@@ -85,6 +85,7 @@ public abstract class Operator<T extends OperatorDesc> implements Serializable,C
   protected transient long runTimeNumRows;
   protected int indexForTezUnion = -1;
   private transient Configuration hconf;
+  //异步执行
   protected final transient Collection<Future<?>> asyncInitOperations = new HashSet<>();
 
   // It can be optimized later so that an operator operator (init/close) is performed
@@ -104,6 +105,7 @@ public abstract class Operator<T extends OperatorDesc> implements Serializable,C
     // to children. Note: close() being called and its state being CLOSE is
     // difference since close() could be called but state is not CLOSE if
     // one of its parent is not in state CLOSE..
+    // 必须是所有父亲节点的operators的状态都是close，当前operator才能是close
   }
 
   protected transient State state = State.UNINIT;
@@ -151,6 +153,7 @@ public abstract class Operator<T extends OperatorDesc> implements Serializable,C
    * Implements the getChildren function for the Node Interface.
    */
   @Override
+  //Operator 实现了Node接口
   public ArrayList<Node> getChildren() {
 
     if (getChildOperators() == null) {
