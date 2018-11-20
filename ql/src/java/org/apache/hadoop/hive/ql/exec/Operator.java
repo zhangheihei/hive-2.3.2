@@ -79,6 +79,7 @@ public abstract class Operator<T extends OperatorDesc> implements Serializable,C
   //记录子算子，为了遍历
   protected List<Operator<? extends OperatorDesc>> childOperators;
   //记录父算子，为了查询父节点信息
+  //疑问：一个算子会有多个父算子？
   protected List<Operator<? extends OperatorDesc>> parentOperators;
   protected String operatorId;
   protected final AtomicBoolean abortOp;
@@ -88,6 +89,7 @@ public abstract class Operator<T extends OperatorDesc> implements Serializable,C
   protected int indexForTezUnion = -1;
   private transient Configuration hconf;
   //异步执行
+  //暂不关系 是由ObjectCache控制的
   protected final transient Collection<Future<?>> asyncInitOperations = new HashSet<>();
 
   // It can be optimized later so that an operator operator (init/close) is performed
@@ -237,6 +239,7 @@ public abstract class Operator<T extends OperatorDesc> implements Serializable,C
   //初始化时 会复制该变量 initialize
   protected transient ObjectInspector[] inputObjInspectors = new ObjectInspector[1];
   // for output rows of this operator
+  //初始化时，将inputObjInspectors[0] 赋值给outputObjInspector
   protected transient ObjectInspector outputObjInspector;
 
   /**
@@ -349,13 +352,17 @@ public abstract class Operator<T extends OperatorDesc> implements Serializable,C
 
     // initialize structure to maintain child op info. operator tree changes
     // while initializing so this need to be done here instead of constructor
-    //childOperatorsArray用来做缓存
+    //childOperatorsArray用来做缓存,childe存放子算子
     childOperatorsArray = new Operator[childOperators.size()];
     for (int i = 0; i < childOperatorsArray.length; i++) {
       childOperatorsArray[i] = childOperators.get(i);
     }
+
     childOperatorsTag = new int[childOperatorsArray.length];
     for (int i = 0; i < childOperatorsArray.length; i++) {
+      //parentOperators存放当前子算子的父算子列表（比较绕），childOperator的父列表，那么该父列表必定包含this
+      //childOperatorsTag存放当前算子在子算子的父算子列表中的index
+      //疑问：一个算子会有多个父算子？
       List<Operator<? extends OperatorDesc>> parentOperators =
           childOperatorsArray[i].getParentOperators();
       childOperatorsTag[i] = parentOperators.indexOf(this);
@@ -373,6 +380,7 @@ public abstract class Operator<T extends OperatorDesc> implements Serializable,C
 
     boolean isInitOk = false;
     try {
+      //初始化本算子
       initializeOp(hconf);
       // sanity checks
       if (!rootInitializeCalled
@@ -382,7 +390,7 @@ public abstract class Operator<T extends OperatorDesc> implements Serializable,C
       if (isLogDebugEnabled) {
         LOG.debug("Initialization Done " + id + " " + getName());
       }
-
+      //初始化子算子
       initializeChildren(hconf);
       isInitOk = true;
     } finally {
@@ -481,6 +489,7 @@ public abstract class Operator<T extends OperatorDesc> implements Serializable,C
     // no-op default
   }
 
+  //深度遍历所有child算子。但是不清楚都做了啥。。。
   public void initializeLocalWork(Configuration hconf) throws HiveException {
     if (childOperators != null) {
       for (int i =0; i<childOperators.size();i++) {
@@ -515,6 +524,7 @@ public abstract class Operator<T extends OperatorDesc> implements Serializable,C
       LOG.debug("Initializing children of " + id + " " + getName());
     }
     for (int i = 0; i < childOperatorsArray.length; i++) {
+      //childOperatorsTag存放的是该算子在child算子的父算子在父算子列表的索引
       childOperatorsArray[i].initialize(hconf, outputObjInspector, childOperatorsTag[i]);
       if (reporter != null) {
         childOperatorsArray[i].setReporter(reporter);
