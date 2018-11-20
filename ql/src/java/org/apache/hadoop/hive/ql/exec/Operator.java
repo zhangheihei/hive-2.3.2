@@ -76,7 +76,9 @@ public abstract class Operator<T extends OperatorDesc> implements Serializable,C
 
   private transient Configuration configuration;
   protected transient CompilationOpContext cContext;
+  //记录子算子，为了遍历
   protected List<Operator<? extends OperatorDesc>> childOperators;
+  //记录父算子，为了查询父节点信息
   protected List<Operator<? extends OperatorDesc>> parentOperators;
   protected String operatorId;
   protected final AtomicBoolean abortOp;
@@ -184,6 +186,7 @@ public abstract class Operator<T extends OperatorDesc> implements Serializable,C
     return parentOperators == null ? 0 : parentOperators.size();
   }
 
+  //T extends OperatorDesc
   protected T conf;
   protected boolean done;
 
@@ -205,6 +208,7 @@ public abstract class Operator<T extends OperatorDesc> implements Serializable,C
   }
 
   // non-bean fields needed during compilation
+  //RowSchema 包含ColumnInfo
   private RowSchema rowSchema;
 
   public void setSchema(RowSchema rowSchema) {
@@ -230,6 +234,7 @@ public abstract class Operator<T extends OperatorDesc> implements Serializable,C
   protected String id;
   // object inspectors for input rows
   // We will increase the size of the array on demand
+  //初始化时 会复制该变量 initialize
   protected transient ObjectInspector[] inputObjInspectors = new ObjectInspector[1];
   // for output rows of this operator
   protected transient ObjectInspector outputObjInspector;
@@ -257,7 +262,7 @@ public abstract class Operator<T extends OperatorDesc> implements Serializable,C
 
   public void setReporter(Reporter rep) {
     reporter = rep;
-
+    //为每个子算子都添加reporter
     for (Operator<? extends OperatorDesc> op : childOperators) {
       op.setReporter(rep);
     }
@@ -266,7 +271,7 @@ public abstract class Operator<T extends OperatorDesc> implements Serializable,C
   @SuppressWarnings("rawtypes")
   public void setOutputCollector(OutputCollector out) {
     this.out = out;
-
+    //为每个子算子都添加OutputCollector
     for (Operator<? extends OperatorDesc> op : childOperators) {
       op.setOutputCollector(out);
     }
@@ -329,6 +334,7 @@ public abstract class Operator<T extends OperatorDesc> implements Serializable,C
     }
 
     this.configuration = hconf;
+    //父节点必须全部初始化好
     if (!areAllParentsInitialized()) {
       return;
     }
@@ -343,6 +349,7 @@ public abstract class Operator<T extends OperatorDesc> implements Serializable,C
 
     // initialize structure to maintain child op info. operator tree changes
     // while initializing so this need to be done here instead of constructor
+    //childOperatorsArray用来做缓存
     childOperatorsArray = new Operator[childOperators.size()];
     for (int i = 0; i < childOperatorsArray.length; i++) {
       childOperatorsArray[i] = childOperators.get(i);
