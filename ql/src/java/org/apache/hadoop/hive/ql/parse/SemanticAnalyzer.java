@@ -11208,6 +11208,7 @@ public class SemanticAnalyzer extends BaseSemanticAnalyzer {
       return;
     }
 
+
     // 2. Gen OP Tree from resolved Parse Tree
     Operator sinkOp = genOPTree(ast, plannerCtx);
 

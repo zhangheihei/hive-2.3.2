@@ -720,6 +720,7 @@ public abstract class Operator<T extends OperatorDesc> implements Serializable,C
 
 
     // call the operator specific close routine
+    //垃圾代码，abort根本没用
     closeOp(abort);
 
     reporter = null;
@@ -752,6 +753,8 @@ public abstract class Operator<T extends OperatorDesc> implements Serializable,C
    */
   protected void closeOp(boolean abort) throws HiveException {
     if (conf != null && conf.getRuntimeStatsTmpDir() != null) {
+      //暂时不清楚干嘛
+      //不清楚干嘛
       publishRunTimeStats();
     }
     runTimeNumRows = 0;
@@ -773,6 +776,7 @@ public abstract class Operator<T extends OperatorDesc> implements Serializable,C
    * @param success
    *          whether the job was completed successfully or not
    */
+  //同样深度遍历，jobClose, jobCloseOp都没有具体的执行逻辑。。。。
   public void jobClose(Configuration conf, boolean success)
       throws HiveException {
     // JobClose has already been performed on this operator
@@ -907,6 +911,7 @@ public abstract class Operator<T extends OperatorDesc> implements Serializable,C
     return 10 * cntr;
   }
 
+  //process具体还是抽象方法
   protected void forward(Object row, ObjectInspector rowInspector)
       throws HiveException {
     runTimeNumRows++;
@@ -1011,6 +1016,7 @@ public abstract class Operator<T extends OperatorDesc> implements Serializable,C
     return dump(level, new HashSet<Integer>());
   }
 
+  //operator的dump 方法，用来输出中间结果试试
   public String dump(int level, HashSet<Integer> seenOpts) {
     if (seenOpts.contains(new Integer(id))) {
       return null;
