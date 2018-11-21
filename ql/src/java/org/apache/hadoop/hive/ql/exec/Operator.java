@@ -598,8 +598,10 @@ public abstract class Operator<T extends OperatorDesc> implements Serializable,C
    *          Rows with the same tag should have exactly the same rowInspector
    *          all the time.
    */
+  //ini->process->forward
   public abstract void process(Object row, int tag) throws HiveException;
 
+  //深度遍历所有的child算子执行defaultStartGroup， 但又是没有实际逻辑
   protected final void defaultStartGroup() throws HiveException {
     if (isLogDebugEnabled) {
       LOG.debug("Starting group");
@@ -621,6 +623,7 @@ public abstract class Operator<T extends OperatorDesc> implements Serializable,C
     }
   }
 
+  //深度遍历所有的child算子执行defaultEndGroup， 但又是没有实际逻辑
   protected final void defaultEndGroup() throws HiveException {
     if (isLogDebugEnabled) {
       LOG.debug("Ending group");
@@ -657,6 +660,7 @@ public abstract class Operator<T extends OperatorDesc> implements Serializable,C
   public void flush() throws HiveException {
   }
 
+  //又是这种深度遍历，但又不执行任何操作
   public void processGroup(int tag) throws HiveException {
     if (childOperators == null || childOperators.isEmpty()) {
       return;
@@ -666,6 +670,7 @@ public abstract class Operator<T extends OperatorDesc> implements Serializable,C
     }
   }
 
+  //查看父类是不是全部CLOSE
   protected boolean allInitializedParentsAreClosed() {
     if (parentOperators != null) {
       for (Operator<? extends OperatorDesc> parent : parentOperators) {
@@ -696,6 +701,7 @@ public abstract class Operator<T extends OperatorDesc> implements Serializable,C
     }
 
     // check if all parents are finished
+    //必须父算子全部关闭，才能关闭本算子
     if (!allInitializedParentsAreClosed()) {
       if (isLogDebugEnabled) {
         LOG.debug("Not all parent operators are closed. Not closing.");
