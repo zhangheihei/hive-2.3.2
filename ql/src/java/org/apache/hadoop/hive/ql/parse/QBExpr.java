@@ -99,18 +99,33 @@ public class QBExpr {
     return qbexpr2;
   }
 
+//  public void print(String msg) {
+//    if (opcode == Opcode.NULLOP) {
+//      LOG.info(msg + "start qb = " + qb);
+//      qb.print(msg + " ");
+//      LOG.info(msg + "end qb = " + qb);
+//    } else {
+//      LOG.info(msg + "start qbexpr1 = " + qbexpr1);
+//      qbexpr1.print(msg + " ");
+//      LOG.info(msg + "end qbexpr1 = " + qbexpr1);
+//      LOG.info(msg + "start qbexpr2 = " + qbexpr2);
+//      qbexpr2.print(msg + " ");
+//      LOG.info(msg + "end qbexpr2 = " + qbexpr2);
+//    }
+//  }
+
   public void print(String msg) {
     if (opcode == Opcode.NULLOP) {
-      LOG.info(msg + "start qb = " + qb);
+      System.out.println(msg + "start qb = " + qb);
       qb.print(msg + " ");
-      LOG.info(msg + "end qb = " + qb);
+      System.out.println(msg + "end qb = " + qb);
     } else {
-      LOG.info(msg + "start qbexpr1 = " + qbexpr1);
+      System.out.println(msg + "start qbexpr1 = " + qbexpr1);
       qbexpr1.print(msg + " ");
-      LOG.info(msg + "end qbexpr1 = " + qbexpr1);
-      LOG.info(msg + "start qbexpr2 = " + qbexpr2);
+      System.out.println(msg + "end qbexpr1 = " + qbexpr1);
+      System.out.println(msg + "start qbexpr2 = " + qbexpr2);
       qbexpr2.print(msg + " ");
-      LOG.info(msg + "end qbexpr2 = " + qbexpr2);
+      System.out.println(msg + "end qbexpr2 = " + qbexpr2);
     }
   }
 

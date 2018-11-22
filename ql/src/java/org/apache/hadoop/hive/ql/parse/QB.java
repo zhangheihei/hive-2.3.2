@@ -101,13 +101,22 @@ public class QB {
 
   // results
 
+//  public void print(String msg) {
+//    LOG.info(msg + "alias=" + qbp.getAlias());
+//    for (String alias : getSubqAliases()) {
+//      QBExpr qbexpr = getSubqForAlias(alias);
+//      LOG.info(msg + "start subquery " + alias);
+//      qbexpr.print(msg + " ");
+//      LOG.info(msg + "end subquery " + alias);
+//    }
+//  }
   public void print(String msg) {
-    LOG.info(msg + "alias=" + qbp.getAlias());
+    System.out.println(msg + "alias=" + qbp.getAlias());
     for (String alias : getSubqAliases()) {
       QBExpr qbexpr = getSubqForAlias(alias);
-      LOG.info(msg + "start subquery " + alias);
+      System.out.println(msg + "start subquery " + alias);
       qbexpr.print(msg + " ");
-      LOG.info(msg + "end subquery " + alias);
+      System.out.println(msg + "end subquery " + alias);
     }
   }
 

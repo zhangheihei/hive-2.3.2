@@ -11208,6 +11208,15 @@ public class SemanticAnalyzer extends BaseSemanticAnalyzer {
       return;
     }
 
+    System.out.println("edwin aliasToTabs map:");
+    for (String key: qb.getTabAliases()) {
+      System.out.println(key + " : " + qb.getTabNameForAlias(key.toLowerCase()));
+    }
+
+    System.out.println("edwin aliasToSubq map:");
+    for (String key: qb.getSubqAliases()) {
+          qb.getSubqForAlias(key).print("edwin-test: ");
+    }
 
     // 2. Gen OP Tree from resolved Parse Tree
     Operator sinkOp = genOPTree(ast, plannerCtx);
