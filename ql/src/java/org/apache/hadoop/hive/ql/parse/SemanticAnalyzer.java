@@ -1610,6 +1610,7 @@ public class SemanticAnalyzer extends BaseSemanticAnalyzer {
           processLateralView(qb, frm);
         } else if (isJoinToken(frm)) {
           processJoin(qb, frm);
+          //JOINExpr设置
           qbp.setJoinExpr(frm);
         }else if(frm.getToken().getType() == HiveParser.TOK_PTBLFUNCTION){
           queryProperties.setHasPTF(true);
@@ -11197,17 +11198,17 @@ public class SemanticAnalyzer extends BaseSemanticAnalyzer {
     //change the location of position alias process here
     //将列名的数字，替换为真正的列名。和hive.groupby.orderby.position.alias，
     //hive.groupby.orderby.position.alias有关
-    System.out.printf("%s%n", "$$$$$$$$$$$$$$$$$$$$$$$$");
+    System.out.printf("%s%n", "############################");
     System.out.printf("%s%n", ast.toStringTree());
-    console.printInfo("###########################");
-    console.printInfo(ast.toStringTree());
     LOG.info("@@@@@");
     LOG.info("edwin-test Abstract syntax tree: " + ast.toStringTree());
     processPositionAlias(ast);
     if (!genResolvedParseTree(ast, plannerCtx)) {
       return;
     }
-
+    if (qb.getParseInfo().getJoinExpr() != null) {
+      System.out.printf("edwin ParseInfo.JoinExpr: %s%n", qb.getParseInfo().getJoinExpr().toStringTree());
+    }
     System.out.println("edwin aliasToTabs map:");
     for (String key: qb.getTabAliases()) {
       System.out.println(key + " : " + qb.getTabNameForAlias(key.toLowerCase()));
