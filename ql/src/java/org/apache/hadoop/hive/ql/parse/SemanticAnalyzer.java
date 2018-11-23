@@ -1069,6 +1069,7 @@ public class SemanticAnalyzer extends BaseSemanticAnalyzer {
     // Recursively do the first phase of semantic analysis for the subquery
     QBExpr qbexpr = new QBExpr(alias);
 
+    //此时getId应该为""
     doPhase1QBExpr(subqref, qbexpr, qb.getId(), alias, qb.isInsideView());
 
     // If the alias is already there then we have a conflict
@@ -1579,7 +1580,7 @@ public class SemanticAnalyzer extends BaseSemanticAnalyzer {
         //此时qbp为空值， 所以默认为false
         if (!qbp.getIsSubQ()) {
           //将TOK_FROM节点赋值给qbp的queryFromExpr
-          //如果没有subquery / lateral view， 那么到此就结束。FROM节点的QB只是将FROM节点的信息添加好QB里
+          //如果没有subquery / lateral view， 那么到此就结束。FROM节点的QB,只是将FROM节点的信息添加好QB里
           qbp.setQueryFromExpr(ast);
         }
 
