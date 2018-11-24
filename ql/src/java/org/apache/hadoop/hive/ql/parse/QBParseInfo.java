@@ -42,12 +42,14 @@ public class QBParseInfo {
 
   private boolean isSubQ;
   private String alias;
+  //存放JOIN信息
   private ASTNode joinExpr;
   private ASTNode hints;
   private final HashMap<String, ASTNode> aliasToSrc;
   /**
    * insclause-0 -> TOK_TAB ASTNode
    */
+  //insclause-0 -> tok_dir ASTNode 临时文件
   private final HashMap<String, ASTNode> nameToDest;
   /**
    * For 'insert into FOO(x,y) select ...' this stores the
@@ -56,7 +58,9 @@ public class QBParseInfo {
   private final Map<String, List<String>> nameToDestSchema;
   private final HashMap<String, TableSample> nameToSample;
   private final Map<ASTNode, String> exprToColumnAlias;
+  //存放select表达式
   private final Map<String, ASTNode> destToSelExpr;
+  //存放where节点
   private final HashMap<String, ASTNode> destToWhereExpr;
   private final HashMap<String, ASTNode> destToGroupby;
   private final Set<String> destRollups;
@@ -66,6 +70,7 @@ public class QBParseInfo {
   // insertIntoTables/insertOverwriteTables map a table's fullName to its ast;
   private final Map<String, ASTNode> insertIntoTables;
   private final Map<String, ASTNode> insertOverwriteTables;
+  //保存from节点信息
   private ASTNode queryFromExpr;
 
   private boolean isAnalyzeCommand; // used for the analyze command (statistics)

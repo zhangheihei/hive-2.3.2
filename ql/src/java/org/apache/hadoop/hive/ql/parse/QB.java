@@ -48,9 +48,11 @@ public class QB {
   private int numSels = 0;
   private int numSelDi = 0;
   private HashMap<String, String> aliasToTabs;
+  //
   private HashMap<String, QBExpr> aliasToSubq;
   private HashMap<String, Table> viewAliasToViewSchema;
   private HashMap<String, Map<String, String>> aliasToProps;
+  //保存语句中的所有别名
   private List<String> aliases;
   private QBParseInfo qbp;
   private QBMetaData qbm;

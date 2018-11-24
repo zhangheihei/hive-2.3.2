@@ -107,6 +107,7 @@ public abstract class BaseSemanticAnalyzer {
   protected CompilationOpContext cContext;
   protected Context ctx;
   protected HashMap<String, String> idToTableNameMap;
+  //统计SQL中的信息
   protected QueryProperties queryProperties;
 
   /**

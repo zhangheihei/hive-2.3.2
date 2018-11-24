@@ -565,6 +565,8 @@ public class SemanticAnalyzer extends BaseSemanticAnalyzer {
         function = (ASTNode)function.getChild(0);
       }
       //拿到功能函数  (tok_select (tok_selexpr (tok_functionstar count))))) 比如 count
+        //传入tok_selexpr的子节点
+        //有function节点才会处理
       doPhase1GetAllAggregations(function, aggregationTrees, wdwFns);
     }
 
@@ -617,6 +619,7 @@ public class SemanticAnalyzer extends BaseSemanticAnalyzer {
    */
 
   //又是深度遍历(tok_functionstar count)
+  //传入tok_selexpr的子节点
   private void doPhase1GetAllAggregations(ASTNode expressionTree,
       HashMap<String, ASTNode> aggregations, List<ASTNode> wdwFns) throws SemanticException {
     int exprTokenType = expressionTree.getToken().getType();
@@ -1078,7 +1081,7 @@ public class SemanticAnalyzer extends BaseSemanticAnalyzer {
     //此时getId应该为""
     System.out.printf("edwin qb.getId() is %s,qb.isInsideView() is %s%n", qb.getId(), qb.isInsideView());
     doPhase1QBExpr(subqref, qbexpr, qb.getId(), alias, qb.isInsideView());
-    System.out.printf("edwin QBExpr is %s%n", qbexpr.getQB().getId());
+    System.out.printf("edwin QBExpr is %s, alias is %s%n", qbexpr.getQB().getId(), qbexpr.getAlias());
     // If the alias is already there then we have a conflict
     if (qb.exists(alias)) {
       throw new SemanticException(ErrorMsg.AMBIGUOUS_TABLE_ALIAS.getMsg(subq
@@ -1479,13 +1482,14 @@ public class SemanticAnalyzer extends BaseSemanticAnalyzer {
       skipRecursion = true;
       switch (ast.getToken().getType()) {
       case HiveParser.TOK_SELECTDI:
+          //不明白为啥不保存信息
         qb.countSelDi();
         // fall through
       case HiveParser.TOK_SELECT:
+
         qb.countSel();
         //接着填充QB，ctx_1.dest="reduce"
         qbp.setSelExprForClause(ctx_1.dest, ast);
-
         int posn = 0;
         if (((ASTNode) ast.getChild(0)).getToken().getType() == HiveParser.QUERY_HINT) {
           ParseDriver pd = new ParseDriver();
@@ -1546,13 +1550,17 @@ public class SemanticAnalyzer extends BaseSemanticAnalyzer {
         }
 
         // is there a insert in the subquery
+        //如果是子查询，那么必须有临时文件（子查询的结果要插入临时文件）
         if (qbp.getIsSubQ() && !isTmpFileDest) {
           throw new SemanticException(ErrorMsg.NO_INSERT_INSUBQUERY.getMsg(ast));
         }
         //设置目的地址
+          // 存放insert:目的地址
         qbp.setDestForClause(ctx_1.dest, (ASTNode) ast.getChild(0));
+        //处理insert_into
         handleInsertStatementSpecPhase1(ast, qbp, ctx_1);
 
+        //插入两个表
         if (qbp.getClauseNamesForDest().size() == 2) {
           // From the moment that we have two destination clauses,
           // we know that this is a multi-insert query.
@@ -1585,6 +1593,7 @@ public class SemanticAnalyzer extends BaseSemanticAnalyzer {
               "Multiple Children " + child_count));
         }
         //此时qbp为空值， 所以默认为false
+          //只有非子查询，才设置From节点
         if (!qbp.getIsSubQ()) {
           //将TOK_FROM节点赋值给qbp的queryFromExpr
           //如果没有subquery / lateral view， 那么到此就结束。FROM节点的QB,只是将FROM节点的信息添加好QB里
@@ -1802,6 +1811,7 @@ public class SemanticAnalyzer extends BaseSemanticAnalyzer {
           }
           validatePartSpec(table, partition, (ASTNode)tab, conf, false);
         }
+
         skipRecursion = false;
         break;
       case HiveParser.TOK_LATERAL_VIEW:
@@ -11215,9 +11225,15 @@ public class SemanticAnalyzer extends BaseSemanticAnalyzer {
     if (!genResolvedParseTree(ast, plannerCtx)) {
       return;
     }
-    if (qb.getParseInfo().getJoinExpr() != null) {
-      System.out.printf("edwin ParseInfo.JoinExpr: %s%n", qb.getParseInfo().getJoinExpr().toStringTree());
+//    if (qb.getParseInfo().getJoinExpr() != null) {
+//      System.out.printf("edwin ParseInfo.JoinExpr: %s%n", qb.getParseInfo().getJoinExpr().toStringTree());
+//    }
+
+ System.out.println("edwin OUTER QB aliases:");
+    for (String data: qb.getAliases()) {
+        System.out.printf("%s ", data);
     }
+      System.out.printf("%n");
     System.out.println("edwin aliasToTabs map:");
     for (String key: qb.getTabAliases()) {
       System.out.println(key + " : " + qb.getTabNameForAlias(key.toLowerCase()));
