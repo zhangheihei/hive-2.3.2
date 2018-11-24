@@ -496,17 +496,21 @@ public class SemanticAnalyzer extends BaseSemanticAnalyzer {
     doPhase1QBExpr(ast, qbexpr, id, alias, false);
   }
   @SuppressWarnings("nls")
+  //一个子查询是一个QBExpr，每个QBExpr有一个自己的QB
   public void doPhase1QBExpr(ASTNode ast, QBExpr qbexpr, String id, String alias, boolean insideView)
       throws SemanticException {
 
     assert (ast.getToken() != null);
     if (ast.getToken().getType() == HiveParser.TOK_QUERY) {
+      //每个QUERY都要生产一个QB
+      //id 为空
       QB qb = new QB(id, alias, true);
       qb.setInsideView(insideView);
       Phase1Ctx ctx_1 = initPhase1Ctx();
       doPhase1(ast, qb, ctx_1, null);
 
       qbexpr.setOpcode(QBExpr.Opcode.NULLOP);
+      //设置新QB
       qbexpr.setQB(qb);
     }
     // setop
@@ -1067,11 +1071,14 @@ public class SemanticAnalyzer extends BaseSemanticAnalyzer {
     String alias = unescapeIdentifier(subq.getChild(1).getText());
 
     // Recursively do the first phase of semantic analysis for the subquery
+    //每个子查询都要用别名创建一个QBExpr对象
+    //alias是a,m9
     QBExpr qbexpr = new QBExpr(alias);
 
     //此时getId应该为""
+    System.out.printf("edwin qb.getId() is %s,qb.isInsideView() is %s%n", qb.getId(), qb.isInsideView());
     doPhase1QBExpr(subqref, qbexpr, qb.getId(), alias, qb.isInsideView());
-
+    System.out.printf("edwin QBExpr is %s%n", qbexpr.getQB().getId());
     // If the alias is already there then we have a conflict
     if (qb.exists(alias)) {
       throw new SemanticException(ErrorMsg.AMBIGUOUS_TABLE_ALIAS.getMsg(subq
@@ -1747,6 +1754,7 @@ public class SemanticAnalyzer extends BaseSemanticAnalyzer {
         break;
 
       case HiveParser.TOK_INSERT:
+        //INSERT字句的下的tok_destination是第一个节点
         ASTNode destination = (ASTNode) ast.getChild(0);
         Tree tab = destination.getChild(0);
 
@@ -11201,8 +11209,8 @@ public class SemanticAnalyzer extends BaseSemanticAnalyzer {
     //hive.groupby.orderby.position.alias有关
     System.out.printf("%s%n", "############################");
     System.out.printf("%s%n", ast.toStringTree());
-    LOG.info("@@@@@");
-    LOG.info("edwin-test Abstract syntax tree: " + ast.toStringTree());
+//    LOG.info("@@@@@");
+//    LOG.info("edwin-test Abstract syntax tree: " + ast.toStringTree());
     processPositionAlias(ast);
     if (!genResolvedParseTree(ast, plannerCtx)) {
       return;
