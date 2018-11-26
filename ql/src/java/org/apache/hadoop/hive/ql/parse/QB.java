@@ -47,8 +47,9 @@ public class QB {
   private final int numGbys = 0;
   private int numSels = 0;
   private int numSelDi = 0;
+  //别名和表名的映射
   private HashMap<String, String> aliasToTabs;
-  //
+  //别名到子查询的映射
   private HashMap<String, QBExpr> aliasToSubq;
   private HashMap<String, Table> viewAliasToViewSchema;
   private HashMap<String, Map<String, String>> aliasToProps;

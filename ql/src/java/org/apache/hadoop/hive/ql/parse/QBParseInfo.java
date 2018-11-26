@@ -40,6 +40,7 @@ import org.apache.hadoop.hive.ql.parse.BaseSemanticAnalyzer.TableSpec;
  **/
 public class QBParseInfo {
 
+  // 当前QUERY是否为子查询
   private boolean isSubQ;
   private String alias;
   //存放JOIN信息

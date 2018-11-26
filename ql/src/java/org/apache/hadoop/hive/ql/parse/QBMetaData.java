@@ -42,6 +42,7 @@ public class QBMetaData {
   public static final int DEST_REDUCE = 4;
   public static final int DEST_LOCAL_FILE = 5;
 
+  //别名到真是表的映射
   private final HashMap<String, Table> aliasToTable;
   private final HashMap<String, Table> nameToDestTable;
   private final HashMap<String, Partition> nameToDestPartition;

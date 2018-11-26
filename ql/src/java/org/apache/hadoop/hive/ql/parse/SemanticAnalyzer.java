@@ -2298,6 +2298,8 @@ public class SemanticAnalyzer extends BaseSemanticAnalyzer {
               qb.setIsQuery(true);
               Path stagingPath = getStagingDirectoryPathname(qb);
               fname = stagingPath.toString();
+              //hdfs://HDFS2769/tmp/hive/hadoop/cc2a18d1-7b60-45a6-b43b-d9d4ef8337fb/hive_2018-11-26_21-26-51_717_716577844207947128-1/-mr-10002
+              System.out.printf("edwin dest file name is %s%n", fname);
               ctx.setResDir(stagingPath);
             }
           }
@@ -2312,6 +2314,7 @@ public class SemanticAnalyzer extends BaseSemanticAnalyzer {
           CreateTableDesc directoryDesc = new CreateTableDesc();
           boolean directoryDescIsSet = false;
           int numCh = ast.getChildCount();
+          //忽略 (tok_dir tok_tmp_file)走不到这里
           for (int num = 1; num < numCh ; num++){
             ASTNode child = (ASTNode) ast.getChild(num);
             if (child != null) {
@@ -11243,7 +11246,7 @@ public class SemanticAnalyzer extends BaseSemanticAnalyzer {
     for (String key: qb.getSubqAliases()) {
           qb.getSubqForAlias(key).print("edwin-test: ");
     }
-
+    System.out.println("####################### before genOPTree");
     // 2. Gen OP Tree from resolved Parse Tree
     Operator sinkOp = genOPTree(ast, plannerCtx);
 
