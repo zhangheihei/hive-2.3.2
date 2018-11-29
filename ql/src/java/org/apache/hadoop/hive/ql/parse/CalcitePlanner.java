@@ -787,7 +787,7 @@ public class CalcitePlanner extends SemanticAnalyzer {
       profilesCBO.add(ExtendedCBOProfile.WINDOWING_POSTPROCESSING);
     }
 
-    System.out.printf("edwin CBO profilesCBO lenth is %d ###########################", profilesCBO.size());
+    System.out.printf("edwin CBO profilesCBO lenth is %d ###########################%n", profilesCBO.size());
     return profilesCBO;
   }
 
@@ -1066,6 +1066,7 @@ public class CalcitePlanner extends SemanticAnalyzer {
 
     CalcitePlannerAction calcitePlannerAction = null;
     if (this.columnAccessInfo == null) {
+      System.out.printf("edwin columnAccessInfo is nil, prunedPartitions size is %d%n", prunedPartitions.size());
       this.columnAccessInfo = new ColumnAccessInfo();
     }
     calcitePlannerAction = new CalcitePlannerAction(prunedPartitions, this.columnAccessInfo);
@@ -1088,6 +1089,7 @@ public class CalcitePlanner extends SemanticAnalyzer {
    */
   ASTNode getOptimizedAST() throws SemanticException {
     RelNode optimizedOptiqPlan = logicalPlan();
+    System.out.printf("edwin resultSchema is %d%n", resultSchema.size());
     ASTNode optiqOptimizedAST = ASTConverter.convert(optimizedOptiqPlan, resultSchema,
             HiveConf.getBoolVar(conf, HiveConf.ConfVars.HIVE_COLUMN_ALIGNMENT));
     return optiqOptimizedAST;
