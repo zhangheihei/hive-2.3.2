@@ -336,9 +336,11 @@ public class CalcitePlanner extends SemanticAnalyzer {
       // did remove those and gave CBO the proper AST. That is kinda hacky.
       ASTNode queryForCbo = ast;
       if (cboCtx.type == PreCboCtx.Type.CTAS || cboCtx.type == PreCboCtx.Type.VIEW) {
+        System.out.println("cboCtx is CTAS or VIEW ########################");
         queryForCbo = cboCtx.nodeOfInterest; // nodeOfInterest is the query
       }
       runCBO = canCBOHandleAst(queryForCbo, getQB(), cboCtx);
+      //熊猫没有插入多个DEST
       if (queryProperties.hasMultiDestQuery()) {
         handleMultiDestQuery(ast, cboCtx);
       }
@@ -777,12 +779,15 @@ public class CalcitePlanner extends SemanticAnalyzer {
     EnumSet<ExtendedCBOProfile> profilesCBO = EnumSet.noneOf(ExtendedCBOProfile.class);
     // If the query contains more than one join
     if (queryProperties.getJoinCount() > 1) {
+      System.out.println("edwin CBO JOIN_REORDERING###########################");
       profilesCBO.add(ExtendedCBOProfile.JOIN_REORDERING);
     }
     // If the query contains windowing processing
     if (queryProperties.hasWindowing()) {
       profilesCBO.add(ExtendedCBOProfile.WINDOWING_POSTPROCESSING);
     }
+
+    System.out.printf("edwin CBO profilesCBO lenth is %d ###########################", profilesCBO.size());
     return profilesCBO;
   }
 

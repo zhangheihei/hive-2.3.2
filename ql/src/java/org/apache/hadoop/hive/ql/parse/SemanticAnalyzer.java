@@ -10493,6 +10493,7 @@ public class SemanticAnalyzer extends BaseSemanticAnalyzer {
   private Operator genPlan(QB parent, QBExpr qbexpr) throws SemanticException {
     if (qbexpr.getOpcode() == QBExpr.Opcode.NULLOP) {
       boolean skipAmbiguityCheck = viewSelect == null && parent.isTopLevelSelectStarQuery();
+      System.out.printf("edwin skipAmbiguityCheck is:%s%n", skipAmbiguityCheck);
       return genPlan(qbexpr.getQB(), skipAmbiguityCheck);
     }
     if (qbexpr.getOpcode() == QBExpr.Opcode.UNION) {
@@ -10517,8 +10518,15 @@ public class SemanticAnalyzer extends BaseSemanticAnalyzer {
     // Must be deterministic order map - see HIVE-8707
     Map<String, Operator> aliasToOpInfo = new LinkedHashMap<String, Operator>();
 
+
+    System.out.println("edwin getPlan aliasToSubq map:");
+    for (String key: qb.getSubqAliases()) {
+      qb.getSubqForAlias(key).print("getPlan-test: ");
+    }
     // Recurse over the subqueries to fill the subquery part of the plan
+      //先从子查询开始递归
     for (String alias : qb.getSubqAliases()) {
+      System.out.printf("edwin genPlan alias is %s%n", alias);
       QBExpr qbexpr = qb.getSubqForAlias(alias);
       Operator operator = genPlan(qb, qbexpr);
       aliasToOpInfo.put(alias, operator);
@@ -10537,6 +10545,7 @@ public class SemanticAnalyzer extends BaseSemanticAnalyzer {
       }
     }
 
+    //当没有子查询后，开始递归表
     // Recurse over all the source tables
     for (String alias : qb.getTabAliases()) {
       Operator op = genTablePlan(alias, qb);
@@ -11231,7 +11240,7 @@ public class SemanticAnalyzer extends BaseSemanticAnalyzer {
 //    if (qb.getParseInfo().getJoinExpr() != null) {
 //      System.out.printf("edwin ParseInfo.JoinExpr: %s%n", qb.getParseInfo().getJoinExpr().toStringTree());
 //    }
-
+    System.out.printf("edwin OUTER QB-ParseInfo alias %s%n ", qb.getParseInfo().getAlias());
  System.out.println("edwin OUTER QB aliases:");
     for (String data: qb.getAliases()) {
         System.out.printf("%s ", data);
@@ -11249,7 +11258,7 @@ public class SemanticAnalyzer extends BaseSemanticAnalyzer {
     System.out.println("####################### before genOPTree");
     // 2. Gen OP Tree from resolved Parse Tree
     Operator sinkOp = genOPTree(ast, plannerCtx);
-
+    System.out.println("####################### after genOPTree");
     if (!unparseTranslator.isEnabled() && tableMask.isEnabled()) {
       // Here we rewrite the * and also the masking table
       ASTNode tree = rewriteASTWithMaskAndFilter(tableMask, ast, ctx.getTokenRewriteStream(),

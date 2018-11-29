@@ -453,6 +453,7 @@ public class Context {
     }
 
     try {
+      System.out.printf("edwin nonLocalScratchPath is %s", nonLocalScratchPath.toString());
       Path dir = FileUtils.makeQualified(nonLocalScratchPath, conf);
       URI uri = dir.toUri();
 
