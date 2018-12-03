@@ -1288,7 +1288,7 @@ public class CalcitePlanner extends SemanticAnalyzer {
 
     // TODO: Do we need to keep track of RR, ColNameToPosMap for every op or
     // just last one.
-    //表信息到行信息的映射
+    //表信息到行信息的映射,RowResolver中存放着普通列，分区列，虚拟列
     LinkedHashMap<RelNode, RowResolver>                   relToHiveRR                   = new LinkedHashMap<RelNode, RowResolver>();
     //表信息到列的map（位置）映射
     LinkedHashMap<RelNode, ImmutableMap<String, Integer>> relToHiveColNameCalcitePosMap = new LinkedHashMap<RelNode, ImmutableMap<String, Integer>>();
@@ -2380,6 +2380,13 @@ public class CalcitePlanner extends SemanticAnalyzer {
       return TableType.NATIVE;
     }
 
+    /*
+  * filterExpr 即where节点下的内容
+  * srcREl:源表的所有信息
+  * outerNameToPosMap:null
+  * outerRR:null
+  * useCaching:false
+  * */
     private RelNode genFilterRelNode(ASTNode filterExpr, RelNode srcRel,
             ImmutableMap<String, Integer> outerNameToPosMap, RowResolver outerRR,
             boolean useCaching) throws SemanticException {
@@ -2446,11 +2453,15 @@ public class CalcitePlanner extends SemanticAnalyzer {
     private void subqueryRestrictionCheck(QB qb, ASTNode searchCond, RelNode srcRel,
                                          boolean forHavingClause,
                                           Set<ASTNode> corrScalarQueries) throws SemanticException {
+      //检查是否有TOK_SUBQUERY_EXPR
         List<ASTNode> subQueriesInOriginalTree = SubQueryUtils.findSubQueries(searchCond);
 
+        //dupTree 是把入参节点拷贝出来 重新构造一颗新树（猜测这么做的原因可能是会对这颗树进行修改，如果在原树修改）
+        //(JAVA的引用 你懂得)
         ASTNode clonedSearchCond = (ASTNode) SubQueryUtils.adaptor.dupTree(searchCond);
         List<ASTNode> subQueries = SubQueryUtils.findSubQueries(clonedSearchCond);
         for(int i=0; i<subQueriesInOriginalTree.size(); i++){
+          System.out.println("edwin test  subqueryRestrictionCheck into for@@@@@@@@@@@@@@@@@@@@");
           //we do not care about the transformation or rewriting of AST
           // which following statement does
           // we only care about the restriction checks they perform.
@@ -2499,12 +2510,14 @@ public class CalcitePlanner extends SemanticAnalyzer {
    * srcREl:源表的所有信息
    * subQueryToRelNode:
    * forHavingClause:false
+   * 如果条件语句中没有TOK_SUBQUERY_EXPR，就什么都不错
    * */
     private boolean genSubQueryRelNode(QB qb, ASTNode node, RelNode srcRel, boolean forHavingClause,
                                        Map<ASTNode, RelNode> subQueryToRelNode) throws SemanticException {
 
         Set<ASTNode> corrScalarQueriesWithAgg = new HashSet<ASTNode>();
         //disallow subqueries which HIVE doesn't currently support
+        //检查标准是查看TOK_SUBQUERY_EXPR，但是熊猫参数没有
         subqueryRestrictionCheck(qb, node, srcRel, forHavingClause, corrScalarQueriesWithAgg);
         Deque<ASTNode> stack = new ArrayDeque<ASTNode>();
         stack.push(node);
@@ -2565,6 +2578,7 @@ public class CalcitePlanner extends SemanticAnalyzer {
       Map<ASTNode, RelNode> subQueryToRelNode = new HashMap<>();
       boolean isSubQuery = genSubQueryRelNode(qb, searchCond, srcRel, forHavingClause,
                                                 subQueryToRelNode);
+      //熊猫是false
       if(isSubQuery) {
         ExprNodeDesc subQueryExpr = genExprNodeDesc(searchCond, relToHiveRR.get(srcRel),
                 outerRR, subQueryToRelNode, forHavingClause);
