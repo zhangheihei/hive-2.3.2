@@ -200,6 +200,7 @@ public class SubQueryUtils {
     return subQueries;
   }
 
+  //从右到左，遍历所有节点，查询TOK_SUBQUERY_EXPR
   private static void findSubQueries(ASTNode node, List<ASTNode> subQueries) {
     Deque<ASTNode> stack = new ArrayDeque<ASTNode>();
     stack.push(node);

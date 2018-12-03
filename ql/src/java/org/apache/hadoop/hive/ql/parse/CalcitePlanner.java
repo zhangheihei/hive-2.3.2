@@ -2436,6 +2436,13 @@ public class CalcitePlanner extends SemanticAnalyzer {
       return true;
     }
 
+    /*
+  *
+  * searchCond 即where节点下的内容
+  * srcREl:源表的所有信息
+  * corrScalarQueries:
+  * forHavingClause:false
+  * */
     private void subqueryRestrictionCheck(QB qb, ASTNode searchCond, RelNode srcRel,
                                          boolean forHavingClause,
                                           Set<ASTNode> corrScalarQueries) throws SemanticException {
@@ -2487,6 +2494,12 @@ public class CalcitePlanner extends SemanticAnalyzer {
           }
       }
     }
+    /*
+   * node 即where节点下的内容
+   * srcREl:源表的所有信息
+   * subQueryToRelNode:
+   * forHavingClause:false
+   * */
     private boolean genSubQueryRelNode(QB qb, ASTNode node, RelNode srcRel, boolean forHavingClause,
                                        Map<ASTNode, RelNode> subQueryToRelNode) throws SemanticException {
 
@@ -2536,6 +2549,15 @@ public class CalcitePlanner extends SemanticAnalyzer {
       }
       return isSubQuery;
     }
+    //生成过滤节点
+    /*
+    * searchCond 即where节点下的内容
+    * srcREl:源表的所有信息
+    * aliasToRel:没有使用
+    * outerNameToPosMap:null
+    * outerRR:null
+    * forHavingClause:false
+    * */
     private RelNode genFilterRelNode(QB qb, ASTNode searchCond, RelNode srcRel,
         Map<String, RelNode> aliasToRel, ImmutableMap<String, Integer> outerNameToPosMap,
         RowResolver outerRR, boolean forHavingClause) throws SemanticException {
@@ -2589,11 +2611,15 @@ public class CalcitePlanner extends SemanticAnalyzer {
       return selRel;
     }
 
+    //生成过滤节点 Filter即where表达式
     private RelNode genFilterLogicalPlan(QB qb, RelNode srcRel, Map<String, RelNode> aliasToRel,
               ImmutableMap<String, Integer> outerNameToPosMap, RowResolver outerRR,
                                          boolean forHavingClause) throws SemanticException {
       RelNode filterRel = null;
 
+      for (String key: getQBParseInfo(qb).getDestToWhereExpr().keySet()) {
+        System.out.printf("edwin DestToWhereExpr key is %s%n:", key);
+      }
       Iterator<ASTNode> whereClauseIterator = getQBParseInfo(qb).getDestToWhereExpr().values()
           .iterator();
       if (whereClauseIterator.hasNext()) {
@@ -4019,6 +4045,7 @@ public class CalcitePlanner extends SemanticAnalyzer {
         srcRel = genJoinLogicalPlan(qb.getParseInfo().getJoinExpr(), aliasToRel);
       } else {
         // If no join then there should only be either 1 TS or 1 SubQuery
+        //子查询中没有JOIN，在取出该子查询的表信息
         srcRel = aliasToRel.values().iterator().next();
       }
 
