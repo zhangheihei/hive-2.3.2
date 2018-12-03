@@ -31,6 +31,7 @@ import java.util.Set;
 public class RowSchema implements Serializable {
 
   private static final long serialVersionUID = 1L;
+  //行信息存储列信息
   private ArrayList<ColumnInfo> signature = new ArrayList<ColumnInfo>();
 
   public RowSchema() {

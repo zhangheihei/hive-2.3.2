@@ -88,9 +88,12 @@ public class LazySerDeParameters implements LazyObjectInspectorParameters {
     lastColumnTakesRest = (lastColumnTakesRestString != null && lastColumnTakesRestString
         .equalsIgnoreCase("true"));
 
+
+    //设置列信息
     extractColumnInfo();
 
     // Create the LazyObject for storing the rows
+    //TypeInfo中包含所有的列信息(名字和type)
     rowTypeInfo = TypeInfoFactory.getStructTypeInfo(columnNames, columnTypes);
 
     collectSeparators(tbl);

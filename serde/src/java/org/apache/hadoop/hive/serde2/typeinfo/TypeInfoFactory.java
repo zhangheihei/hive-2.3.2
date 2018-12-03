@@ -194,6 +194,7 @@ public final class TypeInfoFactory {
   static ConcurrentHashMap<ArrayList<List<?>>, TypeInfo> cachedStructTypeInfo =
     new ConcurrentHashMap<ArrayList<List<?>>, TypeInfo>();
 
+  //是所有列名和列Type
   public static TypeInfo getStructTypeInfo(List<String> names,
       List<TypeInfo> typeInfos) {
     ArrayList<List<?>> signature = new ArrayList<List<?>>(2);

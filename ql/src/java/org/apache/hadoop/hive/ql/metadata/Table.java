@@ -259,6 +259,7 @@ public class Table implements Serializable {
   }
 
   final public Deserializer getDeserializer() {
+    //初始化在该处
     if (deserializer == null) {
       deserializer = getDeserializerFromMetaStore(false);
     }

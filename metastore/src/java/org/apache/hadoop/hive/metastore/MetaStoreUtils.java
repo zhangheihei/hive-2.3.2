@@ -419,9 +419,11 @@ public class MetaStoreUtils {
    *              todo - this should move somewhere into serde.jar
    *
    */
+  //拿到表的反序列化
   static public Deserializer getDeserializer(Configuration conf,
       org.apache.hadoop.hive.metastore.api.Table table, boolean skipConfError) throws
           MetaException {
+    //拿到序列化类 SLIB
     String lib = table.getSd().getSerdeInfo().getSerializationLib();
     if (lib == null) {
       return null;
@@ -908,6 +910,11 @@ public class MetaStoreUtils {
     return ddl.toString();
   }
 
+  /*
+  设置属性FILE_INPUT_FORMAT,
+  FILE_OUTPUT_FORMAT META_TABLE_NAME META_TABLE_LOCATION BUCKET_COUNT BUCKET_FIELD_NAME SERIALIZATION_LIB
+  META_TABLE_PARTITION_COLUMNS  META_TABLE_PARTITION_COLUMN_TYPES 还有列明
+   */
   public static Properties getTableMetadata(
       org.apache.hadoop.hive.metastore.api.Table table) {
     return MetaStoreUtils.getSchema(table.getSd(), table.getSd(), table

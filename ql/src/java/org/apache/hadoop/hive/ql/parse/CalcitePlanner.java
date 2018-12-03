@@ -346,6 +346,7 @@ public class CalcitePlanner extends SemanticAnalyzer {
       }
 
       if (runCBO) {
+        //熊猫为空
         profilesCBO = obtainCBOProfiles(queryProperties);
 
         disableJoinMerge = true;
@@ -670,7 +671,7 @@ public class CalcitePlanner extends SemanticAnalyzer {
    * @param qb
    *          top level QB corresponding to the AST
    * @param cboCtx
-   * @param semAnalyzer
+   *
    * @return boolean
    *
    *         Assumption:<br>
@@ -680,6 +681,7 @@ public class CalcitePlanner extends SemanticAnalyzer {
   boolean canCBOHandleAst(ASTNode ast, QB qb, PreCboCtx cboCtx) {
     int root = ast.getToken().getType();
     boolean needToLogMessage = STATIC_LOG.isInfoEnabled();
+    //只支持select
     boolean isSupportedRoot = root == HiveParser.TOK_QUERY || root == HiveParser.TOK_EXPLAIN
         || qb.isCTAS() || qb.isMaterializedView();
     // Queries without a source table currently are not supported by CBO
@@ -713,6 +715,7 @@ public class CalcitePlanner extends SemanticAnalyzer {
     }
     // Now check QB in more detail. canHandleQbForCbo returns null if query can
     // be handled.
+    //检查没有sore by
     String msg = CalcitePlanner.canHandleQbForCbo(queryProperties, conf, true, needToLogMessage, qb);
     if (msg == null) {
       return true;
@@ -1090,6 +1093,9 @@ public class CalcitePlanner extends SemanticAnalyzer {
   ASTNode getOptimizedAST() throws SemanticException {
     RelNode optimizedOptiqPlan = logicalPlan();
     System.out.printf("edwin resultSchema is %d%n", resultSchema.size());
+    for (FieldSchema fs: resultSchema) {
+      System.out.printf("edwin resultSchema fs is %s%n", fs.toString());
+    }
     ASTNode optiqOptimizedAST = ASTConverter.convert(optimizedOptiqPlan, resultSchema,
             HiveConf.getBoolVar(conf, HiveConf.ConfVars.HIVE_COLUMN_ALIGNMENT));
     return optiqOptimizedAST;
@@ -1282,7 +1288,9 @@ public class CalcitePlanner extends SemanticAnalyzer {
 
     // TODO: Do we need to keep track of RR, ColNameToPosMap for every op or
     // just last one.
+    //表信息到行信息的映射
     LinkedHashMap<RelNode, RowResolver>                   relToHiveRR                   = new LinkedHashMap<RelNode, RowResolver>();
+    //表信息到列的map（位置）映射
     LinkedHashMap<RelNode, ImmutableMap<String, Integer>> relToHiveColNameCalcitePosMap = new LinkedHashMap<RelNode, ImmutableMap<String, Integer>>();
 
     CalcitePlannerAction(Map<String, PrunedPartitionList> partitionCache, ColumnAccessInfo columnAccessInfo) {
@@ -2085,7 +2093,7 @@ public class CalcitePlanner extends SemanticAnalyzer {
     /**
      * Generate Join Logical Plan Relnode by walking through the join AST.
      *
-     * @param qb
+     * @param
      * @param aliasToRel
      *          Alias(Table/Relation alias) to RelNode; only read and not
      *          written in to by this method
@@ -2173,8 +2181,9 @@ public class CalcitePlanner extends SemanticAnalyzer {
       // 5. Create Join rel
       return genJoinRelNode(leftRel, leftTableAlias, rightRel, rightTableAlias, hiveJoinType, joinCond);
     }
-
+    //生产表逻辑计划
     private RelNode genTableLogicalPlan(String tableAlias, QB qb) throws SemanticException {
+      //行信息中存储列信息
       RowResolver rr = new RowResolver();
       RelNode tableRel = null;
 
@@ -2201,50 +2210,68 @@ public class CalcitePlanner extends SemanticAnalyzer {
 
         // 3.1 Add Column info for non partion cols (Object Inspector fields)
         @SuppressWarnings("deprecation")
+        /*
+        *通过元数据，拿到对应的Serde类（比如LazySimpleSerDe）,序列化的内存存在对应的ObjectInspector，里面
+        * 存储的有列名，列的类型
+        * */
         StructObjectInspector rowObjectInspector = (StructObjectInspector) tabMetaData.getDeserializer()
             .getObjectInspector();
+        //通过inspector中存储的fields取出列信息
         List<? extends StructField> fields = rowObjectInspector.getAllStructFieldRefs();
         ColumnInfo colInfo;
         String colName;
+        //所有列信息
         ArrayList<ColumnInfo> cInfoLst = new ArrayList<ColumnInfo>();
         for (int i = 0; i < fields.size(); i++) {
           colName = fields.get(i).getFieldName();
           colInfo = new ColumnInfo(
               fields.get(i).getFieldName(),
+              //LazySimpleSerDe 是STRUCT类型
               TypeInfoUtils.getTypeInfoFromObjectInspector(fields.get(i).getFieldObjectInspector()),
               tableAlias, false);
           colInfo.setSkewedCol((SemanticAnalyzer.isSkewedCol(tableAlias, qb, colName)) ? true
               : false);
           rr.put(tableAlias, colName, colInfo);
           cInfoLst.add(colInfo);
+          System.out.printf("edwin ColumnInfo colName is:%s, tableAlias is %s%n", colName, tableAlias);
         }
         // TODO: Fix this
+        //非分区列信息
         ArrayList<ColumnInfo> nonPartitionColumns = new ArrayList<ColumnInfo>(cInfoLst);
+        //分区列信息
         ArrayList<ColumnInfo> partitionColumns = new ArrayList<ColumnInfo>();
 
         // 3.2 Add column info corresponding to partition columns
         for (FieldSchema part_col : tabMetaData.getPartCols()) {
+          System.out.println("################## edwin test have  partition columns");
           colName = part_col.getName();
           colInfo = new ColumnInfo(colName,
               TypeInfoFactory.getPrimitiveTypeInfo(part_col.getType()), tableAlias, true);
           rr.put(tableAlias, colName, colInfo);
           cInfoLst.add(colInfo);
           partitionColumns.add(colInfo);
+          System.out.printf("edwin partition colName is:%s, tableAlias is %s%n", colName, tableAlias);
+
         }
 
+        //检查有没有storageHandler
         final TableType tableType = obtainTableType(tabMetaData);
 
         // 3.3 Add column info corresponding to virtual columns
         List<VirtualColumn> virtualCols = new ArrayList<VirtualColumn>();
         if (tableType == TableType.NATIVE) {
+          System.out.println("################## edwin test tableType  is NATIVE");
           Iterator<VirtualColumn> vcs = VirtualColumn.getRegistry(conf).iterator();
           while (vcs.hasNext()) {
+            System.out.println("################## edwin test have  virtual columns");
             VirtualColumn vc = vcs.next();
             colInfo = new ColumnInfo(vc.getName(), vc.getTypeInfo(), tableAlias, true,
                 vc.getIsHidden());
             rr.put(tableAlias, vc.getName().toLowerCase(), colInfo);
             cInfoLst.add(colInfo);
             virtualCols.add(vc);
+            System.out.printf("edwin VirtualColumn colName is:%s, tableAlias is %s%n", vc.getName(), tableAlias);
+
           }
         }
 
@@ -2306,6 +2333,7 @@ public class CalcitePlanner extends SemanticAnalyzer {
           // Build row type from field <type, name>
           RelDataType rowType = TypeConverter.getType(cluster, rr, null);
           // Build RelOptAbstractTable
+          //拿到数据库Name
           String fullyQualifiedTabName = tabMetaData.getDbName();
           if (fullyQualifiedTabName != null && !fullyQualifiedTabName.isEmpty()) {
             fullyQualifiedTabName = fullyQualifiedTabName + "." + tabMetaData.getTableName();
@@ -2313,10 +2341,12 @@ public class CalcitePlanner extends SemanticAnalyzer {
           else {
             fullyQualifiedTabName = tabMetaData.getTableName();
           }
+          //把表达所有信息提交给RelOptHiveTable,该表实现了CBO中的类-RelOptAbstractTable
           RelOptHiveTable optTable = new RelOptHiveTable(relOptSchema, fullyQualifiedTabName,
                   rowType, tabMetaData, nonPartitionColumns, partitionColumns, virtualCols, conf,
                   partitionCache, noColsMissingStats);
           // Build Hive Table Scan Rel
+          //relNode就是一张表的所有信息
           tableRel = new HiveTableScan(cluster, cluster.traitSetOf(HiveRelNode.CONVENTION), optTable,
               null == tableAlias ? tabMetaData.getTableName() : tableAlias,
               getAliasId(tableAlias, qb), HiveConf.getBoolVar(conf,
@@ -2325,6 +2355,7 @@ public class CalcitePlanner extends SemanticAnalyzer {
         }
 
         // 6. Add Schema(RR) to RelNode-Schema map
+        //rr是行信息，tableRel整个表信息
         ImmutableMap<String, Integer> hiveToCalciteColMap = buildHiveToCalciteColumnMap(rr,
             tableRel);
         relToHiveRR.put(tableRel, rr);
@@ -3914,7 +3945,7 @@ public class CalcitePlanner extends SemanticAnalyzer {
         return null;
       }
     }
-
+    //递归的遍历QB
     private RelNode genLogicalPlan(QB qb, boolean outerMostQB,
                                    ImmutableMap<String, Integer> outerNameToPosMap,
                                    RowResolver outerRR) throws SemanticException {
@@ -3961,6 +3992,8 @@ public class CalcitePlanner extends SemanticAnalyzer {
 
       // 1.2 Recurse over all the source tables
       for (String tableAlias : qb.getTabAliases()) {
+        System.out.printf("edwin SubQuery tableAlias is %s, tableName is %s%n", tableAlias, qb.getTabNameForAlias(tableAlias));
+        //表中的所有信息，包装到RelNode
         RelNode op = genTableLogicalPlan(tableAlias, qb);
         aliasToRel.put(tableAlias, op);
       }

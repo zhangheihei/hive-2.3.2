@@ -138,6 +138,7 @@ public abstract class BaseSemanticAnalyzer {
    */
   protected LineageInfo linfo;
   protected TableAccessInfo tableAccessInfo;
+  //列访问信息
   protected ColumnAccessInfo columnAccessInfo;
   /**
    * Columns accessed by updates

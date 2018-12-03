@@ -128,8 +128,11 @@ public class TypeConverter {
     List<RelDataType> fieldTypes = new LinkedList<RelDataType>();
     List<String> fieldNames = new LinkedList<String>();
 
+    //遍历所有列名
     for (ColumnInfo ci : rs.getSignature()) {
       if (neededCols == null || neededCols.contains(ci.getInternalName())) {
+        //System.out.printf("edwin ColumnInfo typeInfo is:%s%n", ci.getType().toString());
+        //ci.getType()就是拿string(TypeInfo信息)
         fieldTypes.add(convert(ci.getType(), dtFactory));
         fieldNames.add(ci.getInternalName());
       }
