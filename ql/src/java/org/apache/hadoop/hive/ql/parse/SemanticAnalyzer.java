@@ -11637,8 +11637,8 @@ public class SemanticAnalyzer extends BaseSemanticAnalyzer {
   }
 
   /*
-* expr 即where节点下的内容
-* input:行信息（srcREL 原表对应的行信息）
+  * expr 即where节点下的内容
+  * input:行信息（srcREL 原表对应的行信息）
 * subqueryToRelNode:null
 * outerRR:null
 * useCaching:false
@@ -11679,6 +11679,11 @@ public class SemanticAnalyzer extends BaseSemanticAnalyzer {
    * Returns expression node descriptor for the expression.
    * If it's evaluated already in previous operator, it can be retrieved from cache.
    */
+    /*
+  * expr 即where节点下的内容
+  * input:行信息（srcREL 原表对应的行信息）
+* tcCtx
+* */
   public ExprNodeDesc genExprNodeDesc(ASTNode expr, RowResolver input,
       TypeCheckCtx tcCtx) throws SemanticException {
     // We recursively create the exprNodeDesc. Base cases: when we encounter
@@ -11693,6 +11698,7 @@ public class SemanticAnalyzer extends BaseSemanticAnalyzer {
     if (tcCtx.isUseCaching()) {
       cached = getExprNodeDescCached(expr, input);
     }
+    //熊猫是null
     if (cached == null) {
       Map<ASTNode, ExprNodeDesc> allExprs = genAllExprNodeDesc(expr, input, tcCtx);
       return allExprs.get(expr);
@@ -11733,6 +11739,11 @@ public class SemanticAnalyzer extends BaseSemanticAnalyzer {
    * @throws SemanticException Failed to evaluate expression
    */
   @SuppressWarnings("nls")
+    /*
+  * expr 即where节点下的内容
+  * input:行信息（srcREL 原表对应的行信息）
+* tcCtx
+* */
   public Map<ASTNode, ExprNodeDesc> genAllExprNodeDesc(ASTNode expr, RowResolver input,
     TypeCheckCtx tcCtx) throws SemanticException {
     // Create the walker and  the rules dispatcher.

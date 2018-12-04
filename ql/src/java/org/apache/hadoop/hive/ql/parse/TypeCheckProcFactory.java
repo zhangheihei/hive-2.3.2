@@ -184,12 +184,15 @@ public class TypeCheckProcFactory {
     // generates the plan from the operator tree
     Map<Rule, NodeProcessor> opRules = new LinkedHashMap<Rule, NodeProcessor>();
 
+    //NULL规格
     opRules.put(new RuleRegExp("R1", HiveParser.TOK_NULL + "%"),
         tf.getNullExprProcessor());
+    //数字 规则 | 或的意思
     opRules.put(new RuleRegExp("R2", HiveParser.Number + "%|" +
         HiveParser.IntegralLiteral + "%|" +
         HiveParser.NumberLiteral + "%"),
         tf.getNumExprProcessor());
+    //字符串处理规规则
     opRules
         .put(new RuleRegExp("R3", HiveParser.Identifier + "%|"
         + HiveParser.StringLiteral + "%|" + HiveParser.TOK_CHARSETLITERAL + "%|"
@@ -200,10 +203,13 @@ public class TypeCheckProcFactory {
         + HiveParser.KW_STRUCT + "%|" + HiveParser.KW_EXISTS + "%|"
         + HiveParser.TOK_SUBQUERY_OP_NOTIN + "%"),
         tf.getStrExprProcessor());
+    //布尔值处理规则
     opRules.put(new RuleRegExp("R4", HiveParser.KW_TRUE + "%|"
         + HiveParser.KW_FALSE + "%"), tf.getBoolExprProcessor());
+    //日期处理规格
     opRules.put(new RuleRegExp("R5", HiveParser.TOK_DATELITERAL + "%|"
         + HiveParser.TOK_TIMESTAMPLITERAL + "%"), tf.getDateTimeExprProcessor());
+    //内部字符处理规则
     opRules.put(new RuleRegExp("R6", HiveParser.TOK_INTERVAL_YEAR_MONTH_LITERAL + "%|"
         + HiveParser.TOK_INTERVAL_DAY_TIME_LITERAL + "%|"
         + HiveParser.TOK_INTERVAL_YEAR_LITERAL + "%|"
@@ -212,8 +218,10 @@ public class TypeCheckProcFactory {
         + HiveParser.TOK_INTERVAL_HOUR_LITERAL + "%|"
         + HiveParser.TOK_INTERVAL_MINUTE_LITERAL + "%|"
         + HiveParser.TOK_INTERVAL_SECOND_LITERAL + "%"), tf.getIntervalExprProcessor());
+    //列处理规则
     opRules.put(new RuleRegExp("R7", HiveParser.TOK_TABLE_OR_COL + "%"),
         tf.getColumnExprProcessor());
+    //SUBQUERY_EXPR处理规则
     opRules.put(new RuleRegExp("R8", HiveParser.TOK_SUBQUERY_EXPR + "%"),
         tf.getSubQueryExprProcessor());
 
@@ -221,6 +229,7 @@ public class TypeCheckProcFactory {
     // rule and passes the context along
     Dispatcher disp = new DefaultRuleDispatcher(tf.getDefaultExprProcessor(),
         opRules, tcCtx);
+    //Expr走图流？ MMP哦
     GraphWalker ogw = new ExpressionWalker(disp);
 
     // Create a list of top nodes
