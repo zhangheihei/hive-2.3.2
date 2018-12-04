@@ -11636,6 +11636,13 @@ public class SemanticAnalyzer extends BaseSemanticAnalyzer {
     return genExprNodeDesc(expr, input, true, false);
   }
 
+  /*
+* expr 即where节点下的内容
+* input:行信息（srcREL 原表对应的行信息）
+* subqueryToRelNode:null
+* outerRR:null
+* useCaching:false
+* */
   public ExprNodeDesc genExprNodeDesc(ASTNode expr, RowResolver input,
                                       RowResolver outerRR, Map<ASTNode, RelNode> subqueryToRelNode,
                                       boolean useCaching) throws SemanticException {
