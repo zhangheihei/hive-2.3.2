@@ -105,6 +105,7 @@ public class RuleRegExp implements Rule {
           this.patternWithoutWildCardChar = null;
           this.patternORWildChar = regExp.split("\\|");
       } else {
+        //正则表达式匹配规则
         this.patternWithWildCardChar = Pattern.compile(regExp);
         this.patternWithoutWildCardChar = null;
         this.patternORWildChar = null;

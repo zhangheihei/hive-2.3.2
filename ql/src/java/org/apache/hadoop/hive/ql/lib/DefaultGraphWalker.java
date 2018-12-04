@@ -112,6 +112,9 @@ public class DefaultGraphWalker implements GraphWalker {
    *
    * @throws SemanticException
    */
+  /*
+  * startNodes:是where表达式节点
+  * */
   public void startWalking(Collection<Node> startNodes,
       HashMap<Node, Object> nodeOutput) throws SemanticException {
     toWalk.addAll(startNodes);
