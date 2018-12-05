@@ -229,6 +229,8 @@ public class RuleRegExp implements Rule {
     Matcher m = patternWithWildCardChar.matcher("");
     for (int pos = numElems - 1; pos >= 0; pos--) {
       String nodeName = stack.get(pos).getName() + "%";
+      System.out.printf("edwin RuleRegExp costPatternWithWildCardChar " +
+              "nodeName is %s, Node str name is %s %n", nodeName, stack.get(pos).toString());
       name.insert(0, nodeName);
       m.reset(name);
       if (m.matches()) {
@@ -246,14 +248,14 @@ public class RuleRegExp implements Rule {
   }
 
   /**
-   * Returns true if the rule pattern is valid and has wild character in it.
+   * Returns true if the rule pattern is valid and has not wild character in it.
    */
   boolean rulePatternIsValidWithoutWildCardChar() {
     return patternWithWildCardChar == null && patternWithoutWildCardChar != null && this.patternORWildChar == null;
   }
 
   /**
-   * Returns true if the rule pattern is valid and has wild character in it.
+   * Returns true if the rule pattern is valid OR is wild character .
    */
   boolean rulePatternIsValidWithORWildCardChar() {
     return patternWithoutWildCardChar == null && patternWithWildCardChar == null && this.patternORWildChar != null;

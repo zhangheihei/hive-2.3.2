@@ -69,6 +69,7 @@ public class ExpressionWalker extends DefaultGraphWalker {
     while (!opStack.empty()) {
       Node node = opStack.peek();
 
+      //IdentityHashMap<Node, Object>
       if (node.getChildren() == null ||
               getDispatchedList().containsAll(node.getChildren())) {
         // Dispatch current node
