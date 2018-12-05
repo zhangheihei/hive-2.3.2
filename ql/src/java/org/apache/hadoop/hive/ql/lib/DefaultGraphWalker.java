@@ -152,8 +152,9 @@ public class DefaultGraphWalker implements GraphWalker {
 
     // While there are still nodes to dispatch...
     while (!opStack.empty()) {
+      //查看栈顶对象而不移除它
       Node node = opStack.peek();
-
+      //IdentityHashMap<Node, Object>
       if (node.getChildren() == null ||
               getDispatchedList().containsAll(node.getChildren())) {
         // Dispatch current node
