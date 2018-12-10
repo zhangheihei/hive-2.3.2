@@ -27,7 +27,9 @@ import java.util.List;
 import java.util.Queue;
 import java.util.Set;
 import java.util.Stack;
+import org.apache.hadoop.hive.ql.parse.ASTNode;
 
+import org.apache.hadoop.hive.ql.parse.ASTNodeOrigin;
 import org.apache.hadoop.hive.ql.parse.SemanticException;
 
 /**
@@ -148,6 +150,12 @@ public class DefaultGraphWalker implements GraphWalker {
    */
   protected void walk(Node nd) throws SemanticException {
     // Push the node in the stack
+    if (nd instanceof ASTNode) {
+      System.out.printf("edwin DefualtGraphWalker walk: %s%n", ((ASTNode) nd).toStringTree());
+
+    }
+
+    System.out.printf("edwin DefualtGraphWalker walk: %s%n", ((ASTNode) nd).toStringTree());
     opStack.push(nd);
 
     // While there are still nodes to dispatch...
