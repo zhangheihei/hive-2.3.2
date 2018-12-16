@@ -68,6 +68,7 @@ public class DefaultRuleDispatcher implements Dispatcher {
     // find the rule from the stack specified
     Rule rule = null;
     int minCost = Integer.MAX_VALUE;
+    //将本批次 分支的代价
     for (Rule r : procRules.keySet()) {
       int cost = r.cost(ndStack);
       if ((cost >= 0) && (cost <= minCost)) {

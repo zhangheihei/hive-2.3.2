@@ -44,6 +44,7 @@ public class DefaultGraphWalker implements GraphWalker {
    * opStack keeps the nodes that have been visited, but have not been
    * dispatched yet
    */
+  //保存还没dispatch的节点
   protected final Stack<Node> opStack;
   /**
    * opQueue keeps the nodes in the order that the were dispatched.
@@ -87,6 +88,9 @@ public class DefaultGraphWalker implements GraphWalker {
    *          stack of nodes encountered
    * @throws SemanticException
    */
+  /*
+  * ndStack:还没dispatch的节点
+  * */
   public void dispatch(Node nd, Stack<Node> ndStack) throws SemanticException {
     dispatchAndReturn(nd, ndStack);
   }
@@ -122,6 +126,11 @@ public class DefaultGraphWalker implements GraphWalker {
     toWalk.addAll(startNodes);
     while (toWalk.size() > 0) {
       Node nd = toWalk.remove(0);
+      if (nd instanceof ASTNode) {
+        System.out.printf("edwin DefualtGraphWalker walk: %s%n", ((ASTNode) nd).toStringTree());
+
+      }
+
       walk(nd);
       // Some walkers extending DefaultGraphWalker e.g. ForwardWalker
       // do not use opQueue and rely uniquely in the toWalk structure,
@@ -150,12 +159,6 @@ public class DefaultGraphWalker implements GraphWalker {
    */
   protected void walk(Node nd) throws SemanticException {
     // Push the node in the stack
-    if (nd instanceof ASTNode) {
-      System.out.printf("edwin DefualtGraphWalker walk: %s%n", ((ASTNode) nd).toStringTree());
-
-    }
-
-    System.out.printf("edwin DefualtGraphWalker walk: %s%n", ((ASTNode) nd).toStringTree());
     opStack.push(nd);
 
     // While there are still nodes to dispatch...
