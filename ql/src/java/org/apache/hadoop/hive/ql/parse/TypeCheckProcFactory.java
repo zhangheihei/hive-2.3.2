@@ -234,6 +234,7 @@ public class TypeCheckProcFactory {
 
     // Create a list of top nodes
     ArrayList<Node> topNodes = Lists.<Node>newArrayList(expr);
+    System.out.printf("edwin genExprNode before walk: %s%n", expr.toStringTree());
     HashMap<Node, Object> nodeOutputs = new LinkedHashMap<Node, Object>();
     ogw.startWalking(topNodes, nodeOutputs);
 
