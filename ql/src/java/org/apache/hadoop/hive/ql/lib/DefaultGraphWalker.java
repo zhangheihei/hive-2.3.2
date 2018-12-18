@@ -107,7 +107,9 @@ public class DefaultGraphWalker implements GraphWalker {
         nodeOutputs[i++] = retMap.get(child);
       }
     }
-
+    if (nodeOutputs != null) {
+      System.out.printf("edwin DefualtGraphWalker dispatchAndReturn progress %d%n",nodeOutputs.length);
+    }
     Object retVal = dispatcher.dispatch(nd, ndStack, nodeOutputs);
     retMap.put(nd, retVal);
     return (T) retVal;
@@ -165,11 +167,13 @@ public class DefaultGraphWalker implements GraphWalker {
     while (!opStack.empty()) {
       //查看栈顶对象而不移除它
       Node node = opStack.peek();
+      System.out.printf("-------------edwin DefualtGraphWalker walk outer progress %d%n",opStack.size());
       //IdentityHashMap<Node, Object>
       if (node.getChildren() == null ||
               getDispatchedList().containsAll(node.getChildren())) {
         // Dispatch current node
         if (!getDispatchedList().contains(node)) {
+          System.out.printf("edwin DefualtGraphWalker walk progress %d%n",opStack.size());
           dispatch(node, opStack);
           opQueue.add(node);
         }
