@@ -3998,6 +3998,7 @@ public class CalcitePlanner extends SemanticAnalyzer {
       RelNode limitRel = null;
 
       // First generate all the opInfos for the elements in the from clause
+      //表明到表信息的映射
       Map<String, RelNode> aliasToRel = new HashMap<String, RelNode>();
 
       // 0. Check if we can handle the SubQuery;
@@ -4064,6 +4065,7 @@ public class CalcitePlanner extends SemanticAnalyzer {
       }
 
       // 2. Build Rel for where Clause
+      //查看where 字句
       filterRel = genFilterLogicalPlan(qb, srcRel, aliasToRel, outerNameToPosMap, outerRR, false);
       srcRel = (filterRel == null) ? srcRel : filterRel;
       RelNode starSrcRel = srcRel;
