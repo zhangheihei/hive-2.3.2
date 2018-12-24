@@ -2191,6 +2191,7 @@ public class CalcitePlanner extends SemanticAnalyzer {
 
         // 1. If the table has a Sample specified, bail from Calcite path.
         // 2. if returnpath is on and hivetestmode is on bail
+        //sample 抽样功能
         if (qb.getParseInfo().getTabSample(tableAlias) != null
             || getNameToSplitSampleMap().containsKey(tableAlias)
             || (conf.getBoolVar(HiveConf.ConfVars.HIVE_CBO_RETPATH_HIVEOP)) && (conf.getBoolVar(HiveConf.ConfVars.HIVETESTMODE)) ) {
