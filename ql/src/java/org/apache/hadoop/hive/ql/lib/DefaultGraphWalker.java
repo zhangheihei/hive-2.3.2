@@ -107,6 +107,12 @@ public class DefaultGraphWalker implements GraphWalker {
         nodeOutputs[i++] = retMap.get(child);
       }
     }
+
+    if (nd instanceof ASTNode) {
+      System.out.printf("edwin dispatchAndReturn node is: %s%n", ((ASTNode) nd).toStringTree());
+
+    }
+
     if (nodeOutputs != null) {
       System.out.printf("edwin DefualtGraphWalker dispatchAndReturn progress %d%n",nodeOutputs.length);
     }
@@ -163,6 +169,10 @@ public class DefaultGraphWalker implements GraphWalker {
     // Push the node in the stack
     opStack.push(nd);
 
+    if (nd instanceof ASTNode) {
+      System.out.printf("edwin DefualtGraphWalker walk inner**: %s%n", ((ASTNode) nd).toStringTree());
+
+    }
     // While there are still nodes to dispatch...
     while (!opStack.empty()) {
       //查看栈顶对象而不移除它

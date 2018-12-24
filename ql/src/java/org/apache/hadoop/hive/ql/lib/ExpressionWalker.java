@@ -64,6 +64,10 @@ public class ExpressionWalker extends DefaultGraphWalker {
   protected void walk(Node nd) throws SemanticException {
     // Push the node in the stack
     opStack.push(nd);
+    if (nd instanceof ASTNode) {
+      System.out.printf("edwin ExpressionWalker walk inner**: %s%n", ((ASTNode) nd).toStringTree());
+
+    }
 
     // While there are still nodes to dispatch...
     while (!opStack.empty()) {
