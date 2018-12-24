@@ -273,12 +273,15 @@ public class RuleRegExp implements Rule {
   @Override
   public int cost(Stack<Node> stack) throws SemanticException {
     if (rulePatternIsValidWithoutWildCardChar()) {
+      System.out.printf("edwin RuleRegExp rulePatternIsValidWithoutWildCardChar  %n");
       return costPatternWithoutWildCardChar(stack);
     }
     if (rulePatternIsValidWithWildCardChar()) {
+      System.out.printf("edwin RuleRegExp rulePatternIsValidWithWildCardChar  %n");
       return costPatternWithWildCardChar(stack);
     }
     if (rulePatternIsValidWithORWildCardChar()) {
+      System.out.printf("edwin RuleRegExp rulePatternIsValidWithORWildCardChar %n");
       return costPatternWithORWildCardChar(stack);
     }
     // If we reached here, either :
