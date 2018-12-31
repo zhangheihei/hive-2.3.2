@@ -126,16 +126,19 @@ public class RuleRegExp implements Rule {
    * @return cost of the function
    * @throws SemanticException
    */
+  //计算stack栈里，有没有patternWithoutWildCardChar,必须严格对照
   private int costPatternWithoutWildCardChar(Stack<Node> stack) throws SemanticException {
     int numElems = (stack != null ? stack.size() : 0);
+
+    System.out.printf("edwin costPatternWithoutWildCardChar numElems is %d%n", numElems);
 
     // No elements
     if (numElems == 0) {
       return -1;
     }
-
     int patLen = patternWithoutWildCardChar.length();
     StringBuilder name = new StringBuilder(patLen + numElems);
+    //从栈顶开始找等于patternWithoutWildCardChar的值，只要栈顶没有等于的，那么可以说不符合了。
     for (int pos = numElems - 1; pos >= 0; pos--) {
       String nodeName = stack.get(pos).getName() + "%";
 
@@ -143,6 +146,7 @@ public class RuleRegExp implements Rule {
       System.out.printf("edwin RuleRegExp costPatternWithoutWildCardChar " +
               "nodeName is %s, Node str name is %s, patternWithoutWildCardChar is %s, StringBuild is %s %n", nodeName, stack.get(pos).toString(),
               patternWithoutWildCardChar, name.toString());
+      //从
       if (name.length() >= patLen) {
         if (patternWithoutWildCardChar.contentEquals(name)) {
           return patLen;
