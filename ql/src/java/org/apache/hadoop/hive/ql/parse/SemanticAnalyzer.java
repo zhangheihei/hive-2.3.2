@@ -11637,6 +11637,7 @@ public class SemanticAnalyzer extends BaseSemanticAnalyzer {
   }
 
   /*
+  .............
   * expr 即where节点下的内容
   * input:行信息（srcREL 原表对应的行信息）
 * subqueryToRelNode:null
@@ -12398,7 +12399,7 @@ public class SemanticAnalyzer extends BaseSemanticAnalyzer {
     }
 
     if (ast.getToken().getType() == HiveParser.TOK_ALTERVIEW &&
-        ast.getChild(1).getType() == HiveParser.TOK_QUERY) {
+            ast.getChild(1).getType() == HiveParser.TOK_QUERY) {
       isAlterViewAs = true;
       orReplace = true;
     }
@@ -12407,20 +12408,20 @@ public class SemanticAnalyzer extends BaseSemanticAnalyzer {
 
     if (isMaterialized) {
       createVwDesc = new CreateViewDesc(
-          dbDotTable, cols, comment, tblProps, partColNames,
-          ifNotExists, orReplace, rewriteEnabled, isAlterViewAs,
-          storageFormat.getInputFormat(), storageFormat.getOutputFormat(),
-          location, storageFormat.getSerde(), storageFormat.getStorageHandler(),
-          storageFormat.getSerdeProps());
+              dbDotTable, cols, comment, tblProps, partColNames,
+              ifNotExists, orReplace, rewriteEnabled, isAlterViewAs,
+              storageFormat.getInputFormat(), storageFormat.getOutputFormat(),
+              location, storageFormat.getSerde(), storageFormat.getStorageHandler(),
+              storageFormat.getSerdeProps());
       addDbAndTabToOutputs(qualTabName, TableType.MATERIALIZED_VIEW);
       queryState.setCommandType(HiveOperation.CREATE_MATERIALIZED_VIEW);
     } else {
       createVwDesc = new CreateViewDesc(
-          dbDotTable, cols, comment, tblProps, partColNames,
-          ifNotExists, orReplace, isAlterViewAs, storageFormat.getInputFormat(),
-          storageFormat.getOutputFormat(), storageFormat.getSerde());
+              dbDotTable, cols, comment, tblProps, partColNames,
+              ifNotExists, orReplace, isAlterViewAs, storageFormat.getInputFormat(),
+              storageFormat.getOutputFormat(), storageFormat.getSerde());
       rootTasks.add(TaskFactory.get(new DDLWork(getInputs(), getOutputs(),
-          createVwDesc), conf));
+              createVwDesc), conf));
       addDbAndTabToOutputs(qualTabName, TableType.VIRTUAL_VIEW);
       queryState.setCommandType(HiveOperation.CREATEVIEW);
     }
@@ -12436,7 +12437,7 @@ public class SemanticAnalyzer extends BaseSemanticAnalyzer {
   // validate the (materialized) view statement
   // check semantic conditions
   private void validateCreateView()
-    throws SemanticException {
+          throws SemanticException {
     try {
       Table oldView = getTable(createVwDesc.getViewName(), false);
 
@@ -12456,9 +12457,9 @@ public class SemanticAnalyzer extends BaseSemanticAnalyzer {
       // ALTER VIEW AS SELECT requires the view must exist
       if (createVwDesc.getIsAlterViewAs() && oldView == null) {
         String viewNotExistErrorMsg =
-          "The following view does not exist: " + createVwDesc.getViewName();
+                "The following view does not exist: " + createVwDesc.getViewName();
         throw new SemanticException(
-          ErrorMsg.ALTER_VIEW_AS_SELECT_NOT_EXIST.getMsg(viewNotExistErrorMsg));
+                ErrorMsg.ALTER_VIEW_AS_SELECT_NOT_EXIST.getMsg(viewNotExistErrorMsg));
       }
 
       //replace view
@@ -12467,42 +12468,42 @@ public class SemanticAnalyzer extends BaseSemanticAnalyzer {
         // Don't allow swapping between virtual and materialized view in replace
         if (oldView.getTableType().equals(TableType.VIRTUAL_VIEW) && createVwDesc.isMaterialized()) {
           throw new SemanticException(ErrorMsg.REPLACE_VIEW_WITH_MATERIALIZED,
-              oldView.getTableName());
+                  oldView.getTableName());
         }
 
         if (oldView.getTableType().equals(TableType.MATERIALIZED_VIEW) &&
-            !createVwDesc.isMaterialized()) {
+                !createVwDesc.isMaterialized()) {
           throw new SemanticException(ErrorMsg.REPLACE_MATERIALIZED_WITH_VIEW,
-              oldView.getTableName());
+                  oldView.getTableName());
         }
 
         // Existing table is not a view
         if (!oldView.getTableType().equals(TableType.VIRTUAL_VIEW) &&
-            !oldView.getTableType().equals(TableType.MATERIALIZED_VIEW)) {
+                !oldView.getTableType().equals(TableType.MATERIALIZED_VIEW)) {
           String tableNotViewErrorMsg =
-            "The following is an existing table, not a view: " +
-            createVwDesc.getViewName();
+                  "The following is an existing table, not a view: " +
+                          createVwDesc.getViewName();
           throw new SemanticException(
-            ErrorMsg.EXISTING_TABLE_IS_NOT_VIEW.getMsg(tableNotViewErrorMsg));
+                  ErrorMsg.EXISTING_TABLE_IS_NOT_VIEW.getMsg(tableNotViewErrorMsg));
         }
 
         if (!createVwDesc.isMaterialized()) {
           // if old view has partitions, it could not be replaced
           String partitionViewErrorMsg =
-              "The following view has partition, it could not be replaced: " +
-                  createVwDesc.getViewName();
+                  "The following view has partition, it could not be replaced: " +
+                          createVwDesc.getViewName();
           try {
             if ((createVwDesc.getPartCols() == null ||
-                createVwDesc.getPartCols().isEmpty() ||
-                !createVwDesc.getPartCols().equals(oldView.getPartCols())) &&
-                !oldView.getPartCols().isEmpty() &&
-                !db.getPartitions(oldView).isEmpty()) {
+                    createVwDesc.getPartCols().isEmpty() ||
+                    !createVwDesc.getPartCols().equals(oldView.getPartCols())) &&
+                    !oldView.getPartCols().isEmpty() &&
+                    !db.getPartitions(oldView).isEmpty()) {
               throw new SemanticException(
-                  ErrorMsg.REPLACE_VIEW_WITH_PARTITION.getMsg(partitionViewErrorMsg));
+                      ErrorMsg.REPLACE_VIEW_WITH_PARTITION.getMsg(partitionViewErrorMsg));
             }
           } catch (HiveException e) {
             throw new SemanticException(
-                ErrorMsg.REPLACE_VIEW_WITH_PARTITION.getMsg(partitionViewErrorMsg));
+                    ErrorMsg.REPLACE_VIEW_WITH_PARTITION.getMsg(partitionViewErrorMsg));
           }
         }
       }
@@ -12515,9 +12516,9 @@ public class SemanticAnalyzer extends BaseSemanticAnalyzer {
   public void processPositionAlias(ASTNode ast) throws SemanticException {
     boolean isBothByPos = HiveConf.getBoolVar(conf, ConfVars.HIVE_GROUPBY_ORDERBY_POSITION_ALIAS);
     boolean isGbyByPos = isBothByPos
-        || HiveConf.getBoolVar(conf, ConfVars.HIVE_GROUPBY_POSITION_ALIAS);
+            || HiveConf.getBoolVar(conf, ConfVars.HIVE_GROUPBY_POSITION_ALIAS);
     boolean isObyByPos = isBothByPos
-        || HiveConf.getBoolVar(conf, ConfVars.HIVE_ORDERBY_POSITION_ALIAS);
+            || HiveConf.getBoolVar(conf, ConfVars.HIVE_ORDERBY_POSITION_ALIAS);
 
     Deque<ASTNode> stack = new ArrayDeque<ASTNode>();
     stack.push(ast);
@@ -12561,16 +12562,16 @@ public class SemanticAnalyzer extends BaseSemanticAnalyzer {
                 int pos = Integer.parseInt(node.getText());
                 if (pos > 0 && pos <= selectExpCnt) {
                   groupbyNode.setChild(child_pos,
-                    selectNode.getChild(pos - 1).getChild(0));
+                          selectNode.getChild(pos - 1).getChild(0));
                 } else {
                   throw new SemanticException(
-                    ErrorMsg.INVALID_POSITION_ALIAS_IN_GROUPBY.getMsg(
-                    "Position alias: " + pos + " does not exist\n" +
-                    "The Select List is indexed from 1 to " + selectExpCnt));
+                          ErrorMsg.INVALID_POSITION_ALIAS_IN_GROUPBY.getMsg(
+                                  "Position alias: " + pos + " does not exist\n" +
+                                          "The Select List is indexed from 1 to " + selectExpCnt));
                 }
               } else {
                 warn("Using constant number  " + node.getText() +
-                  " in group by. If you try to use position alias when hive.groupby.position.alias is false, the position alias will be ignored.");
+                        " in group by. If you try to use position alias when hive.groupby.position.alias is false, the position alias will be ignored.");
               }
             }
           }
@@ -12596,17 +12597,17 @@ public class SemanticAnalyzer extends BaseSemanticAnalyzer {
                     colNode.setChild(0, selectNode.getChild(pos - 1).getChild(0));
                   } else {
                     throw new SemanticException(
-                      ErrorMsg.INVALID_POSITION_ALIAS_IN_ORDERBY.getMsg(
-                      "Position alias: " + pos + " does not exist\n" +
-                      "The Select List is indexed from 1 to " + selectExpCnt));
+                            ErrorMsg.INVALID_POSITION_ALIAS_IN_ORDERBY.getMsg(
+                                    "Position alias: " + pos + " does not exist\n" +
+                                            "The Select List is indexed from 1 to " + selectExpCnt));
                   }
                 } else {
                   throw new SemanticException(
-                    ErrorMsg.NO_SUPPORTED_ORDERBY_ALLCOLREF_POS.getMsg());
+                          ErrorMsg.NO_SUPPORTED_ORDERBY_ALLCOLREF_POS.getMsg());
                 }
               } else { //if not using position alias and it is a number.
                 warn("Using constant number " + node.getText() +
-                  " in order by. If you try to use position alias when hive.orderby.position.alias is false, the position alias will be ignored.");
+                        " in order by. If you try to use position alias when hive.orderby.position.alias is false, the position alias will be ignored.");
               }
             }
           }
@@ -12677,7 +12678,7 @@ public class SemanticAnalyzer extends BaseSemanticAnalyzer {
     /* A nice error message should be given to user. */
     if (tbl.isNonNative()) {
       throw new SemanticException(ErrorMsg.ANALYZE_TABLE_NOSCAN_NON_NATIVE.getMsg(tbl
-          .getTableName()));
+              .getTableName()));
     }
   }
 
@@ -12704,7 +12705,7 @@ public class SemanticAnalyzer extends BaseSemanticAnalyzer {
     /* A nice error message should be given to user. */
     if (tbl.isNonNative()) {
       throw new SemanticException(ErrorMsg.ANALYZE_TABLE_PARTIALSCAN_NON_NATIVE.getMsg(tbl
-          .getTableName()));
+              .getTableName()));
     }
 
     /**
@@ -12712,7 +12713,7 @@ public class SemanticAnalyzer extends BaseSemanticAnalyzer {
      */
     if(tbl.getTableType().equals(TableType.EXTERNAL_TABLE)) {
       throw new SemanticException(ErrorMsg.ANALYZE_TABLE_PARTIALSCAN_EXTERNAL_TABLE.getMsg(tbl
-          .getTableName()));
+              .getTableName()));
     }
 
     if (!HiveConf.getBoolVar(conf, HiveConf.ConfVars.HIVESTATSAUTOGATHER)) {
@@ -12785,24 +12786,24 @@ public class SemanticAnalyzer extends BaseSemanticAnalyzer {
     String alias;
     switch(type)
     {
-    case HiveParser.TOK_TABREF:
-      alias = processTable(qb, inputNode);
-      qInSpec = new PTFQueryInputSpec();
-      ((PTFQueryInputSpec)qInSpec).setType(PTFQueryInputType.TABLE);
-      ((PTFQueryInputSpec)qInSpec).setSource(alias);
-      break;
-    case HiveParser.TOK_SUBQUERY:
-      alias = processSubQuery(qb, inputNode);
-      qInSpec = new PTFQueryInputSpec();
-      ((PTFQueryInputSpec)qInSpec).setType(PTFQueryInputType.SUBQUERY);
-      ((PTFQueryInputSpec)qInSpec).setSource(alias);
-      break;
-    case HiveParser.TOK_PTBLFUNCTION:
-      qInSpec = processPTFChain(qb, inputNode);
-      break;
-    default:
-      throw new SemanticException(generateErrorMessage(inputNode,
-          "Unknown input type to PTF"));
+      case HiveParser.TOK_TABREF:
+        alias = processTable(qb, inputNode);
+        qInSpec = new PTFQueryInputSpec();
+        ((PTFQueryInputSpec)qInSpec).setType(PTFQueryInputType.TABLE);
+        ((PTFQueryInputSpec)qInSpec).setSource(alias);
+        break;
+      case HiveParser.TOK_SUBQUERY:
+        alias = processSubQuery(qb, inputNode);
+        qInSpec = new PTFQueryInputSpec();
+        ((PTFQueryInputSpec)qInSpec).setType(PTFQueryInputType.SUBQUERY);
+        ((PTFQueryInputSpec)qInSpec).setSource(alias);
+        break;
+      case HiveParser.TOK_PTBLFUNCTION:
+        qInSpec = processPTFChain(qb, inputNode);
+        break;
+      default:
+        throw new SemanticException(generateErrorMessage(inputNode,
+                "Unknown input type to PTF"));
     }
 
     qInSpec.setAstNode(inputNode);
@@ -12817,11 +12818,11 @@ public class SemanticAnalyzer extends BaseSemanticAnalyzer {
    *   PTF invocation.
    */
   private PartitionedTableFunctionSpec processPTFChain(QB qb, ASTNode ptf)
-      throws SemanticException{
+          throws SemanticException{
     int child_count = ptf.getChildCount();
     if (child_count < 2) {
       throw new SemanticException(generateErrorMessage(ptf,
-                  "Not enough Children " + child_count));
+              "Not enough Children " + child_count));
     }
 
     PartitionedTableFunctionSpec ptfSpec = new PartitionedTableFunctionSpec();
@@ -12857,7 +12858,7 @@ public class SemanticAnalyzer extends BaseSemanticAnalyzer {
      */
     int pSpecIdx = inputIdx + 1;
     ASTNode pSpecNode = ptf.getChildCount() > inputIdx ?
-        (ASTNode) ptf.getChild(pSpecIdx) : null;
+            (ASTNode) ptf.getChild(pSpecIdx) : null;
     if (pSpecNode != null && pSpecNode.getType() == HiveParser.TOK_PARTITIONINGSPEC)
     {
       PartitioningSpec partitioning = processPTFPartitionSpec(pSpecNode);
@@ -12895,7 +12896,7 @@ public class SemanticAnalyzer extends BaseSemanticAnalyzer {
   }
 
   private void handleQueryWindowClauses(QB qb, Phase1Ctx ctx_1, ASTNode node)
-      throws SemanticException {
+          throws SemanticException {
     WindowingSpec spec = qb.getWindowingSpec(ctx_1.dest);
     for(int i=0; i < node.getChildCount(); i++) {
       processQueryWindowClause(spec, (ASTNode) node.getChild(i));
@@ -12965,16 +12966,16 @@ public class SemanticAnalyzer extends BaseSemanticAnalyzer {
   }
 
   private WindowFunctionSpec processWindowFunction(ASTNode node, ASTNode wsNode)
-    throws SemanticException {
+          throws SemanticException {
     WindowFunctionSpec wfSpec = new WindowFunctionSpec();
 
     switch(node.getType()) {
-    case HiveParser.TOK_FUNCTIONSTAR:
-      wfSpec.setStar(true);
-      break;
-    case HiveParser.TOK_FUNCTIONDI:
-      wfSpec.setDistinct(true);
-      break;
+      case HiveParser.TOK_FUNCTIONSTAR:
+        wfSpec.setStar(true);
+        break;
+      case HiveParser.TOK_FUNCTIONDI:
+        wfSpec.setDistinct(true);
+        break;
     }
 
     wfSpec.setExpression(node);
@@ -13001,11 +13002,11 @@ public class SemanticAnalyzer extends BaseSemanticAnalyzer {
       assert (expressionTree.getChildCount() != 0);
       if (expressionTree.getChild(0).getType() == HiveParser.Identifier) {
         String functionName = unescapeIdentifier(expressionTree.getChild(0)
-            .getText());
+                .getText());
         functionName = functionName.toLowerCase();
         if ( FunctionRegistry.LAG_FUNC_NAME.equals(functionName) ||
-            FunctionRegistry.LEAD_FUNC_NAME.equals(functionName)
-            ) {
+                FunctionRegistry.LEAD_FUNC_NAME.equals(functionName)
+                ) {
           return true;
         }
       }
@@ -13019,13 +13020,13 @@ public class SemanticAnalyzer extends BaseSemanticAnalyzer {
   }
 
   private void processQueryWindowClause(WindowingSpec spec, ASTNode node)
-      throws SemanticException {
+          throws SemanticException {
     ASTNode nameNode = (ASTNode) node.getChild(0);
     ASTNode wsNode = (ASTNode) node.getChild(1);
     if(spec.getWindowSpecs() != null && spec.getWindowSpecs().containsKey(nameNode.getText())){
       throw new SemanticException(generateErrorMessage(nameNode,
-          "Duplicate definition of window " + nameNode.getText() +
-          " is not allowed"));
+              "Duplicate definition of window " + nameNode.getText() +
+                      " is not allowed"));
     }
     WindowSpec ws = processWindowSpec(wsNode);
     spec.addWindowSpec(nameNode.getText(), ws);
@@ -13045,16 +13046,16 @@ public class SemanticAnalyzer extends BaseSemanticAnalyzer {
       int type = node.getChild(i).getType();
       switch(type)
       {
-      case HiveParser.Identifier:
-        hasSrcId = true; srcIdIdx = i;
-        break;
-      case HiveParser.TOK_PARTITIONINGSPEC:
-        hasPartSpec = true; partIdx = i;
-        break;
-      case HiveParser.TOK_WINDOWRANGE:
-      case HiveParser.TOK_WINDOWVALUES:
-        hasWF = true; wfIdx = i;
-        break;
+        case HiveParser.Identifier:
+          hasSrcId = true; srcIdIdx = i;
+          break;
+        case HiveParser.TOK_PARTITIONINGSPEC:
+          hasPartSpec = true; partIdx = i;
+          break;
+        case HiveParser.TOK_WINDOWRANGE:
+        case HiveParser.TOK_WINDOWVALUES:
+          hasWF = true; wfIdx = i;
+          break;
       }
     }
 
@@ -13105,16 +13106,16 @@ public class SemanticAnalyzer extends BaseSemanticAnalyzer {
 
     switch(type)
     {
-    case HiveParser.KW_PRECEDING:
-      bs.setDirection(Direction.PRECEDING);
-      break;
-    case HiveParser.KW_FOLLOWING:
-      bs.setDirection(Direction.FOLLOWING);
-      break;
-    case HiveParser.KW_CURRENT:
-      bs.setDirection(Direction.CURRENT);
-      hasAmt = false;
-      break;
+      case HiveParser.KW_PRECEDING:
+        bs.setDirection(Direction.PRECEDING);
+        break;
+      case HiveParser.KW_FOLLOWING:
+        bs.setDirection(Direction.FOLLOWING);
+        break;
+      case HiveParser.KW_CURRENT:
+        bs.setDirection(Direction.CURRENT);
+        hasAmt = false;
+        break;
     }
 
     if ( hasAmt )
@@ -13129,7 +13130,7 @@ public class SemanticAnalyzer extends BaseSemanticAnalyzer {
         int amt = Integer.parseInt(amtNode.getText());
         if ( amt <= 0 ) {
           throw new SemanticException(
-              "Window Frame Boundary Amount must be a positive integer, provided amount is: " + amt);
+                  "Window Frame Boundary Amount must be a positive integer, provided amount is: " + amt);
         }
         bs.setAmt(amt);
       }

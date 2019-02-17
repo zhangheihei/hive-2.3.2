@@ -88,6 +88,7 @@ public class ExpressionWalker extends DefaultGraphWalker {
       // Add a single child and restart the loop
       for (Node childNode : node.getChildren()) {
         if (!getDispatchedList().contains(childNode)) {
+          //shouldByPass暂时不理解
           if(shouldByPass(childNode, node)) {
             retMap.put(childNode, null);
           } else {

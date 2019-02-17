@@ -142,6 +142,7 @@ public class TypeCheckProcFactory {
     // subqueries e.g. select min(b.value) from table b group by b.key
     //                                  having key in (select .. where a = min(b.value)
     if (!ctx.isUseCaching() && ctx.getOuterRR() == null) {
+      System.out.printf("edwin panda go here^^^^^^^^^^^^^^ %n");
       return null;
     }
 

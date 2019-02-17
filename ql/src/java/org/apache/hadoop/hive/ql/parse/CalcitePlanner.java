@@ -1314,12 +1314,15 @@ public class CalcitePlanner extends SemanticAnalyzer {
               conf, HiveConf.ConfVars.HIVECONVERTJOINNOCONDITIONALTASKTHRESHOLD);
       HiveAlgorithmsConf algorithmsConf = new HiveAlgorithmsConf(maxSplitSize, maxMemory);
       HiveRulesRegistry registry = new HiveRulesRegistry();
+      //PlannerContext 环境
       HivePlannerContext confContext = new HivePlannerContext(algorithmsConf, registry, corrScalarRexSQWithAgg);
       RelOptPlanner planner = HiveVolcanoPlanner.createPlanner(confContext);
       final RexBuilder rexBuilder = cluster.getRexBuilder();
+      //不使用apply参数传入进的clustger,反而重新创建
       final RelOptCluster optCluster = RelOptCluster.create(planner, rexBuilder);
 
       this.cluster = optCluster;
+      //relOptSchema其实是CalciteCatalogReader
       this.relOptSchema = relOptSchema;
 
       PerfLogger perfLogger = SessionState.getPerfLogger();
@@ -3987,6 +3990,11 @@ public class CalcitePlanner extends SemanticAnalyzer {
       }
     }
     //递归的遍历QB
+    /*
+    * outerMostQB:true
+    * outerNameToPosMap:null
+    * outerRR:null
+    * */
     private RelNode genLogicalPlan(QB qb, boolean outerMostQB,
                                    ImmutableMap<String, Integer> outerNameToPosMap,
                                    RowResolver outerRR) throws SemanticException {
@@ -4015,6 +4023,7 @@ public class CalcitePlanner extends SemanticAnalyzer {
 
       // 1. Build Rel For Src (SubQuery, TS, Join)
       // 1.1. Recurse over the subqueries to fill the subquery part of the plan
+      //为啥只针对子查询语句？
       for (String subqAlias : qb.getSubqAliases()) {
         QBExpr qbexpr = qb.getSubqForAlias(subqAlias);
         RelNode relNode = genLogicalPlan(qbexpr);

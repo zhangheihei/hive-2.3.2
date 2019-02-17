@@ -116,7 +116,9 @@ public class DefaultGraphWalker implements GraphWalker {
     if (nodeOutputs != null) {
       System.out.printf("edwin DefualtGraphWalker dispatchAndReturn progress %d%n",nodeOutputs.length);
     }
+    //nodeOutputs存放nd的子节点
     Object retVal = dispatcher.dispatch(nd, ndStack, nodeOutputs);
+    //每个nd经过处理
     retMap.put(nd, retVal);
     return (T) retVal;
   }
