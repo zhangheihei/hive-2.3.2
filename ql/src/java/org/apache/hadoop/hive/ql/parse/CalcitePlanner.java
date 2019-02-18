@@ -2235,6 +2235,7 @@ public class CalcitePlanner extends SemanticAnalyzer {
               tableAlias, false);
           colInfo.setSkewedCol((SemanticAnalyzer.isSkewedCol(tableAlias, qb, colName)) ? true
               : false);
+          //行信息 存储列信息
           rr.put(tableAlias, colName, colInfo);
           cInfoLst.add(colInfo);
           System.out.printf("edwin ColumnInfo colName is:%s, tableAlias is %s%n", colName, tableAlias);
@@ -2251,6 +2252,7 @@ public class CalcitePlanner extends SemanticAnalyzer {
           colName = part_col.getName();
           colInfo = new ColumnInfo(colName,
               TypeInfoFactory.getPrimitiveTypeInfo(part_col.getType()), tableAlias, true);
+          //行信息 存储列信息
           rr.put(tableAlias, colName, colInfo);
           cInfoLst.add(colInfo);
           partitionColumns.add(colInfo);
@@ -2271,6 +2273,7 @@ public class CalcitePlanner extends SemanticAnalyzer {
             VirtualColumn vc = vcs.next();
             colInfo = new ColumnInfo(vc.getName(), vc.getTypeInfo(), tableAlias, true,
                 vc.getIsHidden());
+            //行信息 存储列信息
             rr.put(tableAlias, vc.getName().toLowerCase(), colInfo);
             cInfoLst.add(colInfo);
             virtualCols.add(vc);
@@ -2335,6 +2338,7 @@ public class CalcitePlanner extends SemanticAnalyzer {
               optTable, druidTable, ImmutableList.<RelNode>of(scan));
         } else {
           // Build row type from field <type, name>
+          //RelDataType就是CBO中每个数据的类型
           RelDataType rowType = TypeConverter.getType(cluster, rr, null);
           // Build RelOptAbstractTable
           //拿到数据库Name
@@ -3991,7 +3995,7 @@ public class CalcitePlanner extends SemanticAnalyzer {
     }
     //递归的遍历QB
     /*
-    * outerMostQB:true
+    * outerMostQB:true 当时子查询的时候outerMostQB=false
     * outerNameToPosMap:null
     * outerRR:null
     * */
