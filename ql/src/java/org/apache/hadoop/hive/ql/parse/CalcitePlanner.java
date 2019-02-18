@@ -1314,12 +1314,15 @@ public class CalcitePlanner extends SemanticAnalyzer {
               conf, HiveConf.ConfVars.HIVECONVERTJOINNOCONDITIONALTASKTHRESHOLD);
       HiveAlgorithmsConf algorithmsConf = new HiveAlgorithmsConf(maxSplitSize, maxMemory);
       HiveRulesRegistry registry = new HiveRulesRegistry();
+      //PlannerContext 环境
       HivePlannerContext confContext = new HivePlannerContext(algorithmsConf, registry, corrScalarRexSQWithAgg);
       RelOptPlanner planner = HiveVolcanoPlanner.createPlanner(confContext);
       final RexBuilder rexBuilder = cluster.getRexBuilder();
+      //不使用apply参数传入进的clustger,反而重新创建
       final RelOptCluster optCluster = RelOptCluster.create(planner, rexBuilder);
 
       this.cluster = optCluster;
+      //relOptSchema其实是CalciteCatalogReader
       this.relOptSchema = relOptSchema;
 
       PerfLogger perfLogger = SessionState.getPerfLogger();
@@ -2232,6 +2235,7 @@ public class CalcitePlanner extends SemanticAnalyzer {
               tableAlias, false);
           colInfo.setSkewedCol((SemanticAnalyzer.isSkewedCol(tableAlias, qb, colName)) ? true
               : false);
+          //行信息 存储列信息
           rr.put(tableAlias, colName, colInfo);
           cInfoLst.add(colInfo);
           System.out.printf("edwin ColumnInfo colName is:%s, tableAlias is %s%n", colName, tableAlias);
@@ -2248,6 +2252,7 @@ public class CalcitePlanner extends SemanticAnalyzer {
           colName = part_col.getName();
           colInfo = new ColumnInfo(colName,
               TypeInfoFactory.getPrimitiveTypeInfo(part_col.getType()), tableAlias, true);
+          //行信息 存储列信息
           rr.put(tableAlias, colName, colInfo);
           cInfoLst.add(colInfo);
           partitionColumns.add(colInfo);
@@ -2268,6 +2273,7 @@ public class CalcitePlanner extends SemanticAnalyzer {
             VirtualColumn vc = vcs.next();
             colInfo = new ColumnInfo(vc.getName(), vc.getTypeInfo(), tableAlias, true,
                 vc.getIsHidden());
+            //行信息 存储列信息
             rr.put(tableAlias, vc.getName().toLowerCase(), colInfo);
             cInfoLst.add(colInfo);
             virtualCols.add(vc);
@@ -2332,6 +2338,7 @@ public class CalcitePlanner extends SemanticAnalyzer {
               optTable, druidTable, ImmutableList.<RelNode>of(scan));
         } else {
           // Build row type from field <type, name>
+          //RelDataType就是CBO中每个数据的类型
           RelDataType rowType = TypeConverter.getType(cluster, rr, null);
           // Build RelOptAbstractTable
           //拿到数据库Name
@@ -3987,6 +3994,11 @@ public class CalcitePlanner extends SemanticAnalyzer {
       }
     }
     //递归的遍历QB
+    /*
+    * outerMostQB:true 当时子查询的时候outerMostQB=false
+    * outerNameToPosMap:null
+    * outerRR:null
+    * */
     private RelNode genLogicalPlan(QB qb, boolean outerMostQB,
                                    ImmutableMap<String, Integer> outerNameToPosMap,
                                    RowResolver outerRR) throws SemanticException {
@@ -4015,6 +4027,7 @@ public class CalcitePlanner extends SemanticAnalyzer {
 
       // 1. Build Rel For Src (SubQuery, TS, Join)
       // 1.1. Recurse over the subqueries to fill the subquery part of the plan
+      //为啥只针对子查询语句？
       for (String subqAlias : qb.getSubqAliases()) {
         QBExpr qbexpr = qb.getSubqForAlias(subqAlias);
         RelNode relNode = genLogicalPlan(qbexpr);

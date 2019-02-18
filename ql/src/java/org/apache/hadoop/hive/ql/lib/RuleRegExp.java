@@ -144,7 +144,8 @@ public class RuleRegExp implements Rule {
 
       name.insert(0, nodeName);
       System.out.printf("edwin RuleRegExp costPatternWithoutWildCardChar " +
-              "nodeName is %s, Node str name is %s, patternWithoutWildCardChar is %s, StringBuild is %s %n", nodeName, stack.get(pos).toString(),
+              "nodeName is %s, Node str name is %s, patternWithoutWildCardChar is %s, StringBuild is %s %n",
+              nodeName, stack.get(pos).toString(),
               patternWithoutWildCardChar, name.toString());
       //从
       if (name.length() >= patLen) {
