@@ -106,7 +106,9 @@ public class RelOptHiveTable extends RelOptAbstractTable {
     //虚拟列
     this.hiveVirtualCols = ImmutableList.copyOf(hiveVirtualCols);
     this.hiveConf = hconf;
+    //一开始为空的，不知道什么时候填充
     this.partitionCache = partitionCache;
+    //在Calcite类中默认是 0
     this.noColsMissingStats = noColsMissingStats;
   }
 
