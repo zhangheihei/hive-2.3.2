@@ -290,6 +290,7 @@ public class SemanticAnalyzer extends BaseSemanticAnalyzer {
    */
   private final HashMap<String, SplitSample> nameToSplitSample;
   Map<GroupByOperator, Set<String>> groupOpToInputTables;
+  //CBO优化使用
   Map<String, PrunedPartitionList> prunedPartitions;
   protected List<FieldSchema> resultSchema;
   protected CreateViewDesc createVwDesc;
