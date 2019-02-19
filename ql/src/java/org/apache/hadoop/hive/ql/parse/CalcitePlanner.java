@@ -2354,7 +2354,7 @@ public class CalcitePlanner extends SemanticAnalyzer {
                   rowType, tabMetaData, nonPartitionColumns, partitionColumns, virtualCols, conf,
                   partitionCache, noColsMissingStats);
           // Build Hive Table Scan Rel
-          //relNode就是一张表的所有信息
+          //relNode就是一个relational expression,表结构也是一个关系表达式
           tableRel = new HiveTableScan(cluster, cluster.traitSetOf(HiveRelNode.CONVENTION), optTable,
               null == tableAlias ? tabMetaData.getTableName() : tableAlias,
               getAliasId(tableAlias, qb), HiveConf.getBoolVar(conf,
