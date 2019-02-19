@@ -2339,6 +2339,7 @@ public class CalcitePlanner extends SemanticAnalyzer {
         } else {
           // Build row type from field <type, name>
           //RelDataType就是CBO中每个数据的类型
+          //rowType 是表的整个行信息struct类型
           RelDataType rowType = TypeConverter.getType(cluster, rr, null);
           // Build RelOptAbstractTable
           //拿到数据库Name

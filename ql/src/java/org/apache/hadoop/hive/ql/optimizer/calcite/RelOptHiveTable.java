@@ -91,15 +91,24 @@ public class RelOptHiveTable extends RelOptAbstractTable {
       List<ColumnInfo> hivePartitionCols, List<VirtualColumn> hiveVirtualCols, HiveConf hconf,
       Map<String, PrunedPartitionList> partitionCache, AtomicInteger noColsMissingStats) {
     super(calciteSchema, qualifiedTblName, rowType);
+    //Table在整个元数据中的信息
     this.hiveTblMetadata = hiveTblMetadata;
+    //正常列，非分区列
     this.hiveNonPartitionCols = ImmutableList.copyOf(hiveNonPartitionCols);
+    //正常列LIST转换为 列顺序到列信息的映射，从0开始
     this.hiveNonPartitionColsMap = HiveCalciteUtil.getColInfoMap(hiveNonPartitionCols, 0);
+    //分区列
     this.hivePartitionCols = ImmutableList.copyOf(hivePartitionCols);
+    //分区列LIST转换为 列顺序到列信息的映射
     this.hivePartitionColsMap = HiveCalciteUtil.getColInfoMap(hivePartitionCols, hiveNonPartitionColsMap.size());
+    //非虚拟列的个数
     this.noOfNonVirtualCols = hiveNonPartitionCols.size() + hivePartitionCols.size();
+    //虚拟列
     this.hiveVirtualCols = ImmutableList.copyOf(hiveVirtualCols);
     this.hiveConf = hconf;
+    //一开始为空的，不知道什么时候填充
     this.partitionCache = partitionCache;
+    //在Calcite类中默认是 0
     this.noColsMissingStats = noColsMissingStats;
   }
 

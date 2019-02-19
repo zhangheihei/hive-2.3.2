@@ -176,6 +176,7 @@ public class RuleRegExp implements Rule {
     }
 
     // These DS are used to cache previously created String
+    //适配第一个规则的时候，将栈上的所有链条就保存起来
     Map<Integer,String> cachedNames = new HashMap<Integer,String>();
     int maxDepth = numElems;
     int maxLength = 0;

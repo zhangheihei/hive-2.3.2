@@ -69,6 +69,7 @@ public class DefaultRuleDispatcher implements Dispatcher {
     Rule rule = null;
     int minCost = Integer.MAX_VALUE;
     //将本批次 分支的代价,找出代价最低的规则
+    //对每个rule适配栈内容，找出rule中代价最低的
     for (Rule r : procRules.keySet()) {
       int cost = r.cost(ndStack);
       if ((cost >= 0) && (cost <= minCost)) {
@@ -76,7 +77,8 @@ public class DefaultRuleDispatcher implements Dispatcher {
         rule = r;
       }
     }
-
+    //各类节点的处理器
+    //有规则的话就是用那个规则的处理器
     NodeProcessor proc;
 
     if (rule == null) {

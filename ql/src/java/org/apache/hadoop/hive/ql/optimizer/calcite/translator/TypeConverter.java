@@ -131,8 +131,9 @@ public class TypeConverter {
     //遍历所有列名
     for (ColumnInfo ci : rs.getSignature()) {
       if (neededCols == null || neededCols.contains(ci.getInternalName())) {
-        System.out.printf("edwin ColumnInfo typeInfo is:%s, typeInfo type is:%s, insternaleName is:%s%n",
-                ci.getType().toString(), ci.getType().toString(),ci.getInternalName());
+        System.out.printf("edwin ColumnInfo typeInfo is:%s, typeInfo type is:%s, insternaleName is:%s, RelDataType" +
+                        "is:%s%n",
+                ci.getType().toString(), ci.getType().toString(),ci.getInternalName(), convert(ci.getType(), dtFactory).toString());
         //ci.getType()就是拿string(TypeInfo信息)
         fieldTypes.add(convert(ci.getType(), dtFactory));
         fieldNames.add(ci.getInternalName());
