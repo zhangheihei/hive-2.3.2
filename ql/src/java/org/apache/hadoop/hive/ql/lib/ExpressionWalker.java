@@ -46,6 +46,15 @@ public class ExpressionWalker extends DefaultGraphWalker {
       ASTNode parentOp = (ASTNode)parentNode;
       //subquery either in WHERE <LHS> IN <SUBQUERY> form OR WHERE EXISTS <SUBQUERY> form
       //in first case LHS should not be bypassed
+      /*
+      * SELECT *
+FROM A
+WHERE A.a IN (SELECT foo FROM B);
+
+SELECT A
+FROM T1
+WHERE EXISTS (SELECT B FROM T2 WHERE T1.X = T2.Y)
+      * */
       assert(parentOp.getChildCount() == 2 || parentOp.getChildCount()==3);
       if(parentOp.getChildCount() == 3 && (ASTNode)childNode == parentOp.getChild(2)) {
         return false;
@@ -88,7 +97,7 @@ public class ExpressionWalker extends DefaultGraphWalker {
       // Add a single child and restart the loop
       for (Node childNode : node.getChildren()) {
         if (!getDispatchedList().contains(childNode)) {
-          //shouldByPass暂时不理解
+          //shouldByPass暂时不理解,TOKEN_QUERY_EXPR在前面已经处理过
           if(shouldByPass(childNode, node)) {
             retMap.put(childNode, null);
           } else {

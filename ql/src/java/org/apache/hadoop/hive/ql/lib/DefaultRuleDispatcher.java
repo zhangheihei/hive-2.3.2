@@ -85,6 +85,7 @@ public class DefaultRuleDispatcher implements Dispatcher {
       proc = defaultProc;
     } else {
       proc = procRules.get(rule);
+      System.out.printf("edwin dispatch nodel rule is %s", rule.getName());
     }
 
     // Do nothing in case proc is null

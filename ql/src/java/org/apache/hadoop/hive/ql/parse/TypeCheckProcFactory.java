@@ -1203,10 +1203,16 @@ public class TypeCheckProcFactory {
     }
 
     @Override
+    /*
+    *nd:当前要dispatch的节点
+    * stack:以nd为栈顶元素的栈
+    * procCtx:TypeCheckCtx 这个环境里主要是input  行信息
+     */
     public Object process(Node nd, Stack<Node> stack, NodeProcessorCtx procCtx,
         Object... nodeOutputs) throws SemanticException {
 
       TypeCheckCtx ctx = (TypeCheckCtx) procCtx;
+      System.out.printf("edwin panda NodeProcesser process expr default process%n");
 
       ExprNodeDesc desc = TypeCheckProcFactory.processGByExpr(nd, procCtx);
       if (desc != null) {
@@ -1234,12 +1240,14 @@ public class TypeCheckProcFactory {
         }
         return desc;
       }
-
+      System.out.printf("edwin panda NodeProcesser process expr default process%n");
       if (ctx.getError() != null) {
         return null;
       }
 
       ASTNode expr = (ASTNode) nd;
+      System.out.printf("edwin panda NodeProcesser process expr is %s, expr tree is " +
+              "%s, expr type is %d%n", expr.toString(), expr.toStringTree(), expr.getType());
 
       /*
        * A Windowing specification get added as a child to a UDAF invocation to distinguish it
@@ -1251,6 +1259,8 @@ public class TypeCheckProcFactory {
        * The difference is that there is translation for Window related tokens, so we just
        * return null;
        */
+
+      //panda的SQL没有windowingTokens
       if (windowingTokens.contains(expr.getType())) {
         if (!ctx.getallowWindowing())
           throw new SemanticException(SemanticAnalyzer.generateErrorMessage(expr,

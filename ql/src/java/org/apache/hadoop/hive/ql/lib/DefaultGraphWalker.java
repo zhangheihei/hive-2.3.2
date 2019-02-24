@@ -130,6 +130,7 @@ public class DefaultGraphWalker implements GraphWalker {
    */
   /*
   * startNodes:是where表达式节点
+  * nodeOutput入参是认为NULL
   * */
   public void startWalking(Collection<Node> startNodes,
       HashMap<Node, Object> nodeOutput) throws SemanticException {

@@ -38,7 +38,7 @@ public class HiveVolcanoPlanner extends VolcanoPlanner {
   public HiveVolcanoPlanner(HivePlannerContext conf) {
     super(HiveCost.FACTORY, conf);
   }
-
+  //Planner中包含 traitDef
   public static RelOptPlanner createPlanner(HivePlannerContext conf) {
     final VolcanoPlanner planner = new HiveVolcanoPlanner(conf);
     planner.addRelTraitDef(ConventionTraitDef.INSTANCE);

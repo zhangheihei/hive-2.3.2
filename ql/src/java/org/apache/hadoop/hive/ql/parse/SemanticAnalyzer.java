@@ -11648,7 +11648,7 @@ public class SemanticAnalyzer extends BaseSemanticAnalyzer {
   public ExprNodeDesc genExprNodeDesc(ASTNode expr, RowResolver input,
                                       RowResolver outerRR, Map<ASTNode, RelNode> subqueryToRelNode,
                                       boolean useCaching) throws SemanticException {
-
+    //TypeCheckCtx 这个环境里主要是input  行信息
     TypeCheckCtx tcCtx = new TypeCheckCtx(input, useCaching, false);
     tcCtx.setOuterRR(outerRR);
     tcCtx.setSubqueryToRelNode(subqueryToRelNode);
@@ -11684,7 +11684,7 @@ public class SemanticAnalyzer extends BaseSemanticAnalyzer {
     /*
   * expr 即where节点下的内容
   * input:行信息（srcREL 原表对应的行信息）
-* tcCtx
+* tcCtx：保存了行信息
 * */
   public ExprNodeDesc genExprNodeDesc(ASTNode expr, RowResolver input,
       TypeCheckCtx tcCtx) throws SemanticException {
@@ -11697,6 +11697,7 @@ public class SemanticAnalyzer extends BaseSemanticAnalyzer {
 
     // If the current subExpression is pre-calculated, as in Group-By etc.
     ExprNodeDesc cached = null;
+    //没有使用Cache,熊猫
     if (tcCtx.isUseCaching()) {
       cached = getExprNodeDescCached(expr, input);
     }

@@ -1289,6 +1289,7 @@ public class CalcitePlanner extends SemanticAnalyzer {
     // TODO: Do we need to keep track of RR, ColNameToPosMap for every op or
     // just last one.
     //表信息到行信息的映射,RowResolver中存放着普通列，分区列，虚拟列
+    //ReloNode-hivetableScan Calcite的存储方式
     LinkedHashMap<RelNode, RowResolver>                   relToHiveRR                   = new LinkedHashMap<RelNode, RowResolver>();
     //表信息到列的map（位置）映射
     LinkedHashMap<RelNode, ImmutableMap<String, Integer>> relToHiveColNameCalcitePosMap = new LinkedHashMap<RelNode, ImmutableMap<String, Integer>>();
@@ -2356,6 +2357,9 @@ public class CalcitePlanner extends SemanticAnalyzer {
                   partitionCache, noColsMissingStats);
           // Build Hive Table Scan Rel
           //relNode就是一个relational expression,表结构也是一个关系表达式
+          System.out.printf("edwin HiveTableScan param tableAlias is:%s," +
+                          " tableAliasId is %s%n", null == tableAlias ? tabMetaData.getTableName() : tableAlias,
+                  getAliasId(tableAlias, qb));
           tableRel = new HiveTableScan(cluster, cluster.traitSetOf(HiveRelNode.CONVENTION), optTable,
               null == tableAlias ? tabMetaData.getTableName() : tableAlias,
               getAliasId(tableAlias, qb), HiveConf.getBoolVar(conf,
@@ -2365,6 +2369,7 @@ public class CalcitePlanner extends SemanticAnalyzer {
 
         // 6. Add Schema(RR) to RelNode-Schema map
         //rr是行信息，tableRel整个表信息
+        //又是列名和列索引
         ImmutableMap<String, Integer> hiveToCalciteColMap = buildHiveToCalciteColumnMap(rr,
             tableRel);
         relToHiveRR.put(tableRel, rr);
@@ -2391,7 +2396,7 @@ public class CalcitePlanner extends SemanticAnalyzer {
 
     /*
   * filterExpr 即where节点下的内容
-  * srcREl:源表的所有信息
+  * srcREl:源表的所有信息，hiveTableScan
   * outerNameToPosMap:null
   * outerRR:null
   * useCaching:false
@@ -2516,7 +2521,7 @@ public class CalcitePlanner extends SemanticAnalyzer {
     }
     /*
    * node 即where节点下的内容
-   * srcREl:源表的所有信息
+   * srcREl:源表的所有信息,relNode 关系表达式 hiveTableScan
    * subQueryToRelNode:
    * forHavingClause:false
    * 如果条件语句中没有TOK_SUBQUERY_EXPR，就什么都不错
@@ -2526,7 +2531,7 @@ public class CalcitePlanner extends SemanticAnalyzer {
 
         Set<ASTNode> corrScalarQueriesWithAgg = new HashSet<ASTNode>();
         //disallow subqueries which HIVE doesn't currently support
-        //检查标准是查看TOK_SUBQUERY_EXPR，但是熊猫参数没有
+        //检查标准是查看TOK_SUBQUERY_EXPR，但是熊猫参数没有,查看即where节点下的内容有无该TOK_SUBQUERY_EXPR
         subqueryRestrictionCheck(qb, node, srcRel, forHavingClause, corrScalarQueriesWithAgg);
         Deque<ASTNode> stack = new ArrayDeque<ASTNode>();
         stack.push(node);
@@ -2574,7 +2579,7 @@ public class CalcitePlanner extends SemanticAnalyzer {
     //生成过滤节点
     /*
     * searchCond 即where节点下的内容
-    * srcREl:源表的所有信息
+    * srcREl:源表的所有信息,relNode 关系表达式 hiveTableScan
     * aliasToRel:没有使用
     * outerNameToPosMap:null
     * outerRR:null
@@ -2635,6 +2640,14 @@ public class CalcitePlanner extends SemanticAnalyzer {
     }
 
     //生成过滤节点 Filter即where表达式
+    /*
+    * qb  SQL中的整个查询信息
+    * srcRel:relNode 关系表达式 hiveTableScan
+    * aliasToRel:表名到关系表达式的映射
+    * outerNameToPosMap: null
+    * outerRR:null
+    * forHavingClause:false
+    * */
     private RelNode genFilterLogicalPlan(QB qb, RelNode srcRel, Map<String, RelNode> aliasToRel,
               ImmutableMap<String, Integer> outerNameToPosMap, RowResolver outerRR,
                                          boolean forHavingClause) throws SemanticException {
@@ -4049,7 +4062,7 @@ public class CalcitePlanner extends SemanticAnalyzer {
       // 1.2 Recurse over all the source tables
       for (String tableAlias : qb.getTabAliases()) {
         System.out.printf("edwin SubQuery tableAlias is %s, tableName is %s%n", tableAlias, qb.getTabNameForAlias(tableAlias));
-        //表中的所有信息，包装到RelNode
+        //表中的所有信息，包装到RelNode，hivetableScan
         RelNode op = genTableLogicalPlan(tableAlias, qb);
         aliasToRel.put(tableAlias, op);
       }

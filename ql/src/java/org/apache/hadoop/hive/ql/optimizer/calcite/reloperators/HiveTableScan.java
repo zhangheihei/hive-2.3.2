@@ -93,14 +93,22 @@ public class HiveTableScan extends TableScan implements HiveRelNode {
 
   private HiveTableScan(RelOptCluster cluster, RelTraitSet traitSet, RelOptHiveTable table,
       String alias, String concatQbIDAlias, RelDataType newRowtype, boolean useQBIdInDigest, boolean insideView) {
+    //TraitsUtil.getDefaultTraitSet(cluster)拿到默认的TraitSet和HiveVolcanoPlanner里默认注册的一致
+    //之所以不直接拿cluster里已有的，估计是因为后续会忘cluster里添加新的trait
     super(cluster, TraitsUtil.getDefaultTraitSet(cluster), table);
     assert getConvention() == HiveRelNode.CONVENTION;
+    //表别名, 真正的标的数据已经存放到super里
     this.tblAlias = alias;
+    //表ID，也是表名
     this.concatQbIDAlias = concatQbIDAlias;
+    //整个行信息，也就是每个列的type组成的结构体
     this.hiveTableScanRowType = newRowtype;
     Pair<ImmutableList<Integer>, ImmutableSet<Integer>> colIndxPair = buildColIndxsFrmReloptHT(table, newRowtype);
+    //表实际列的索引列表
     this.neededColIndxsFrmReloptHT = colIndxPair.getKey();
+    //表虚拟列和分区列的索引列表
     this.viurtualOrPartColIndxsInTS = colIndxPair.getValue();
+    //hive.cbo.returnpath.hiveop参数 默认false
     this.useQBIdInDigest = useQBIdInDigest;
     this.insideView = insideView;
   }
@@ -206,6 +214,7 @@ public class HiveTableScan extends TableScan implements HiveRelNode {
     return viurtualOrPartColIndxsInTS;
   }
 
+  //这段代码入参scanRowType和relOptHTable.getRowType()是一致的，为啥要多此一举
   private static Pair<ImmutableList<Integer>, ImmutableSet<Integer>> buildColIndxsFrmReloptHT(
       RelOptHiveTable relOptHTable, RelDataType scanRowType) {
     RelDataType relOptHtRowtype = relOptHTable.getRowType();
@@ -214,8 +223,10 @@ public class HiveTableScan extends TableScan implements HiveRelNode {
     ImmutableSet<Integer> viurtualOrPartColIndxsInTS;
     ImmutableSet.Builder<Integer> viurtualOrPartColIndxsInTSBldr = new ImmutableSet.Builder<Integer>();
 
+    //列名和索引顺序
     Map<String, Integer> colNameToPosInReloptHT = HiveCalciteUtil
         .getRowColNameIndxMap(relOptHtRowtype.getFieldList());
+    //只有列名
     List<String> colNamesInScanRowType = scanRowType.getFieldNames();
 
     int partOrVirtualColStartPosInrelOptHtRowtype = relOptHTable.getNonPartColumns().size();
@@ -227,8 +238,9 @@ public class HiveTableScan extends TableScan implements HiveRelNode {
         viurtualOrPartColIndxsInTSBldr.add(i);
       }
     }
-
+    //表实际列的索引列表
     neededColIndxsFrmReloptHT = neededColIndxsFrmReloptHTBldr.build();
+    //表虚拟列和分区列的索引列表
     viurtualOrPartColIndxsInTS = viurtualOrPartColIndxsInTSBldr.build();
 
     return new Pair<ImmutableList<Integer>, ImmutableSet<Integer>>(neededColIndxsFrmReloptHT,
