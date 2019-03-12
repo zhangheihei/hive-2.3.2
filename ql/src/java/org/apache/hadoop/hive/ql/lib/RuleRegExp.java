@@ -183,6 +183,7 @@ public class RuleRegExp implements Rule {
     int maxLength = 0;
 
     // For every pattern
+    //遍历每个字符串 查看是否符合
     for (String pattern : patternORWildChar) {
       int patLen = pattern.length();
 
@@ -200,8 +201,11 @@ public class RuleRegExp implements Rule {
         // We are going to build the name
         StringBuilder name = new StringBuilder(patLen + numElems);
         if (maxLength != 0) {
+          //为什么新的pattern开始匹配的时候，要从上一次的栈位置开始适配，而不是重头开始 （理解错误）
+          //正确理解：将栈上的节点都缓存起来，去适配下一个pattern
           name.append(cachedNames.get(maxLength));
         }
+        //从栈顶开始
         for (int pos = maxDepth - 1; pos >= 0; pos--) {
           String nodeName = stack.get(pos).getName() + "%";
           name.insert(0, nodeName);

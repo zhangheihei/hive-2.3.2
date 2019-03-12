@@ -546,6 +546,11 @@ public final class FunctionRegistry {
 
   public static FunctionInfo getFunctionInfo(String functionName) throws SemanticException {
     FunctionInfo info = getTemporaryFunctionInfo(functionName);
+    if (info != null) {
+      System.out.printf("edwin  getTemporaryFunctionInfo FunctionInfo %n");
+    }else {
+      System.out.printf("edwin  system.getFunctionInfo FunctionInfo %n");
+    }
     return info != null ? info : system.getFunctionInfo(functionName);
   }
 

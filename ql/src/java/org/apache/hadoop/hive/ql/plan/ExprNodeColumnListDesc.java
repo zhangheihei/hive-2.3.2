@@ -27,6 +27,7 @@ import org.apache.hadoop.hive.serde2.typeinfo.TypeInfo;
 /**
  * Dummy desc only for populating TOK_ALLCOLREF and should not be used
  * outside of TypeCheckProcFactory
+ * TOK_ALLCOLREF 指的就是select *
  */
 public class ExprNodeColumnListDesc extends ExprNodeDesc {
 

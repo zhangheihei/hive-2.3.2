@@ -39,6 +39,7 @@ import org.apache.hadoop.hive.ql.exec.RowSchema;
 public class RowResolver implements Serializable{
   private static final long serialVersionUID = 1L;
   private RowSchema rowSchema;
+  //结构 表名：列名：列信息
   private LinkedHashMap<String, LinkedHashMap<String, ColumnInfo>> rslvMap;
 
   private HashMap<String, String[]> invRslvMap;

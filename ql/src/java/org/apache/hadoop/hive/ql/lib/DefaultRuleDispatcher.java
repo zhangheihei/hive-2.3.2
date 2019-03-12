@@ -61,6 +61,9 @@ public class DefaultRuleDispatcher implements Dispatcher {
    * @throws SemanticException
    */
   @Override
+  /*
+  * nodeOutputs:nd元素的子节点
+  * */
   public Object dispatch(Node nd, Stack<Node> ndStack, Object... nodeOutputs)
       throws SemanticException {
 
@@ -85,7 +88,7 @@ public class DefaultRuleDispatcher implements Dispatcher {
       proc = defaultProc;
     } else {
       proc = procRules.get(rule);
-      System.out.printf("edwin dispatch nodel rule is %s", rule.getName());
+      System.out.printf("edwin dispatch nodel rule is %s%n", rule.getName());
     }
 
     // Do nothing in case proc is null

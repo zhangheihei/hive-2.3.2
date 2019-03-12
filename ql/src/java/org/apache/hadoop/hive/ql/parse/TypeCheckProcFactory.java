@@ -189,7 +189,7 @@ public class TypeCheckProcFactory {
     opRules.put(new RuleRegExp("R1", HiveParser.TOK_NULL + "%"),
         tf.getNullExprProcessor());
     //数字 规则 | 或的意思
-    opRules.put(new RuleRegExp("R2", HiveParser.Number + "%|" +
+      opRules.put(new RuleRegExp("R2", HiveParser.Number + "%|" +
         HiveParser.IntegralLiteral + "%|" +
         HiveParser.NumberLiteral + "%"),
         tf.getNumExprProcessor());
@@ -628,20 +628,25 @@ public class TypeCheckProcFactory {
 
       ASTNode expr = (ASTNode) nd;
       ASTNode parent = stack.size() > 1 ? (ASTNode) stack.get(stack.size() - 2) : null;
+      //拿到整个行信息
       RowResolver input = ctx.getInputRR();
 
       if (expr.getType() != HiveParser.TOK_TABLE_OR_COL) {
+        //标志本次context中有错误
         ctx.setError(ErrorMsg.INVALID_COLUMN.getMsg(expr), expr);
         return null;
       }
 
+      //一个TOK_TABLE_OR_COL符号下肯定只有一个列名或者表名
       assert (expr.getChildCount() == 1);
       String tableOrCol = BaseSemanticAnalyzer.unescapeIdentifier(expr
           .getChild(0).getText());
 
+      //检验是否为表名
       boolean isTableAlias = input.hasTableAlias(tableOrCol);
+      //拿到列信息
       ColumnInfo colInfo = input.get(null, tableOrCol);
-
+      System.out.printf("R7 ColumnExprProcessor isTableAlias is %b, cloInfo is %s%n", isTableAlias, colInfo);
       // try outer row resolver
       if(ctx.getOuterRR() != null && colInfo == null && !isTableAlias) {
         RowResolver outerRR = ctx.getOuterRR();
@@ -664,6 +669,7 @@ public class TypeCheckProcFactory {
         }
       } else {
         if (colInfo == null) {
+          //既不是表名，也不是列名
           // It's not a column or a table alias.
           if (input.getIsExprResolver()) {
             ASTNode exprNode = expr;
@@ -688,6 +694,7 @@ public class TypeCheckProcFactory {
           }
         } else {
           // It's a column.
+          //列信息包装成ExprNode
           return toExprNodeDesc(colInfo);
         }
       }
@@ -788,6 +795,7 @@ public class TypeCheckProcFactory {
       windowingTokens.add(HiveParser.TOK_NULLS_LAST);
     }
 
+    //什么是RedundantConversion冗余转换，熊猫不是函数 肯定false
     protected static boolean isRedundantConversionFunction(ASTNode expr,
         boolean isFunction, ArrayList<ExprNodeDesc> children) {
       if (!isFunction) {
@@ -820,6 +828,7 @@ public class TypeCheckProcFactory {
         if (funcText == null) {
           funcText = expr.getText();
         }
+        System.out.printf("edwin TypeCheckFactory funcText is %s%n", funcText);
       } else {
         // For TOK_FUNCTION, the function name is stored in the first child,
         // unless it's in our
@@ -904,7 +913,13 @@ public class TypeCheckProcFactory {
         }
       }
     }
-
+    /*
+    *expr：当前节点
+    * isFunction:是否是函数节点
+    * children:expr的子节点
+    * ctx:当前的环境, foldExpr is false
+    * isFunction:熊猫 是FALSE
+     */
     protected ExprNodeDesc getXpathOrFuncExprNodeDesc(ASTNode expr,
         boolean isFunction, ArrayList<ExprNodeDesc> children, TypeCheckCtx ctx)
         throws SemanticException, UDFArgumentException {
@@ -978,17 +993,24 @@ public class TypeCheckProcFactory {
           throw new SemanticException(ErrorMsg.NON_COLLECTION_TYPE.getMsg(expr, myt.getTypeName()));
         }
       } else {
+        //熊猫
         // other operators or functions
         FunctionInfo fi = FunctionRegistry.getFunctionInfo(funcText);
 
+        //=号这些都是有默认UDF函数的。。。
+        if (fi != null) {
+          System.out.printf("edwin  getXpathOrFuncExprNodeDesc FunctionInfo is:%s%n", fi.toString());
+        }
+
         if (fi == null) {
+          System.out.printf("edwin  getXpathOrFuncExprNodeDesc FunctionInfo is null %n");
           if (isFunction) {
             throw new SemanticException(ErrorMsg.INVALID_FUNCTION
                 .getMsg((ASTNode) expr.getChild(0)));
           } else {
             throw new SemanticException(ErrorMsg.INVALID_FUNCTION.getMsg(expr));
           }
-        }
+      }
 
         // getGenericUDF() actually clones the UDF. Just call it once and reuse.
         GenericUDF genericUDF = fi.getGenericUDF();
@@ -1026,25 +1048,32 @@ public class TypeCheckProcFactory {
               break;
           }
         }
+        System.out.printf("edwin  getXpathOrFuncExprNodeDesc FunctionInfo isNative:%b, isFunction:%b%n", fi.isNative(), isFunction);
 
         validateUDF(expr, isFunction, ctx, fi, children, genericUDF);
 
         // Try to infer the type of the constant only if there are two
         // nodes, one of them is column and the other is numeric const
+        //当isFUnction为false时， 那么该函数就肯定是=, =>这一类的。必然一边是列 一边是值
         if (genericUDF instanceof GenericUDFBaseCompare
             && children.size() == 2
             && ((children.get(0) instanceof ExprNodeConstantDesc
                 && children.get(1) instanceof ExprNodeColumnDesc)
                 || (children.get(0) instanceof ExprNodeColumnDesc
                     && children.get(1) instanceof ExprNodeConstantDesc))) {
+          System.out.printf("edwin  getXpathOrFuncExprNodeDesc FunctionInfo GenericUDFBaseCompare%n");
+
+          //常量的位置
           int constIdx =
               children.get(0) instanceof ExprNodeConstantDesc ? 0 : 1;
 
           String constType = children.get(constIdx).getTypeString().toLowerCase();
           String columnType = children.get(1 - constIdx).getTypeString().toLowerCase();
           final PrimitiveTypeInfo colTypeInfo = TypeInfoFactory.getPrimitiveTypeInfo(columnType);
+          System.out.printf("edwin  getXpathOrFuncExprNodeDesc FunctionInfo constType is %s, columnType is %s%n", constType, columnType);
           // Try to narrow type of constant
           Object constVal = ((ExprNodeConstantDesc) children.get(constIdx)).getValue();
+          //如果常量是一些数字的话，将节点类型从ExprNodeDesc细化为ExprNodeConstantDesc
           try {
             if (PrimitiveObjectInspectorUtils.intTypeEntry.equals(colTypeInfo.getPrimitiveTypeEntry()) && (constVal instanceof Number || constVal instanceof String)) {
               children.set(constIdx, new ExprNodeConstantDesc(new Integer(constVal.toString())));
@@ -1078,6 +1107,8 @@ public class TypeCheckProcFactory {
           }
         }
         if (genericUDF instanceof GenericUDFOPOr) {
+          System.out.printf("edwin  getXpathOrFuncExprNodeDesc FunctionInfo GenericUDFOPOr%n");
+
           // flatten OR
           List<ExprNodeDesc> childrenList = new ArrayList<ExprNodeDesc>(
               children.size());
@@ -1091,6 +1122,8 @@ public class TypeCheckProcFactory {
           desc = ExprNodeGenericFuncDesc.newInstance(genericUDF, funcText,
               childrenList);
         } else if (genericUDF instanceof GenericUDFOPAnd) {
+          System.out.printf("edwin  getXpathOrFuncExprNodeDesc FunctionInfo GenericUDFOPAnd%n");
+
           // flatten AND
           List<ExprNodeDesc> childrenList = new ArrayList<ExprNodeDesc>(
               children.size());
@@ -1112,12 +1145,14 @@ public class TypeCheckProcFactory {
                     Lists.newArrayList(desc));
           }
         } else {
+          System.out.printf("edwin  getXpathOrFuncExprNodeDesc genericUDF is %s  %n", genericUDF.toString());
           desc = ExprNodeGenericFuncDesc.newInstance(genericUDF, funcText,
               children);
         }
 
         // If the function is deterministic and the children are constants,
         // we try to fold the expression to remove e.g. cast on constant
+        //当前为false:isFoldExpr
         if (ctx.isFoldExpr() && desc instanceof ExprNodeGenericFuncDesc &&
                 FunctionRegistry.isDeterministic(genericUDF) &&
                 ExprNodeDescUtils.isAllConstants(children)) {
@@ -1207,12 +1242,13 @@ public class TypeCheckProcFactory {
     *nd:当前要dispatch的节点
     * stack:以nd为栈顶元素的栈
     * procCtx:TypeCheckCtx 这个环境里主要是input  行信息
+    * nodeOutputs：当前要dispatch的节点的子节点
      */
     public Object process(Node nd, Stack<Node> stack, NodeProcessorCtx procCtx,
         Object... nodeOutputs) throws SemanticException {
 
       TypeCheckCtx ctx = (TypeCheckCtx) procCtx;
-      System.out.printf("edwin panda NodeProcesser process expr default process%n");
+      System.out.printf("edwin panda NodeProcesser process expr default process %n");
 
       ExprNodeDesc desc = TypeCheckProcFactory.processGByExpr(nd, procCtx);
       if (desc != null) {
@@ -1328,7 +1364,7 @@ public class TypeCheckProcFactory {
           || expr.getToken().getType() == HiveParser.CharSetLiteral) {
         return null;
       }
-
+      //熊猫把上面都排除，
       boolean isFunction = (expr.getType() == HiveParser.TOK_FUNCTION ||
           expr.getType() == HiveParser.TOK_FUNCTIONSTAR ||
           expr.getType() == HiveParser.TOK_FUNCTIONDI);
@@ -1339,17 +1375,21 @@ public class TypeCheckProcFactory {
       }
 
       // Create all children
+      //非函数，子节点从0开始
       int childrenBegin = (isFunction ? 1 : 0);
       ArrayList<ExprNodeDesc> children = new ArrayList<ExprNodeDesc>(
           expr.getChildCount() - childrenBegin);
       for (int ci = childrenBegin; ci < expr.getChildCount(); ci++) {
+        //TOK_ALLCOLREF select * 的所有列
         if (nodeOutputs[ci] instanceof ExprNodeColumnListDesc) {
+          System.out.printf("edwin panda NodeProcesser process expr default:  ExprNodeColumnListDesc:%s%n",
+                  ((ExprNodeDesc) nodeOutputs[ci]).toString());
           children.addAll(((ExprNodeColumnListDesc) nodeOutputs[ci]).getChildren());
         } else {
           children.add((ExprNodeDesc) nodeOutputs[ci]);
         }
       }
-
+      //熊猫跳过
       if (expr.getType() == HiveParser.TOK_FUNCTIONSTAR) {
         if (!ctx.getallowFunctionStar())
         throw new SemanticException(SemanticAnalyzer.generateErrorMessage(expr,

@@ -85,7 +85,7 @@ WHERE EXISTS (SELECT B FROM T2 WHERE T1.X = T2.Y)
       //IdentityHashMap<Node, Object>
       if (node.getChildren() == null ||
               getDispatchedList().containsAll(node.getChildren())) {
-        // Dispatch current node
+        // Dispatch current ndispatchode
         if (!getDispatchedList().contains(node)) {
           dispatch(node, opStack);
           opQueue.add(node);

@@ -318,6 +318,7 @@ public class Registry {
     try {
       functionName = functionName.toLowerCase();
       if (FunctionUtils.isQualifiedFunctionName(functionName)) {
+        System.out.printf("edwin system.getFunctionInfo FunctionInfo isQualifiedFunctionName %n");
         return getQualifiedFunctionInfoUnderLock(functionName);
       }
       // First try without qualifiers - would resolve builtin/temp functions.
@@ -329,7 +330,15 @@ public class Registry {
       if (functionInfo == null) {
         String qualifiedName = FunctionUtils.qualifyFunctionName(
             functionName, SessionState.get().getCurrentDatabase().toLowerCase());
+        System.out.printf("edwin system.getFunctionInfo FunctionInfo is null enter  qualifyFunctionName is %s%n", qualifiedName);
+
+        //由于=号没有对应函数信息  制造一个dbName+"."+functionname
         functionInfo = getQualifiedFunctionInfoUnderLock(qualifiedName);
+      }
+      if (functionInfo != null) {
+        System.out.printf("edwin system.getFunctionInfo FunctionInfo  functionInfo is not null, is %s%n", functionInfo.toString());
+      }else {
+        System.out.printf("edwin system.getFunctionInfo FunctionInfo  functionInfo is  null %n");
       }
     return functionInfo;
     } finally {
@@ -601,6 +610,9 @@ public class Registry {
 
   private FunctionInfo getQualifiedFunctionInfoUnderLock(String qualifiedName) throws SemanticException {
     FunctionInfo info = mFunctions.get(qualifiedName);
+    if (info == null) {
+      System.out.printf("edwin system.getFunctionInfo FunctionInfo getQualifiedFunctionInfoUnderLock info is null %n");
+    }
     if (info != null && info.isBlockedFunction()) {
       throw new SemanticException ("UDF " + qualifiedName + " is not allowed");
     }
@@ -616,12 +628,15 @@ public class Registry {
       return registerToSessionRegistry(qualifiedName, info);
     }
     if (info != null || !isNative) {
+      System.out.printf("edwin system.getFunctionInfo FunctionInfo getQualifiedFunctionInfoUnderLock " +
+              "info is %b , is Native is %b%n", (info != null)?true:false, isNative);
       return info; // We have the UDF, or we are in the session registry (or both).
     }
     // If we are in the system registry and this feature is enabled, try to get it from metastore.
     SessionState ss = SessionState.get();
     HiveConf conf = (ss == null) ? null : ss.getConf();
     if (conf == null || !HiveConf.getBoolVar(conf, ConfVars.HIVE_ALLOW_UDF_LOAD_ON_DEMAND)) {
+      System.out.printf("edwin system.getFunctionInfo FunctionInfo getQualifiedFunctionInfoUnderLock conf is null then info is null %n");
       return null;
     }
     // This is a little bit weird. We'll do the MS call outside of the lock. Our caller calls us
