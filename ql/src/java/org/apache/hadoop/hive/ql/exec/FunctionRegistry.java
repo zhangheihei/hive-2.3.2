@@ -786,6 +786,8 @@ public final class FunctionRegistry {
   public static synchronized TypeInfo getCommonClassForComparison(TypeInfo a, TypeInfo b) {
     // If same return one of them
     if (a.equals(b)) {
+      System.out.printf("edwin RexNode convert getCommonClassForComparison is  (a.equals(b) %n");
+
       return a;
     }
     if (a.getCategory() != Category.PRIMITIVE || b.getCategory() != Category.PRIMITIVE) {

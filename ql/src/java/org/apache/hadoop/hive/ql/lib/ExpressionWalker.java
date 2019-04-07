@@ -74,7 +74,7 @@ WHERE EXISTS (SELECT B FROM T2 WHERE T1.X = T2.Y)
     // Push the node in the stack
     opStack.push(nd);
     if (nd instanceof ASTNode) {
-      System.out.printf("edwin ExpressionWalker walk inner**: %s%n", ((ASTNode) nd).toStringTree());
+      System.out.printf("edwin ExpressionWalker walk inner** start: %s%n", ((ASTNode) nd).toStringTree());
 
     }
 

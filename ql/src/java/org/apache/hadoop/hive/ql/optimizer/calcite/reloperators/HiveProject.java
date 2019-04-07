@@ -88,6 +88,7 @@ public class HiveProject extends Project implements HiveRelNode {
       String msg = "Select list contains multiple expressions with the same name." + fieldNames;
       throw new CalciteSemanticException(msg, UnsupportedFeature.Same_name_in_multiple_expressions);
     }
+    //structType 名字：类型
     RelDataType rowType = RexUtil.createStructType(cluster.getTypeFactory(), exps, fieldNames);
     return create(cluster, child, exps, rowType, Collections.<RelCollation> emptyList());
   }
@@ -98,6 +99,7 @@ public class HiveProject extends Project implements HiveRelNode {
   public static HiveProject create(RelOptCluster cluster, RelNode child, List<? extends RexNode> exps,
       RelDataType rowType, final List<RelCollation> collationList) {
     RelTraitSet traitSet = TraitsUtil.getDefaultTraitSet(cluster);
+    System.out.printf("edwin HiveProject edwinRealTraitSet is %s%n",  traitSet.toString());
     return new HiveProject(cluster, traitSet, child, exps, rowType, Flags.BOXED);
   }
 

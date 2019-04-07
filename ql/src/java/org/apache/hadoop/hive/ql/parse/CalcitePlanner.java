@@ -1075,6 +1075,7 @@ public class CalcitePlanner extends SemanticAnalyzer {
     calcitePlannerAction = new CalcitePlannerAction(prunedPartitions, this.columnAccessInfo);
 
     try {
+        //进入到这里开始优化
       optimizedOptiqPlan = Frameworks.withPlanner(calcitePlannerAction, Frameworks
           .newConfigBuilder().typeSystem(new HiveTypeSystemImpl()).build());
     } catch (Exception e) {
@@ -1291,15 +1292,20 @@ public class CalcitePlanner extends SemanticAnalyzer {
     //表信息到行信息的映射,RowResolver中存放着普通列，分区列，虚拟列
     //ReloNode-hivetableScan Calcite的存储方式
     LinkedHashMap<RelNode, RowResolver>                   relToHiveRR                   = new LinkedHashMap<RelNode, RowResolver>();
-    //表信息到列的map（位置）映射
+    //表信息到列的map（位置）映射,  列名：位置
     LinkedHashMap<RelNode, ImmutableMap<String, Integer>> relToHiveColNameCalcitePosMap = new LinkedHashMap<RelNode, ImmutableMap<String, Integer>>();
 
     CalcitePlannerAction(Map<String, PrunedPartitionList> partitionCache, ColumnAccessInfo columnAccessInfo) {
+        //初始化都为空
       this.partitionCache = partitionCache;
       this.columnAccessInfo = columnAccessInfo;
     }
 
     @Override
+    /*
+    relOptSchema:CalciteCatalogReader
+    SchemaPlus:(CalciteSchema)schema.root().plus()
+    * */
     public RelNode apply(RelOptCluster cluster, RelOptSchema relOptSchema, SchemaPlus rootSchema) {
       RelNode calciteGenPlan = null;
       RelNode calcitePreCboPlan = null;
@@ -1317,6 +1323,8 @@ public class CalcitePlanner extends SemanticAnalyzer {
       HiveRulesRegistry registry = new HiveRulesRegistry();
       //PlannerContext 环境
       HivePlannerContext confContext = new HivePlannerContext(algorithmsConf, registry, corrScalarRexSQWithAgg);
+      //使用自己的planner:HiveVolcanoPlanner
+      //默认的还有没添加任何ruler
       RelOptPlanner planner = HiveVolcanoPlanner.createPlanner(confContext);
       final RexBuilder rexBuilder = cluster.getRexBuilder();
       //不使用apply参数传入进的clustger,反而重新创建
@@ -1325,6 +1333,7 @@ public class CalcitePlanner extends SemanticAnalyzer {
       this.cluster = optCluster;
       //relOptSchema其实是CalciteCatalogReader
       this.relOptSchema = relOptSchema;
+      System.out.printf("edwin optCluster emptyTraitSet is %s%n",  this.cluster.traitSet().toString());
 
       PerfLogger perfLogger = SessionState.getPerfLogger();
 
@@ -1342,7 +1351,6 @@ public class CalcitePlanner extends SemanticAnalyzer {
         throw new RuntimeException(e);
       }
       perfLogger.PerfLogEnd(this.getClass().getName(), PerfLogger.OPTIMIZER, "Calcite: Plan generation");
-
       // We need to get the ColumnAccessInfo and viewToTableSchema for views.
       HiveRelFieldTrimmer fieldTrimmer = new HiveRelFieldTrimmer(null,
           HiveRelFactories.HIVE_BUILDER.create(optCluster, null), this.columnAccessInfo,
@@ -2361,12 +2369,17 @@ public class CalcitePlanner extends SemanticAnalyzer {
           System.out.printf("edwin HiveTableScan param tableAlias is:%s," +
                           " tableAliasId is %s%n", null == tableAlias ? tabMetaData.getTableName() : tableAlias,
                   getAliasId(tableAlias, qb));
-          tableRel = new HiveTableScan(cluster, cluster.traitSetOf(HiveRelNode.CONVENTION), optTable,
+          RelTraitSet edwinTrait = cluster.traitSetOf(HiveRelNode.CONVENTION);
+          tableRel = new HiveTableScan(cluster, edwinTrait, optTable,
               null == tableAlias ? tabMetaData.getTableName() : tableAlias,
               getAliasId(tableAlias, qb), HiveConf.getBoolVar(conf,
                   HiveConf.ConfVars.HIVE_CBO_RETPATH_HIVEOP), qb.isInsideView()
                   || qb.getAliasInsideView().contains(tableAlias.toLowerCase()));
+          System.out.printf("edwin optCluster edwinTrait is %s%n",  edwinTrait.toString());
+
         }
+
+        System.out.printf("edwin optCluster emptyTraitSet is %s%n",  this.cluster.traitSet().toString());
 
         // 6. Add Schema(RR) to RelNode-Schema map
         //rr是行信息，tableRel整个表信息
@@ -2424,10 +2437,15 @@ public class CalcitePlanner extends SemanticAnalyzer {
       RexNode convertedFilterExpr = new RexNodeConverter(cluster, srcRel.getRowType(),
           outerNameToPosMap, hiveColNameCalcitePosMap, relToHiveRR.get(srcRel), outerRR,
               0, true, subqueryId).convert(filterCondn);
+      System.out.printf("edwin genFilterRelNode desc convert to RexNode: %s%n", convertedFilterExpr.toString());
+
+      //创建节点的等效版本，其中提取OR之间的公共因子。熊猫的SQL不存在公共因子
       RexNode factoredFilterExpr = RexUtil
           .pullFactors(cluster.getRexBuilder(), convertedFilterExpr);
+      System.out.printf("edwin genFilterRelNode filterRel RexNode: %s%n", factoredFilterExpr.toString());
       RelNode filterRel = new HiveFilter(cluster, cluster.traitSetOf(HiveRelNode.CONVENTION),
           srcRel, factoredFilterExpr);
+
       this.relToHiveColNameCalcitePosMap.put(filterRel, hiveColNameCalcitePosMap);
       relToHiveRR.put(filterRel, relToHiveRR.get(srcRel));
       relToHiveColNameCalcitePosMap.put(filterRel, hiveColNameCalcitePosMap);
@@ -2461,7 +2479,7 @@ public class CalcitePlanner extends SemanticAnalyzer {
     /*
   *
   * searchCond 即where节点下的内容
-  * srcREl:源表的所有信息
+  * srcREl:源表的所有信息， 关系表达式 hiveTableScan
   * corrScalarQueries:
   * forHavingClause:false
   * */
@@ -2591,6 +2609,7 @@ public class CalcitePlanner extends SemanticAnalyzer {
         RowResolver outerRR, boolean forHavingClause) throws SemanticException {
 
       Map<ASTNode, RelNode> subQueryToRelNode = new HashMap<>();
+      //熊猫子查询
       boolean isSubQuery = genSubQueryRelNode(qb, searchCond, srcRel, forHavingClause,
                                                 subQueryToRelNode);
       //熊猫是false
@@ -2937,6 +2956,10 @@ public class CalcitePlanner extends SemanticAnalyzer {
      * @return TODO: 1. Grouping Sets (roll up..)
      * @throws SemanticException
      */
+    /*
+    * qb  SQL中的整个查询信息
+    * srcRel:关系表达式，熊猫中是hiveFilter
+    * */
     private RelNode genGBLogicalPlan(QB qb, RelNode srcRel) throws SemanticException {
       RelNode gbRel = null;
       QBParseInfo qbp = getQBParseInfo(qb);
@@ -2944,6 +2967,7 @@ public class CalcitePlanner extends SemanticAnalyzer {
       // 1. Gather GB Expressions (AST) (GB + Aggregations)
       // NOTE: Multi Insert is not supported
       String detsClauseName = qbp.getClauseNames().iterator().next();
+      System.out.printf("edwin genGBLogicalPlan detsClauseName is %s%n",  detsClauseName);
       // Check and transform group by *. This will only happen for select distinct *.
       // Here the "genSelectPlan" is being leveraged.
       // The main benefits are (1) remove virtual columns that should
@@ -2952,9 +2976,12 @@ public class CalcitePlanner extends SemanticAnalyzer {
       // not necessary, it will be removed by NonBlockingOpDeDupProc Optimizer because it will match
       // SEL%SEL% rule.
       ASTNode selExprList = qb.getParseInfo().getSelForClause(detsClauseName);
+      System.out.printf("edwin genGBLogicalPlan ASTNode selExprList tree is%s, str is %s%n",
+              selExprList.toStringTree(), selExprList.toString());
       SubQueryUtils.checkForTopLevelSubqueries(selExprList);
       if (selExprList.getToken().getType() == HiveParser.TOK_SELECTDI
           && selExprList.getChildCount() == 1 && selExprList.getChild(0).getChildCount() == 1) {
+        System.out.printf("edwin genGBLogicalPlan HiveParser.TOK_SELECTDI 11111 %n");
         ASTNode node = (ASTNode) selExprList.getChild(0).getChild(0);
         if (node.getToken().getType() == HiveParser.TOK_ALLCOLREF) {
           srcRel = genSelectLogicalPlan(qb, srcRel, srcRel, null,null);
@@ -2966,19 +2993,35 @@ public class CalcitePlanner extends SemanticAnalyzer {
       // Select DISTINCT + windowing; GBy handled by genSelectForWindowing
       if (selExprList.getToken().getType() == HiveParser.TOK_SELECTDI &&
               !qb.getAllWindowingSpecs().isEmpty()) {
+        System.out.printf("edwin genGBLogicalPlan HiveParser.TOK_SELECTDI 22222 %n");
         return null;
       }
 
       List<ASTNode> grpByAstExprs = getGroupByForClause(qbp, detsClauseName);
+      if (grpByAstExprs.isEmpty()) {
+        System.out.printf("edwin genGBLogicalPlan List<ASTNode> grpByAstExprs is empty %n");
+      }
       HashMap<String, ASTNode> aggregationTrees = qbp.getAggregationExprsForClause(detsClauseName);
+      if (aggregationTrees.isEmpty()) {
+        System.out.printf("edwin genGBLogicalPlan HashMap<String, ASTNode> aggregationTrees is empty %n");
+      }
       boolean hasGrpByAstExprs = (grpByAstExprs != null && !grpByAstExprs.isEmpty()) ? true : false;
       boolean hasAggregationTrees = (aggregationTrees != null && !aggregationTrees.isEmpty()) ? true
           : false;
 
       final boolean cubeRollupGrpSetPresent = (!qbp.getDestRollups().isEmpty()
           || !qbp.getDestGroupingSets().isEmpty() || !qbp.getDestCubes().isEmpty());
+      System.out.printf("edwin genGBLogicalPlan getDestRollups empty is:%b,  getDestGroupingSets empty is:%b," +
+              "getDestCubes empty is:%b %n", qbp.getDestRollups().isEmpty(), qbp.getDestGroupingSets().isEmpty(),
+              qbp.getDestCubes().isEmpty());
 
       // 2. Sanity check
+      //hive.groupby.skewindata
+      //不支持多个distinct function
+      //拿到功能函数  (tok_select (tok_selexpr (tok_functionstar count))))) 比如 count
+      //如果标记了hive.groupby.skewindata（倾斜数据标记为TRUE）,那么不支持有多个聚合函数
+      //(tok_select (tok_selexpr (tok_functiondi count (tok_table_or_col id))) (tok_selexpr (tok_functiondi sum (tok_table_or_col name))))))
+      //explain select count(distinct id), sum(distinct name) from teststring;
       if (conf.getBoolVar(HiveConf.ConfVars.HIVEGROUPBYSKEW)
           && qbp.getDistinctFuncExprsForClause(detsClauseName).size() > 1) {
         throw new SemanticException(ErrorMsg.UNSUPPORTED_MULTIPLE_DISTINCTS.getMsg());
@@ -3465,8 +3508,10 @@ public class CalcitePlanner extends SemanticAnalyzer {
       getQBParseInfo(qb);
       WindowingSpec wSpec = (!qb.getAllWindowingSpecs().isEmpty()) ? qb.getAllWindowingSpecs()
           .values().iterator().next() : null;
-      if (wSpec == null)
-        return null;
+      if (wSpec == null) {
+          System.out.printf("edwin genSelectForWindowing WindowingSpec is null %n");
+          return null;
+      }
       // 1. Get valid Window Function Spec
       wSpec.validateAndMakeEffective();
       List<WindowExpressionSpec> windowExpressions = wSpec.getWindowExpressions();
@@ -3513,16 +3558,29 @@ public class CalcitePlanner extends SemanticAnalyzer {
       return genSelectRelNode(projsForWindowSelOp, out_rwsch, srcRel, windowExpressions);
     }
 
+    /*
+    * calciteColLst:select字段的所有列
+    * out_rwsch:作用不明
+    * srcRel:上一阶段的relNode(比如hivefilter)
+    * */
     private RelNode genSelectRelNode(List<RexNode> calciteColLst, RowResolver out_rwsch,
             RelNode srcRel) throws CalciteSemanticException {
       return genSelectRelNode(calciteColLst, out_rwsch, srcRel, null);
     }
 
+    /*
+   * calciteColLst:select字段的所有列
+   * out_rwsch:对外展示的列信息 比如_col0, _col1
+   * srcRel:上一阶段的relNode(比如hivefilter)
+   * windowExpressions:null
+   * */
     private RelNode genSelectRelNode(List<RexNode> calciteColLst, RowResolver out_rwsch,
         RelNode srcRel, List<WindowExpressionSpec> windowExpressions) throws CalciteSemanticException {
       // 1. Build Column Names
       Set<String> colNamesSet = new HashSet<String>();
       List<ColumnInfo> cInfoLst = out_rwsch.getRowSchema().getSignature();
+      System.out.printf("edwin genSelectLogicalPlan->genSelectRelNode List<ColumnInfo> cInfoLst is %s %n",
+              org.apache.commons.lang.StringUtils.join(cInfoLst.toArray(),",") );
       ArrayList<String> columnNames = new ArrayList<String>();
       Map<String,String> windowToAlias = null;
       if (windowExpressions != null ) {
@@ -3545,6 +3603,7 @@ public class CalcitePlanner extends SemanticAnalyzer {
         if (tmpColAlias.contains(".") || tmpColAlias.contains(":")) {
           tmpColAlias = cInfo.getInternalName();
         }
+        System.out.printf("edwin genSelectLogicalPlan->genSelectRelNode tmpColAlias is %s%n", tmpColAlias);
         // Prepend column names with '_o_' if it starts with '_c'
         /*
          * Hive treats names that start with '_c' as internalNames; so change
@@ -3556,16 +3615,22 @@ public class CalcitePlanner extends SemanticAnalyzer {
         } else if (windowToAlias != null && windowToAlias.containsKey(tmpColAlias)) {
           tmpColAlias = windowToAlias.get(tmpColAlias);
         }
+
+        System.out.printf("edwin genSelectLogicalPlan->genSelectRelNode with _o_ tmpColAlias is %s%n", tmpColAlias);
+
         int suffix = 1;
         while (colNamesSet.contains(tmpColAlias)) {
           tmpColAlias = qualifiedColNames[1] + suffix;
           suffix++;
+          System.out.printf("edwin genSelectLogicalPlan->genSelectRelNode colNamesSet.contains tmpColAlias is %s%n", tmpColAlias);
         }
 
         colNamesSet.add(tmpColAlias);
         columnNames.add(tmpColAlias);
       }
 
+      System.out.printf("edwin genSelectLogicalPlan->genSelectRelNode List<ColumnInfo> cInfoLst is %s %n",
+              org.apache.commons.lang.StringUtils.join(columnNames.toArray(),",") );
       // 3 Build Calcite Rel Node for project using converted projections & col
       // names
       HiveRelNode selRel = HiveProject.create(srcRel, calciteColLst, columnNames);
@@ -3574,7 +3639,13 @@ public class CalcitePlanner extends SemanticAnalyzer {
       this.relToHiveColNameCalcitePosMap
           .put(selRel, buildHiveToCalciteColumnMap(out_rwsch, selRel));
       this.relToHiveRR.put(selRel, out_rwsch);
+      for (Map.Entry<String, Integer> entry : buildHiveToCalciteColumnMap(out_rwsch, selRel).entrySet()) {
 
+        System.out.println("edwin genSelectLogicalPlan->genSelectRelNode Key = " + entry.getKey() + ", Value = " + entry.getValue());
+
+      }
+
+      System.out.printf("edwin genSelectLogicalPlan->genSelectRelNode project RelNode is %s %n", selRel.toString());
       return selRel;
     }
 
@@ -3584,11 +3655,20 @@ public class CalcitePlanner extends SemanticAnalyzer {
      *
      * @throws SemanticException
      */
+    /*
+    *qb:query block
+    * srcRel:如果GB和GB HAVING为空那么srcRel和starSrcRel一致 都是filterRel(前提是filterRel不为NULL)
+    * 否则：starSrcRel是filterRel; srcRel会是gbRel或者gbHavaingRel
+    * outerNameToPosMap:null
+    * outerRR:null
+    * */
     private RelNode genSelectLogicalPlan(QB qb, RelNode srcRel, RelNode starSrcRel,
                                          ImmutableMap<String, Integer> outerNameToPosMap, RowResolver outerRR)
         throws SemanticException {
       // 0. Generate a Select Node for Windowing
       // Exclude the newly-generated select columns from */etc. resolution.
+      System.out.printf("edwin genSelectLogicalPlan srcRel is %s, starSrcRel is %s %n",
+              srcRel.toString(), starSrcRel.toString());
       HashSet<ColumnInfo> excludedColumns = new HashSet<ColumnInfo>();
       RelNode selForWindow = genSelectForWindowing(qb, srcRel, excludedColumns);
       srcRel = (selForWindow == null) ? srcRel : selForWindow;
@@ -3599,13 +3679,15 @@ public class CalcitePlanner extends SemanticAnalyzer {
       QBParseInfo qbp = getQBParseInfo(qb);
       String selClauseName = qbp.getClauseNames().iterator().next();
       ASTNode selExprList = qbp.getSelForClause(selClauseName);
-
+      System.out.printf("edwin genSelectLogicalPlan selExprList is %s%n", selExprList.toStringTree());
       // make sure if there is subquery it is top level expression
       SubQueryUtils.checkForTopLevelSubqueries(selExprList);
 
       final boolean cubeRollupGrpSetPresent = (!qbp.getDestRollups().isEmpty()
               || !qbp.getDestGroupingSets().isEmpty() || !qbp.getDestCubes().isEmpty());
-
+      System.out.printf("edwin genSelectLogicalPlan getDestRollups empty is:%b,  getDestGroupingSets empty is:%b," +
+                      "getDestCubes empty is:%b, cubeRollupGrpSetPresent is %b %n", qbp.getDestRollups().isEmpty(), qbp.getDestGroupingSets().isEmpty(),
+              qbp.getDestCubes().isEmpty(), cubeRollupGrpSetPresent);
       // 2.Row resolvers for input, output
       RowResolver out_rwsch = new RowResolver();
       Integer pos = Integer.valueOf(0);
@@ -3625,6 +3707,7 @@ public class CalcitePlanner extends SemanticAnalyzer {
       }
 
       // 4. Bailout if select involves Transform
+      //transform:transform中的值作为输入， 然后传递给python脚本，最后经过python的处理后，输出想要得到的字符串格式。
       boolean isInTransform = (selExprList.getChild(posn).getChild(0).getType() == HiveParser.TOK_TRANSFORM);
       if (isInTransform) {
         String msg = String.format("SELECT TRANSFORM is currently not supported in CBO,"
@@ -3658,6 +3741,8 @@ public class CalcitePlanner extends SemanticAnalyzer {
       }
 
       if (genericUDTF != null) {
+        System.out.printf("edwin genSelectLogicalPlan genericUDTF is not null %n");
+
         // Only support a single expression when it's a UDTF
         if (selExprList.getChildCount() > 1) {
           throw new SemanticException(generateErrorMessage(
@@ -3697,17 +3782,21 @@ public class CalcitePlanner extends SemanticAnalyzer {
       // 6. Iterate over all expression (after SELECT)
       ASTNode exprList;
       if (genericUDTF != null) {
+        System.out.printf("edwin genSelectLogicalPlan genericUDTF is not null %n");
         exprList = expr;
       } else {
+        System.out.printf("edwin genSelectLogicalPlan genericUDTF is null %n");
         exprList = selExprList;
       }
-      // For UDTF's, skip the function name to get the expressions
+      // For UDTF's, skip the function. name to get the expressions
       int startPosn = genericUDTF != null ? posn + 1 : posn;
       for (int i = startPosn; i < exprList.getChildCount(); ++i) {
 
         // 6.1 child can be EXPR AS ALIAS, or EXPR.
         ASTNode child = (ASTNode) exprList.getChild(i);
         boolean hasAsClause = (!isInTransform) && (child.getChildCount() == 2);
+        System.out.printf("edwin genSelectLogicalPlan child is %s, hasAsClause is %b%n",
+                child.toStringTree(), hasAsClause);
 
         // 6.2 EXPR AS (ALIAS,...) parses, but is only allowed for UDTF's
         // This check is not needed and invalid when there is a transform b/c
@@ -3732,6 +3821,8 @@ public class CalcitePlanner extends SemanticAnalyzer {
                   inputRR, autogenColAliasPrfxIncludeFuncName(), i);
           tabAlias = colRef[0];
           colAlias = colRef[1];
+          System.out.printf("edwin genSelectLogicalPlan tabAlias is %s, colAlias is %s %n"
+          , tabAlias, colAlias);
           if (hasAsClause) {
             unparseTranslator.addIdentifierTranslation((ASTNode) child
                     .getChild(1));
@@ -3772,6 +3863,8 @@ public class CalcitePlanner extends SemanticAnalyzer {
               pos = genColListRegex(SemanticAnalyzer.unescapeIdentifier(expr.getChild(0).getText()),
                       null, expr, col_list, excludedColumns, inputRR, starRR, pos, out_rwsch,
                       qb.getAliases(), true);
+              System.out.printf("edwin genSelectLogicalPlan expr.getType() is TOK_ALLCOLREF, pos is %d %n"
+                      ,pos);
             } else if (expr.getType() == HiveParser.DOT
                     && expr.getChild(0).getType() == HiveParser.TOK_TABLE_OR_COL
                     && inputRR.hasTableAlias(SemanticAnalyzer.unescapeIdentifier(expr.getChild(0)
@@ -3804,13 +3897,19 @@ public class CalcitePlanner extends SemanticAnalyzer {
                 expr = rewriteGroupingFunctionAST(getGroupByForClause(qbp, selClauseName), expr,
                         !cubeRollupGrpSetPresent);
               }
+              //拿到TOL_SELEXPR下面的节点 转为DESC
               ExprNodeDesc exp = genExprNodeDesc(expr, inputRR, tcCtx);
               String recommended = recommendName(exp, colAlias);
               if (recommended != null && out_rwsch.get(null, recommended) == null) {
                 colAlias = recommended;
+                System.out.printf("edwin genSelectLogicalPlan recommended != null " +
+                        "&& out_rwsch.get(null, recommended) == null, recommendes is %s %n", recommended);
               }
+              System.out.printf("edwin genSelectLogicalPlan colAlias is %s, recommended is %s %n",
+                      colAlias, recommended);
               col_list.add(exp);
 
+              //这里有插入操作
               ColumnInfo colInfo = new ColumnInfo(SemanticAnalyzer.getColumnInternalName(pos),
                       exp.getWritableObjectInspector(), tabAlias, false);
               colInfo.setSkewedCol((exp instanceof ExprNodeColumnDesc) ? ((ExprNodeColumnDesc) exp)
@@ -3827,6 +3926,9 @@ public class CalcitePlanner extends SemanticAnalyzer {
                 if (altMapping != null) {
                   // TODO: this can overwrite the mapping. Should this be allowed?
                   out_rwsch.put(altMapping[0], altMapping[1], colInfo);
+                  System.out.printf("edwin genSelectLogicalPlan altMapping != null, internale name is %s," +
+                                  "altMapping is %s%n",
+                          colExp.getColumn(),Arrays.toString(altMapping));
                 }
               }
 
@@ -3855,6 +3957,7 @@ public class CalcitePlanner extends SemanticAnalyzer {
         outputRel = genUDTFPlan(genericUDTF, genericUDTFName, udtfTableAlias, udtfColAliases, qb, calciteColLst, out_rwsch, srcRel);
       }
       else{
+        //产生select
         outputRel = genSelectRelNode(calciteColLst, out_rwsch, srcRel);
       }
 
@@ -4026,7 +4129,7 @@ public class CalcitePlanner extends SemanticAnalyzer {
       RelNode limitRel = null;
 
       // First generate all the opInfos for the elements in the from clause
-      //表明到表信息的映射
+      //表明到表信息的映射，表信息存放hivetableScan
       Map<String, RelNode> aliasToRel = new HashMap<String, RelNode>();
 
       // 0. Check if we can handle the SubQuery;
@@ -4089,12 +4192,13 @@ public class CalcitePlanner extends SemanticAnalyzer {
         srcRel = genJoinLogicalPlan(qb.getParseInfo().getJoinExpr(), aliasToRel);
       } else {
         // If no join then there should only be either 1 TS or 1 SubQuery
-        //子查询中没有JOIN，在取出该子查询的表信息
+        //子查询中没有JOIN，在取出该子查询的表信息hivetableScan
         srcRel = aliasToRel.values().iterator().next();
       }
 
       // 2. Build Rel for where Clause
       //查看where 字句
+      //genFilterLogicalPlan 是取出子查询条件语句的信息,即hivefilter 关系表达式
       filterRel = genFilterLogicalPlan(qb, srcRel, aliasToRel, outerNameToPosMap, outerRR, false);
       srcRel = (filterRel == null) ? srcRel : filterRel;
       RelNode starSrcRel = srcRel;
@@ -4102,12 +4206,19 @@ public class CalcitePlanner extends SemanticAnalyzer {
       // 3. Build Rel for GB Clause
       gbRel = genGBLogicalPlan(qb, srcRel);
       srcRel = (gbRel == null) ? srcRel : gbRel;
+      if (gbRel == null) {
+          System.out.printf("edwin genLogicalPlan gbrel is null%n");
+      }
 
       // 4. Build Rel for GB Having Clause
       gbHavingRel = genGBHavingLogicalPlan(qb, srcRel, aliasToRel);
       srcRel = (gbHavingRel == null) ? srcRel : gbHavingRel;
+      if (gbHavingRel == null) {
+        System.out.printf("edwin genLogicalPlan gbHavingRel is null%n");
+      }
 
       // 5. Build Rel for Select Clause
+      //如果GB和GB HAVING为空 那么srcRel为filterRel(包含的有hiveTableScan)
       selectRel = genSelectLogicalPlan(qb, srcRel, starSrcRel, outerNameToPosMap, outerRR);
       srcRel = (selectRel == null) ? srcRel : selectRel;
 
@@ -4281,6 +4392,7 @@ public class CalcitePlanner extends SemanticAnalyzer {
       // Build a map of Hive column Names (ExprNodeColumnDesc Name)
       // to the positions of those projections in the input
       Map<Integer, ExprNodeDesc> hashCodeTocolumnDescMap = new HashMap<Integer, ExprNodeDesc>();
+      //这里专门给个hashCode的MAP是啥意思
       ExprNodeDescUtils.getExprNodeColumnDesc(col_list, hashCodeTocolumnDescMap);
       ImmutableMap.Builder<String, Integer> hiveColNameToInputPosMapBuilder = new ImmutableMap.Builder<String, Integer>();
       String exprNodecolName;

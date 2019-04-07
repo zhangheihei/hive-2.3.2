@@ -239,6 +239,9 @@ public class TypeCheckProcFactory {
     HashMap<Node, Object> nodeOutputs = new LinkedHashMap<Node, Object>();
     ogw.startWalking(topNodes, nodeOutputs);
 
+    System.out.printf("edwin GraphWalker is ended, nodeOutputs size is:%d, convertMap size is%d%n",
+            nodeOutputs.size(), convert(nodeOutputs).size());
+    //这里减少map的数量
     return convert(nodeOutputs);
   }
 
@@ -997,7 +1000,7 @@ public class TypeCheckProcFactory {
         // other operators or functions
         FunctionInfo fi = FunctionRegistry.getFunctionInfo(funcText);
 
-        //=号这些都是有默认UDF函数的。。。
+        //=号, and这些都是有默认UDF函数的。。。
         if (fi != null) {
           System.out.printf("edwin  getXpathOrFuncExprNodeDesc FunctionInfo is:%s%n", fi.toString());
         }
@@ -1055,6 +1058,7 @@ public class TypeCheckProcFactory {
         // Try to infer the type of the constant only if there are two
         // nodes, one of them is column and the other is numeric const
         //当isFUnction为false时， 那么该函数就肯定是=, =>这一类的。必然一边是列 一边是值
+        //and  两边就是=号， =是ExprNodeGenericFuncDesc 故不会走这个逻辑
         if (genericUDF instanceof GenericUDFBaseCompare
             && children.size() == 2
             && ((children.get(0) instanceof ExprNodeConstantDesc
@@ -1073,7 +1077,7 @@ public class TypeCheckProcFactory {
           System.out.printf("edwin  getXpathOrFuncExprNodeDesc FunctionInfo constType is %s, columnType is %s%n", constType, columnType);
           // Try to narrow type of constant
           Object constVal = ((ExprNodeConstantDesc) children.get(constIdx)).getValue();
-          //如果常量是一些数字的话，将节点类型从ExprNodeDesc细化为ExprNodeConstantDesc
+          //如果常量是一些数字的话，将节点类型从新建一个ExprNodeConstantDesc 不再使用string
           try {
             if (PrimitiveObjectInspectorUtils.intTypeEntry.equals(colTypeInfo.getPrimitiveTypeEntry()) && (constVal instanceof Number || constVal instanceof String)) {
               children.set(constIdx, new ExprNodeConstantDesc(new Integer(constVal.toString())));
@@ -1128,6 +1132,8 @@ public class TypeCheckProcFactory {
           List<ExprNodeDesc> childrenList = new ArrayList<ExprNodeDesc>(
               children.size());
           for (ExprNodeDesc child : children) {
+            //如果子节点是AND，那么会把该节点下的假如进来
+            //GenericUDFOPAnd(GenericUDFOPEqual(Column[par_date], Const string 20180819), GenericUDFOPEqual(Column[plat], Const string huya), GenericUDFOPEqual(Column[rid], Const string meijiao))
             if (FunctionRegistry.isOpAnd(child)) {
               childrenList.addAll(child.getChildren());
             } else {
@@ -1166,6 +1172,7 @@ public class TypeCheckProcFactory {
       // However, we still create it, and then remove it here, to make sure we
       // only allow
       // "+" for numeric types.
+      //就是+号
       if (FunctionRegistry.isOpPositive(desc)) {
         assert (desc.getChildren().size() == 1);
         desc = desc.getChildren().get(0);

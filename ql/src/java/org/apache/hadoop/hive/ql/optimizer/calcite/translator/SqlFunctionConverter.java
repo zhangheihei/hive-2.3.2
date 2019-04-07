@@ -88,11 +88,18 @@ public class SqlFunctionConverter {
     calciteToHiveToken = ImmutableMap.copyOf(builder.calciteToHiveToken);
     reverseOperatorMap = ImmutableMap.copyOf(builder.reverseOperatorMap);
   }
-
+  /*
+  * funcTextName: 比如 =
+  * hiveUDF:UDF名称
+  * calciteArgTypes:函数子节点的类型
+  * retType:函数的返回类型
+  * */
   public static SqlOperator getCalciteOperator(String funcTextName, GenericUDF hiveUDF,
       ImmutableList<RelDataType> calciteArgTypes, RelDataType retType)
       throws SemanticException {
-    // handle overloaded methods first
+    System.out.printf("edwin getCalciteOperator cfuncTextName is %s, hiveUDF is %s%n",
+            funcTextName, hiveUDF.toString());
+            // handle overloaded methods first
     if (hiveUDF instanceof GenericUDFOPNegative) {
       return SqlStdOperatorTable.UNARY_MINUS;
     } else if (hiveUDF instanceof GenericUDFOPPositive) {
@@ -473,6 +480,11 @@ public class SqlFunctionConverter {
     return udfInfo;
   }
 
+  /*
+  * hiveUdfName:函数名字 比如'='
+  * calciteArgTypes:函数子节点的返回类型
+  * calciteRetType: 函数的返回类型
+  * */
   public static SqlOperator getCalciteFn(String hiveUdfName,
       ImmutableList<RelDataType> calciteArgTypes, RelDataType calciteRetType, boolean deterministic)
       throws CalciteSemanticException {
@@ -506,6 +518,10 @@ public class SqlFunctionConverter {
         }
         break;
     }
+
+      System.out.printf("edwin SqlOperator getCalciteFn hiveUdfName is %s, deterministic is %b , SqlOperator" +
+                      "is %s%n",
+              hiveUdfName, deterministic, calciteOp.toString());
     return calciteOp;
   }
 

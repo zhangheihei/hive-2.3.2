@@ -34,9 +34,16 @@ import java.util.Set;
 import java.util.HashSet;
  
 public class HiveFilter extends Filter implements HiveRelNode {
-
+    /*
+    * cluster: Cluster that this relational expression belongs to
+    * traits:the traits of this rel
+    * child:input relational expression 即hivetablescan 条件语句是要作用于输入之上，即表之上
+    * condition：boolean expression which determines whether a row is allowed to pass 条件语句。一个表里表达式 比如rexCall
+    * */
   public HiveFilter(RelOptCluster cluster, RelTraitSet traits, RelNode child, RexNode condition) {
     super(cluster, TraitsUtil.getDefaultTraitSet(cluster), child, condition);
+      RelTraitSet edwinRealTraitSet = TraitsUtil.getDefaultTraitSet(cluster);
+      System.out.printf("edwin HiveFilter edwinRealTraitSet is %s%n",  edwinRealTraitSet.toString());
   }
 
   @Override

@@ -29,14 +29,14 @@ import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hive.ql.metadata.HiveUtils;
 
 /**
- * UnparseTranslator is used to "unparse" objects such as views when their
- * definition is stored. It has a translations map where its possible to replace all the
- * text with the appropriate escaped version [say invites.ds will be replaced with
- * `invites`.`ds` and the entire query is processed like this and stored as
- * Extended text in table's metadata]. This holds all individual translations and
- * where they apply in the stream. The unparse is lazy and happens when
- * SemanticAnalyzer.saveViewDefinition() calls TokenRewriteStream.toString().
- *
+  UnparseTranslator is used to "unparse" objects such as views when their
+  definition is stored. It has a translations map where its possible to replace all the
+  text with the appropriate escaped version [say invites.ds will be replaced with
+  `invites`.`ds` and the entire query is processed like this and stored as
+  Extended text in table's metadata]. This holds all individual translations and
+  where they apply in the stream. The unparse is lazy and happens when
+  SemanticAnalyzer.saveViewDefinition() calls TokenRewriteStream.toString().
+
  */
 public class UnparseTranslator {
   // key is token start index

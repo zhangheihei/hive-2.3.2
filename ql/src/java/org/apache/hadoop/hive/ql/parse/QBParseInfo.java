@@ -63,9 +63,13 @@ public class QBParseInfo {
   private final Map<String, ASTNode> destToSelExpr;
   //存放where节点
   private final HashMap<String, ASTNode> destToWhereExpr;
+  //存放group 节点
   private final HashMap<String, ASTNode> destToGroupby;
+  //不清楚 和GB相关
   private final Set<String> destRollups;
+  //不清楚 和GB相关
   private final Set<String> destCubes;
+  //不清楚 和GB相关
   private final Set<String> destGroupingSets;
   private final Map<String, ASTNode> destToHaving;
   // insertIntoTables/insertOverwriteTables map a table's fullName to its ast;
@@ -117,6 +121,8 @@ public class QBParseInfo {
 
   // used by GroupBy
   private final LinkedHashMap<String, LinkedHashMap<String, ASTNode>> destToAggregationExprs;
+  //拿到功能函数  (tok_select (tok_selexpr (tok_functiondi count (tok_table_or_col id))))))
+  // select count(distinct id) from teststring;
   private final HashMap<String, List<ASTNode>> destToDistinctFuncExprs;
 
   // used by Windowing

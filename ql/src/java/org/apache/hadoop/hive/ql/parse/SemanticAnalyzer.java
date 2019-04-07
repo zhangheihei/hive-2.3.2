@@ -3479,11 +3479,25 @@ public class SemanticAnalyzer extends BaseSemanticAnalyzer {
 
   @SuppressWarnings("nls")
   // TODO: make aliases unique, otherwise needless rewriting takes place
+  /*
+  * colRegex:列名， 比如plat
+  * tabAlias:null
+  * sel:TOK_TABLE_OR_COL节点
+  * col_list:ArrayList<ExprNodeDesc> 应该是存放select的列名字段
+  * excludeCols：为NULL（除非有窗口函数）
+  * input:srcRel的行信息
+  * colSrcRR:starRel的行信息
+  * pos:位置
+  * output:out_rwsch 暂时不知
+  * aliases:当前QB的 别名
+  * ensureUniqueCols:true
+  * */
   Integer genColListRegex(String colRegex, String tabAlias, ASTNode sel,
     ArrayList<ExprNodeDesc> col_list, HashSet<ColumnInfo> excludeCols, RowResolver input,
     RowResolver colSrcRR, Integer pos, RowResolver output, List<String> aliases,
     boolean ensureUniqueCols) throws SemanticException {
-
+    System.out.printf("edwin genSelectLogicalPlan->genColListRegex colRegex is %s, sel is %s, aliases is %s %n",
+            colRegex, sel, aliases.toString());
     if (colSrcRR == null) {
       colSrcRR = input;
     }
@@ -4119,6 +4133,9 @@ public class SemanticAnalyzer extends BaseSemanticAnalyzer {
    * automatically translates SELECT DISTINCT a,b,c to SELECT a,b,c GROUP BY
    * a,b,c.
    */
+  /*
+  * dest: insclause-0
+  * */
   List<ASTNode> getGroupByForClause(QBParseInfo parseInfo, String dest) throws SemanticException {
     if (parseInfo.getSelForClause(dest).getToken().getType() == HiveParser.TOK_SELECTDI) {
       ASTNode selectExprs = parseInfo.getSelForClause(dest);
@@ -4150,13 +4167,21 @@ public class SemanticAnalyzer extends BaseSemanticAnalyzer {
       return result;
     }
   }
-
+  /*
+  *selExpr:TOK_SELEXPR节点
+  * defaultName:_c
+  * inputRR:行信息
+  * includeFuncName:默认FALSE
+  * colNum：TOK_SELEXPR在TOK_SELECT下的索引
+  * */
   static String[] getColAlias(ASTNode selExpr, String defaultName,
       RowResolver inputRR, boolean includeFuncName, int colNum) {
     String colAlias = null;
     String tabAlias = null;
     String[] colRef = new String[2];
-
+    System.out.printf("edwin genSelectLogicalPlan getColAlias selExpr is %s, defaultName is %s, " +
+                    "includeFuncName is %b%n",
+            selExpr.toStringTree(), defaultName, includeFuncName);
     //for queries with a windowing expressions, the selexpr may have a third child
     if (selExpr.getChildCount() == 2 ||
         (selExpr.getChildCount() == 3 &&
@@ -11704,6 +11729,7 @@ public class SemanticAnalyzer extends BaseSemanticAnalyzer {
     //熊猫是null
     if (cached == null) {
       Map<ASTNode, ExprNodeDesc> allExprs = genAllExprNodeDesc(expr, input, tcCtx);
+      //只返回了顶部节点的desc，但是顶部节点的DESC拥有所有子节点的DESC
       return allExprs.get(expr);
     }
     return cached;
@@ -11766,8 +11792,11 @@ public class SemanticAnalyzer extends BaseSemanticAnalyzer {
       throw new SemanticException("TOK_ALLCOLREF is not supported in current context");
     }
 
+    //只有创建视图了才需要这个
+    //熊猫没有视图 直接退出
     if (!unparseTranslator.isEnabled()) {
       // Not creating a view, so no need to track view expansions.
+      System.out.printf("edwin genAllExprNodeDesc don't need unparseTranslator, is not have view %n");
       return nodeOutputs;
     }
 
@@ -11775,9 +11804,11 @@ public class SemanticAnalyzer extends BaseSemanticAnalyzer {
     List<ASTNode> fieldDescList = new ArrayList<>();
 
     for (Map.Entry<ASTNode, ExprNodeDesc> entry : nodeOutputs.entrySet()) {
+      //针对列名Desc
       if (!(entry.getValue() instanceof ExprNodeColumnDesc)) {
         // we need to translate the ExprNodeFieldDesc too, e.g., identifiers in
         // struct<>.
+        //熊猫没有ExprNodeFieldDesc(起码第一个SUBQUERY没有)
         if (entry.getValue() instanceof ExprNodeFieldDesc) {
           fieldDescList.add(entry.getKey());
         }
@@ -11785,6 +11816,7 @@ public class SemanticAnalyzer extends BaseSemanticAnalyzer {
       }
       ASTNode node = entry.getKey();
       ExprNodeColumnDesc columnDesc = (ExprNodeColumnDesc) entry.getValue();
+      System.out.printf("edwin genAllExprNodeDesc ExprNodeColumnDesc is %s%n", columnDesc.toString());
       if ((columnDesc.getTabAlias() == null)
           || (columnDesc.getTabAlias().length() == 0)) {
         // These aren't real column refs; instead, they are special
@@ -11792,6 +11824,13 @@ public class SemanticAnalyzer extends BaseSemanticAnalyzer {
         continue;
       }
       String[] tmp = input.reverseLookup(columnDesc.getColumn());
+      if (tmp.length >= 2){
+        System.out.printf("edwin genAllExprNodeDesc ExprNodeColumnDesc internelName(column) is%s," +
+                "tabeAlas is %s, colAlias is %s %n", columnDesc.getColumn(), tmp[0], tmp[1]);
+      }else {
+        System.out.printf("edwin genAllExprNodeDesc ExprNodeColumnDesc internelName(column) is%s," +
+                "tabeAlas is %s %n", columnDesc.getColumn(), tmp[0]);
+      }
       // in subquery case, tmp may be from outside.
       if (tmp[0] != null && columnDesc.getTabAlias() != null
           && !tmp[0].equals(columnDesc.getTabAlias()) && tcCtx.getOuterRR() != null) {

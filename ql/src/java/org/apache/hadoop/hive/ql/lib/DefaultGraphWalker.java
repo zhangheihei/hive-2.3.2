@@ -31,6 +31,7 @@ import org.apache.hadoop.hive.ql.parse.ASTNode;
 
 import org.apache.hadoop.hive.ql.parse.ASTNodeOrigin;
 import org.apache.hadoop.hive.ql.parse.SemanticException;
+import org.apache.hadoop.hive.ql.plan.ExprNodeDesc;
 
 /**
  * base class for operator graph walker this class takes list of starting ops
@@ -51,12 +52,14 @@ public class DefaultGraphWalker implements GraphWalker {
    * Then it is used to go through the processed nodes and store
    * the results that the dispatcher has produced (if any)
    */
+  //按顺序保存已经dispatch的节点
   protected final Queue<Node> opQueue;
   /**
    * toWalk stores the starting nodes for the graph that needs to be
    * traversed
    */
   protected final List<Node> toWalk = new ArrayList<Node>();
+  //walk graph:每个节点NODE 丰富为ExprDesc
   protected final IdentityHashMap<Node, Object> retMap = new  IdentityHashMap<Node, Object>();
   protected final Dispatcher dispatcher;
 
@@ -103,6 +106,7 @@ public class DefaultGraphWalker implements GraphWalker {
     if (nd.getChildren() != null) {
       nodeOutputs = new Object[nd.getChildren().size()];
       int i = 0;
+      //nodeOutPut存的是对应节点的desc
       for (Node child : nd.getChildren()) {
         nodeOutputs[i++] = retMap.get(child);
       }
@@ -118,6 +122,10 @@ public class DefaultGraphWalker implements GraphWalker {
     }
     //nodeOutputs存放nd的子节点
     Object retVal = dispatcher.dispatch(nd, ndStack, nodeOutputs);
+    if (retVal instanceof ExprNodeDesc) {
+      System.out.printf("edwin dispatchAndReturn node conver desc  is: %s%n", ((ExprNodeDesc) retVal).toString());
+    }
+
     //每个nd经过处理
     retMap.put(nd, retVal);
     return (T) retVal;
@@ -138,11 +146,17 @@ public class DefaultGraphWalker implements GraphWalker {
     while (toWalk.size() > 0) {
       Node nd = toWalk.remove(0);
       if (nd instanceof ASTNode) {
-        System.out.printf("edwin DefualtGraphWalker walk: %s%n", ((ASTNode) nd).toStringTree());
+        System.out.printf("edwin DefualtGraphWalker walk start: %s%n", ((ASTNode) nd).toStringTree());
 
       }
 
       walk(nd);
+      if (nd instanceof ASTNode) {
+        System.out.printf("edwin ExpressionWalker walk inner** end: %s%n", ((ASTNode) nd).toStringTree());
+        System.out.printf("edwin DefualtGraphWalker walk end: %s%n", ((ASTNode) nd).toStringTree());
+      }
+
+
       // Some walkers extending DefaultGraphWalker e.g. ForwardWalker
       // do not use opQueue and rely uniquely in the toWalk structure,
       // thus we store the results produced by the dispatcher here
@@ -151,7 +165,7 @@ public class DefaultGraphWalker implements GraphWalker {
         nodeOutput.put(nd, retMap.get(nd));
       }
     }
-
+    //ForwardWalke不会用opQueue。所以要在上面先把根节点保存在nodeOupput中
     // Store the results produced by the dispatcher
     while (!opQueue.isEmpty()) {
       Node node = opQueue.poll();

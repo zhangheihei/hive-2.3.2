@@ -133,6 +133,17 @@ public class RexNodeConverter {
   }
 
   //subqueries will need outer query's row resolver
+  /*
+  * cluster:An environment for related relational expressions during the optimization of a query.
+  * inpDataType: hivetableScan中的getRowType,行的类型集合 struct
+  * outerNameToPosMap:null
+  * nameToPosMap:列名：位置
+  * hiveRR:RowResolver中存放着普通列，分区列，虚拟列
+  * outerRR:null
+  * offset:0
+  * flattenExpr:true
+  * correlatedId: 熊猫没有TOK_SUBQUERY_EXPR， 应该为0
+  * */
   public RexNodeConverter(RelOptCluster cluster, RelDataType inpDataType,
                           ImmutableMap<String, Integer> outerNameToPosMap,
       ImmutableMap<String, Integer> nameToPosMap, RowResolver hiveRR, RowResolver outerRR, int offset, boolean flattenExpr, int correlatedId) {
@@ -163,14 +174,19 @@ public class RexNodeConverter {
 
   public RexNode convert(ExprNodeDesc expr) throws SemanticException {
     if (expr instanceof ExprNodeGenericFuncDesc) {
+      System.out.printf("edwin RexNode conver ExprNodeGenericFuncDesc is %s %n", expr.toString());
       return convert((ExprNodeGenericFuncDesc) expr);
     } else if (expr instanceof ExprNodeConstantDesc) {
+      System.out.printf("edwin RexNode conver ExprNodeConstantDesc is %s %n", expr.toString());
       return convert((ExprNodeConstantDesc) expr);
     } else if (expr instanceof ExprNodeColumnDesc) {
+      System.out.printf("edwin RexNode conver ExprNodeColumnDesc is %s %n", expr.toString());
       return convert((ExprNodeColumnDesc) expr);
     } else if (expr instanceof ExprNodeFieldDesc) {
+      System.out.printf("edwin RexNode conver ExprNodeFieldDesc is %s %n", expr.toString());
       return convert((ExprNodeFieldDesc) expr);
     } else if(expr instanceof  ExprNodeSubQueryDesc) {
+      System.out.printf("edwin RexNode conver ExprNodeSubQueryDesc is %s %n", expr.toString());
       return convert((ExprNodeSubQueryDesc) expr);
     } else {
       throw new RuntimeException("Unsupported Expression");
@@ -229,6 +245,9 @@ public class RexNodeConverter {
     }
   }
 
+  /*
+  * 把FUNC下面的子节点都convert
+  * */
   private RexNode convert(ExprNodeGenericFuncDesc func) throws SemanticException {
     ExprNodeDesc tmpExprNode;
     RexNode tmpRN;
@@ -249,12 +268,19 @@ public class RexNodeConverter {
     boolean isTransformableTimeStamp = func.getGenericUDF() instanceof GenericUDFUnixTimeStamp &&
             func.getChildren().size() != 0;
 
+
+    System.out.printf("edwin RexNode convert tgtUdf is %s isNumeric is %b, isCompare %b, isWhenCase %b, isTransformableTimeStamp %b%n",
+            tgtUdf.toString(), isNumeric, isCompare, isWhenCase, isTransformableTimeStamp);
+
     if (isNumeric) {
       tgtDT = func.getTypeInfo();
 
       assert func.getChildren().size() == 2;
       // TODO: checking 2 children is useless, compare already does that.
     } else if (isCompare && (func.getChildren().size() == 2)) {
+      System.out.printf("edwin RexNode isCompare convert exprNode expr0 is %s, typeInfo0 is %s, expr1 is %s, typeInfo is %s%n",
+              func.getChildren().get(0).toString(), func.getChildren().get(0)
+                      .getTypeInfo(), func.getChildren().get(1).toString(), func.getChildren().get(1).getTypeInfo());
       tgtDT = FunctionRegistry.getCommonClassForComparison(func.getChildren().get(0)
             .getTypeInfo(), func.getChildren().get(1).getTypeInfo());
     } else if (isWhenCase) {
@@ -285,8 +311,12 @@ public class RexNodeConverter {
         }
       }
 
+      System.out.printf("edwin RexNode convert exprNode typeInfo is %s, tmpExprNode(children) is %s%n",
+              tmpExprNode.getTypeInfo().toString(), tmpExprNode.toString());
+
       argTypeBldr.add(TypeConverter.convert(tmpExprNode.getTypeInfo(), cluster.getTypeFactory()));
       tmpRN = convert(tmpExprNode);
+      System.out.printf("edwin RexNode convert tmpRN(RexNode) is %s%n", tmpRN.toString());
       childRexNodeLst.add(tmpRN);
     }
 
@@ -297,7 +327,11 @@ public class RexNodeConverter {
 
     if (expr == null) {
       // This is not a cast; process the function.
+      //=号tyoeInfo是boolean
+      System.out.printf("edwin RexNode convert expr == null, func is %s, funcText is %s, typeInfo is %s%n",
+              func.toString(), func.getFuncText(), func.getTypeInfo().toString());
       retType = TypeConverter.convert(func.getTypeInfo(), cluster.getTypeFactory());
+      System.out.printf("checkcheckcheckcheckcheckcheckcheckcheck %n");
       SqlOperator calciteOp = SqlFunctionConverter.getCalciteOperator(func.getFuncText(),
           func.getGenericUDF(), argTypeBldr.build(), retType);
       if (calciteOp.getKind() == SqlKind.CASE) {
@@ -312,6 +346,7 @@ public class RexNodeConverter {
       }
       expr = cluster.getRexBuilder().makeCall(calciteOp, childRexNodeLst);
     } else {
+      System.out.printf("edwin RexNode convert expr != null%n");
       retType = expr.getType();
     }
 
@@ -319,7 +354,9 @@ public class RexNodeConverter {
     // an exception
     if (flattenExpr && (expr instanceof RexCall)
         && !(((RexCall) expr).getOperator() instanceof SqlCastFunction)) {
+        System.out.printf("edwin RexNode convert flattenExpr is true, expr is not SqlCastFunction%n");
       RexCall call = (RexCall) expr;
+      //flatte将节点展开
       expr = cluster.getRexBuilder().makeCall(retType, call.getOperator(),
           RexUtil.flatten(call.getOperands(), call.getOperator()));
     }
@@ -525,6 +562,7 @@ public class RexNodeConverter {
       return cluster.getRexBuilder().makeFieldAccess(corExpr, pos);
     }
     int pos = ic.hiveNameToPosMap.get(col.getColumn());
+    //makeInputRef 存放类型， 和索引
     return cluster.getRexBuilder().makeInputRef(
         ic.calciteInpDataType.getFieldList().get(pos).getType(), pos + ic.offsetInCalciteSchema);
   }

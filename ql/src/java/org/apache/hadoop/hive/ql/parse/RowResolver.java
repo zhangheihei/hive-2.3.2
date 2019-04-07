@@ -42,6 +42,7 @@ public class RowResolver implements Serializable{
   //结构 表名：列名：列信息
   private LinkedHashMap<String, LinkedHashMap<String, ColumnInfo>> rslvMap;
 
+  //internalName is 列的实际名称: string[]存放表别名，列别名
   private HashMap<String, String[]> invRslvMap;
   /*
    * now a Column can have an alternate mapping.

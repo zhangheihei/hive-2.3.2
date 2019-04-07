@@ -93,9 +93,12 @@ public class HiveTableScan extends TableScan implements HiveRelNode {
 
   private HiveTableScan(RelOptCluster cluster, RelTraitSet traitSet, RelOptHiveTable table,
       String alias, String concatQbIDAlias, RelDataType newRowtype, boolean useQBIdInDigest, boolean insideView) {
-    //TraitsUtil.getDefaultTraitSet(cluster)拿到默认的TraitSet和HiveVolcanoPlanner里默认注册的一致
-    //之所以不直接拿cluster里已有的，估计是因为后续会忘cluster里添加新的trait
+    //入参traitSet都不会。。。
+    //新生产需要的traitSet
     super(cluster, TraitsUtil.getDefaultTraitSet(cluster), table);
+    RelTraitSet edwinRealTraitSet = TraitsUtil.getDefaultTraitSet(cluster);
+    System.out.printf("edwin HiveTableScan edwinRealTraitSet is %s%n",  edwinRealTraitSet.toString());
+
     assert getConvention() == HiveRelNode.CONVENTION;
     //表别名, 真正的标的数据已经存放到super里
     this.tblAlias = alias;
