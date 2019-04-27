@@ -47,6 +47,8 @@ public class HiveAggregate extends Aggregate implements HiveRelNode {
       List<AggregateCall> aggCalls) {
     super(cluster, TraitsUtil.getDefaultTraitSet(cluster), child, indicator, groupSet,
             groupSets, aggCalls);
+    System.out.printf("edwin HiveAggregate edwinRealTraitSet is %s%n",  TraitsUtil.getDefaultTraitSet(cluster).toString());
+
   }
 
   @Override

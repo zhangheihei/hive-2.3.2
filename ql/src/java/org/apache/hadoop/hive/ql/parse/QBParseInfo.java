@@ -57,6 +57,7 @@ public class QBParseInfo {
    * insclause-0 -> x,y mapping
    */
   private final Map<String, List<String>> nameToDestSchema;
+  //抽样功能
   private final HashMap<String, TableSample> nameToSample;
   private final Map<ASTNode, String> exprToColumnAlias;
   //存放select表达式

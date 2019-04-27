@@ -56,8 +56,10 @@ public class QB {
   //保存语句中的所有别名
   private List<String> aliases;
   private QBParseInfo qbp;
+  //metaData
   private QBMetaData qbm;
   private QBJoinTree qbjoin;
+  //id 是结构别名
   private String id;
   private boolean isQuery;
   private boolean isAnalyzeRewrite;

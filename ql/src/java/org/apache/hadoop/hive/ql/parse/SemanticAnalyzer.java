@@ -4194,11 +4194,17 @@ public class SemanticAnalyzer extends BaseSemanticAnalyzer {
     }
 
     ASTNode root = (ASTNode) selExpr.getChild(0);
+    System.out.printf("edwin genSelectLogicalPlan getColAlias ASTNode root is %s" +
+                    "%n",
+            root.toStringTree());
     if (root.getType() == HiveParser.TOK_TABLE_OR_COL) {
       colAlias =
           BaseSemanticAnalyzer.unescapeIdentifier(root.getChild(0).getText().toLowerCase());
       colRef[0] = tabAlias;
       colRef[1] = colAlias;
+      System.out.printf("edwin genSelectLogicalPlan getColAlias ASTNode root tabAlias is %s, colAlias is %s, " +
+                      "%n",
+              tabAlias, colAlias);
       return colRef;
     }
 

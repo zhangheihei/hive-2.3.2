@@ -146,6 +146,9 @@ public class TypeCheckProcFactory {
       return null;
     }
 
+    System.out.printf("edwin panda go here&&&&&&&&&&&&&&&&& %n");
+
+
     RowResolver input = ctx.getInputRR();
     ExprNodeDesc desc = null;
 
@@ -159,9 +162,11 @@ public class TypeCheckProcFactory {
     // try outer row resolver
     RowResolver outerRR = ctx.getOuterRR();
     if(colInfo == null && outerRR != null) {
-        colInfo = outerRR.getExpression(expr);
+      System.out.printf("edwin panda go here colInfo == null && outerRR != null %n");
+      colInfo = outerRR.getExpression(expr);
     }
     if (colInfo != null) {
+      System.out.printf("edwin panda go here colInfo != null %n");
       desc = new ExprNodeColumnDesc(colInfo);
       ASTNode source = input.getExpressionSource(expr);
       if (source != null) {
@@ -169,6 +174,8 @@ public class TypeCheckProcFactory {
       }
       return desc;
     }
+
+    System.out.printf("edwin panda go here desc == null %n");
     return desc;
   }
 
@@ -1230,6 +1237,8 @@ public class TypeCheckProcFactory {
         throw new SemanticException("Unexpected ExprNode : " + nodeOutputs[1]);
       }
       ColumnInfo colInfo = input.get(tableAlias, colName);
+      System.out.printf("edwin panda processQualifiedColRef  expr is %s, tableAlias is " +
+              "%s, colName is %s%n", expr.toString(), tableAlias, colName);
 
       // Try outer Row resolver
       if(colInfo == null && ctx.getOuterRR() != null) {
@@ -1358,6 +1367,7 @@ public class TypeCheckProcFactory {
 
       // If the first child is a TOK_TABLE_OR_COL, and nodeOutput[0] is NULL,
       // and the operator is a DOT, then it's a table column reference.
+      //(. (tok_table_or_col edwin) privatehost) 这种确实为NULL
       if (expr.getType() == HiveParser.DOT
           && expr.getChild(0).getType() == HiveParser.TOK_TABLE_OR_COL
           && nodeOutputs[0] == null) {

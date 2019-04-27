@@ -33,7 +33,7 @@ import org.apache.hadoop.hive.ql.plan.DynamicPartitionCtx;
  *
  **/
 
-public class QBMetaData {
+public class   QBMetaData {
 
   public static final int DEST_INVALID = 0;
   public static final int DEST_TABLE = 1;

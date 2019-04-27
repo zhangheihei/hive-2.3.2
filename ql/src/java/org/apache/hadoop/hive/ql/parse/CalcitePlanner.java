@@ -1340,6 +1340,7 @@ public class CalcitePlanner extends SemanticAnalyzer {
       // 1. Gen Calcite Plan
       perfLogger.PerfLogBegin(this.getClass().getName(), PerfLogger.OPTIMIZER);
       try {
+        //所有的relNode已经生成
         calciteGenPlan = genLogicalPlan(getQB(), true, null, null);
         // if it is to create view, we do not use table alias
         resultSchema = SemanticAnalyzer.convertRowSchemaToResultSetSchema(
@@ -2349,7 +2350,7 @@ public class CalcitePlanner extends SemanticAnalyzer {
         } else {
           // Build row type from field <type, name>
           //RelDataType就是CBO中每个数据的类型
-          //rowType 是表的整个行信息struct类型
+          //rowType 是表的整个行信息struct类型 记录 internaleName:type
           RelDataType rowType = TypeConverter.getType(cluster, rr, null);
           // Build RelOptAbstractTable
           //拿到数据库Name
@@ -2388,6 +2389,8 @@ public class CalcitePlanner extends SemanticAnalyzer {
             tableRel);
         relToHiveRR.put(tableRel, rr);
         relToHiveColNameCalcitePosMap.put(tableRel, hiveToCalciteColMap);
+        System.out.printf("edwin genTableLogicalPlan relToHiveRR is %s, relToHiveColNameCalcitePosMap is %s " +
+                "%n", relToHiveRR.toString(), relToHiveColNameCalcitePosMap.toString());
       } catch (Exception e) {
         if (e instanceof SemanticException) {
           throw (SemanticException) e;
@@ -2449,6 +2452,8 @@ public class CalcitePlanner extends SemanticAnalyzer {
       this.relToHiveColNameCalcitePosMap.put(filterRel, hiveColNameCalcitePosMap);
       relToHiveRR.put(filterRel, relToHiveRR.get(srcRel));
       relToHiveColNameCalcitePosMap.put(filterRel, hiveColNameCalcitePosMap);
+      System.out.printf("edwin genFilterRelNode->genFilterRelNode relToHiveColNameCalcitePosMap is %s," +
+              " relToHiveRR is %s %n", relToHiveColNameCalcitePosMap.toString(), relToHiveRR.toString());
 
       return filterRel;
     }
@@ -2743,14 +2748,26 @@ public class CalcitePlanner extends SemanticAnalyzer {
       return new AggregateCall(aggregation, agg.m_distinct, argList, aggFnRetType, null);
     }
 
+    /*
+    * GB子句
+    * gbExprs:子句中节点对应的expr
+    * aggInfoLst:聚合list
+    * groupSets:
+    * srcRel:关系表达式，熊猫中是hiveFilter
+    * */
     private RelNode genGBRelNode(List<ExprNodeDesc> gbExprs, List<AggInfo> aggInfoLst,
         List<Integer> groupSets, RelNode srcRel) throws SemanticException {
+      System.out.printf("edwin genGBLogicalPlan->genGBRelNode gbExprs len is %s, aggInfoLst len is %s" +
+                      ", groupSets is %s,  srcRel is %s %n",
+              (gbExprs != null)?gbExprs.toString():"null", (aggInfoLst != null)?aggInfoLst.toString():"null",
+              (groupSets != null)?groupSets.toString():"null", srcRel.toString());
       ImmutableMap<String, Integer> posMap = this.relToHiveColNameCalcitePosMap.get(srcRel);
       RexNodeConverter converter = new RexNodeConverter(this.cluster, srcRel.getRowType(), posMap,
           0, false);
 
       final boolean hasGroupSets = groupSets != null && !groupSets.isEmpty();
       final List<RexNode> gbChildProjLst = Lists.newArrayList();
+      //rexNode对应的索引
       final HashMap<String, Integer> rexNodeToPosMap = new HashMap<String, Integer>();
       final List<Integer> groupSetPositions = Lists.newArrayList();
       Integer gbIndx = 0;
@@ -2799,6 +2816,8 @@ public class CalcitePlanner extends SemanticAnalyzer {
       }
       RelNode gbInputRel = HiveProject.create(srcRel, gbChildProjLst, null);
 
+      //transformedGroupSets熊猫为null
+      //在聚合之前 先有映射关系表达式
       HiveRelNode aggregateRel = new HiveAggregate(cluster, cluster.traitSetOf(HiveRelNode.CONVENTION),
             gbInputRel, (transformedGroupSets!=null ? true:false), groupSet,
             transformedGroupSets, aggregateCalls);
@@ -2830,6 +2849,9 @@ public class CalcitePlanner extends SemanticAnalyzer {
             .getText().toLowerCase());
         String col_alias = BaseSemanticAnalyzer.unescapeIdentifier(gByExpr.getChild(1).getText().toLowerCase());
         gByRR.put(tab_alias, col_alias, colInfo);
+        System.out.printf("edwin first genGBLogicalPlan->addToGBExpr->addAlternateGByKeyMappings " +
+                "gByExpr is %s, tab_alias is %s, col_alias is %s %n", gByExpr.toStringTree(), tab_alias, col_alias);
+
       } else if (gByExpr.getType() == HiveParser.TOK_TABLE_OR_COL) {
         String col_alias = BaseSemanticAnalyzer.unescapeIdentifier(gByExpr.getChild(0).getText().toLowerCase());
         String tab_alias = null;
@@ -2845,10 +2867,22 @@ public class CalcitePlanner extends SemanticAnalyzer {
           tab_alias = pColInfo == null ? null : pColInfo.getTabAlias();
         } catch (SemanticException se) {
         }
+
+        System.out.printf("edwin second genGBLogicalPlan->addToGBExpr->addAlternateGByKeyMappings " +
+                "gByExpr is %s, tab_alias is %s, col_alias is %s %n", gByExpr.toStringTree(), tab_alias, col_alias);
+
         gByRR.put(tab_alias, col_alias, colInfo);
       }
     }
-
+    /*
+    * groupByOutputRowResolver: output的rowResolver
+    * groupByInputRowResolver:input的rowResolver
+    * grpbyExpr:tok_selexpr下面的节点(ASTNODE) 如huya, . , .
+    * grpbyExprNDesc:astNode对应的desc
+    * gbExprNDescLst:存放desc的列表
+    * outputColumnNames：group by 输出的列名吧
+    *
+    * */
     private void addToGBExpr(RowResolver groupByOutputRowResolver,
         RowResolver groupByInputRowResolver, ASTNode grpbyExpr, ExprNodeDesc grpbyExprNDesc,
         List<ExprNodeDesc> gbExprNDescLst, List<String> outputColumnNames) {
@@ -2856,12 +2890,15 @@ public class CalcitePlanner extends SemanticAnalyzer {
       // UDF
       int i = gbExprNDescLst.size();
       String field = SemanticAnalyzer.getColumnInternalName(i);
+        System.out.printf("edwin genGBLogicalPla->addToGBExpr field is %s %n", field);
       outputColumnNames.add(field);
       gbExprNDescLst.add(grpbyExprNDesc);
 
       ColumnInfo oColInfo = new ColumnInfo(field, grpbyExprNDesc.getTypeInfo(), null, false);
+      // 将列信息添加到outPutRowResolver
       groupByOutputRowResolver.putExpression(grpbyExpr, oColInfo);
 
+      //有表别名的话 就要存一个别名信息
       addAlternateGByKeyMappings(grpbyExpr, oColInfo, groupByInputRowResolver,
           groupByOutputRowResolver);
     }
@@ -3000,6 +3037,10 @@ public class CalcitePlanner extends SemanticAnalyzer {
       List<ASTNode> grpByAstExprs = getGroupByForClause(qbp, detsClauseName);
       if (grpByAstExprs.isEmpty()) {
         System.out.printf("edwin genGBLogicalPlan List<ASTNode> grpByAstExprs is empty %n");
+      }else {
+        System.out.printf("edwin genGBLogicalPlan List<ASTNode> grpByAstExprs is not empty %n");
+        System.out.printf("edwin genGBLogicalPlan List<ASTNode> grpByAstExprs is %s %n",
+        org.apache.commons.lang.StringUtils.join(grpByAstExprs.toArray(),','));
       }
       HashMap<String, ASTNode> aggregationTrees = qbp.getAggregationExprsForClause(detsClauseName);
       if (aggregationTrees.isEmpty()) {
@@ -3054,9 +3095,12 @@ public class CalcitePlanner extends SemanticAnalyzer {
         // 3. Input, Output Row Resolvers
         RowResolver groupByInputRowResolver = this.relToHiveRR.get(srcRel);
         RowResolver groupByOutputRowResolver = new RowResolver();
+        System.out.printf("edwin genGBLogicalPlan process GB groupByInputRowResolver is %s %n",
+                groupByInputRowResolver.toString());
         groupByOutputRowResolver.setIsExprResolver(true);
 
         if (hasGrpByAstExprs) {
+          System.out.printf("edwin genGBLogicalPlan hasGrpByAstExprs is true %n");
           // 4. Construct GB Keys (ExprNode)
           for (int i = 0; i < grpByAstExprs.size(); ++i) {
             ASTNode grpbyExpr = grpByAstExprs.get(i);
@@ -3070,11 +3114,14 @@ public class CalcitePlanner extends SemanticAnalyzer {
                 grpbyExprNDesc, gbExprNDescLst, outputColumnNames);
           }
         }
-
+        System.out.printf("edwin genGBLogicalPlan groupByOutputRowResolver is %s %n ",
+                groupByOutputRowResolver.toString());
+        System.out.printf("HHHHHHHHHHHHHHHHHHHHHHHHHHHHHH1 %n");
         // 5. GroupingSets, Cube, Rollup
         int groupingColsSize = gbExprNDescLst.size();
         List<Integer> groupingSets = null;
         if (cubeRollupGrpSetPresent) {
+          System.out.printf("edwin genGBLogicalPlan cubeRollupGrpSetPresent is true %n");
           if (qbp.getDestRollups().contains(detsClauseName)) {
             groupingSets = getGroupingSetsForRollup(grpByAstExprs.size());
           } else if (qbp.getDestCubes().contains(detsClauseName)) {
@@ -3096,10 +3143,13 @@ public class CalcitePlanner extends SemanticAnalyzer {
             groupingColsSize++;
           }
         }
+        System.out.printf("HHHHHHHHHHHHHHHHHHHHHHHHHHHHHH2 %n");
+
 
         // 6. Construct aggregation function Info
         ArrayList<AggInfo> aggregations = new ArrayList<AggInfo>();
         if (hasAggregationTrees) {
+          System.out.printf("edwin genGBLogicalPlan hasAggregationTrees is true %n");
           assert (aggregationTrees != null);
           for (ASTNode value : aggregationTrees.values()) {
             // 6.1 Determine type of UDAF
@@ -3131,9 +3181,11 @@ public class CalcitePlanner extends SemanticAnalyzer {
                 "", false));
           }
         }
+        System.out.printf("HHHHHHHHHHHHHHHHHHHHHHHHHHHHHH3 %n");
 
         // 7. If GroupingSets, Cube, Rollup were used, we account grouping__id
         if(groupingSets != null && !groupingSets.isEmpty()) {
+          System.out.printf("edwin genGBLogicalPlan groupingSets != null && !groupingSets.isEmpty() %n");
           String field = getColumnInternalName(groupingColsSize + aggregations.size());
           outputColumnNames.add(field);
           groupByOutputRowResolver.put(null, VirtualColumn.GROUPINGID.getName(),
@@ -3143,14 +3195,22 @@ public class CalcitePlanner extends SemanticAnalyzer {
                           null,
                           true));
         }
+        System.out.printf("HHHHHHHHHHHHHHHHHHHHHHHHHHHHHH4 %n");
 
         // 8. We create the group_by operator
+        //groupByOutputRowResolver存放的OutputRowResolver的ImmutableMap<String, Integer>
         gbRel = genGBRelNode(gbExprNDescLst, aggregations, groupingSets, srcRel);
+        System.out.printf("HHHHHHHHHHHHHHHHHHHHHHHHHHHHHH5 %n");
         relToHiveColNameCalcitePosMap.put(gbRel,
             buildHiveToCalciteColumnMap(groupByOutputRowResolver, gbRel));
         this.relToHiveRR.put(gbRel, groupByOutputRowResolver);
-      }
+        System.out.printf("HHHHHHHHHHHHHHHHHHHHHHHHHHHHHH6 %n");
 
+
+      }
+      System.out.printf("HHHHHHHHHHHHHHHHHHHHHHHHHHHHHH7 %n");
+      System.out.printf("edwin genGBLogicalPlan relToHiveColNameCalcitePosMap is %s," +
+              "relToHiveRR is %s %n", relToHiveColNameCalcitePosMap.toString(), relToHiveRR.toString());
       return gbRel;
     }
 
@@ -3646,6 +3706,8 @@ public class CalcitePlanner extends SemanticAnalyzer {
       }
 
       System.out.printf("edwin genSelectLogicalPlan->genSelectRelNode project RelNode is %s %n", selRel.toString());
+      System.out.printf("edwin genFilterRelNode->genFilterRelNode relToHiveColNameCalcitePosMap is %s," +
+              " relToHiveRR is %s %n", relToHiveColNameCalcitePosMap.toString(), relToHiveRR.toString());
       return selRel;
     }
 
@@ -3667,8 +3729,10 @@ public class CalcitePlanner extends SemanticAnalyzer {
         throws SemanticException {
       // 0. Generate a Select Node for Windowing
       // Exclude the newly-generated select columns from */etc. resolution.
-      System.out.printf("edwin genSelectLogicalPlan srcRel is %s, starSrcRel is %s %n",
-              srcRel.toString(), starSrcRel.toString());
+      System.out.printf("edwin genSelectLogicalPlan srcRel is %s, starSrcRel is %s，outerNameToPosMap is %s," +
+                      " outerRR is %s %n",
+              srcRel.toString(), starSrcRel.toString(), (outerNameToPosMap==null)?"NULL":outerNameToPosMap.toString(),
+              (outerRR==null)?"NULL":outerRR.toString());
       HashSet<ColumnInfo> excludedColumns = new HashSet<ColumnInfo>();
       RelNode selForWindow = genSelectForWindowing(qb, srcRel, excludedColumns);
       srcRel = (selForWindow == null) ? srcRel : selForWindow;
@@ -3696,7 +3760,8 @@ public class CalcitePlanner extends SemanticAnalyzer {
       if (starSrcRel != null) {
         starRR = this.relToHiveRR.get(starSrcRel);
       }
-
+      System.out.printf("edwin genSelectLogicalPlan inputRR is %s,starRR is %s %n", inputRR.toString(),
+              starRR.toString());
       // 3. Query Hints
       // TODO: Handle Query Hints; currently we ignore them
       boolean selectStar = false;
@@ -3845,8 +3910,8 @@ public class CalcitePlanner extends SemanticAnalyzer {
                       UnsupportedFeature.Duplicates_in_RR);
             }
           } else {
-
-            // 6.4 Build ExprNode corresponding to colums
+            System.out.printf("edwin genSelectLogicalPlan expr is %s, type is %d %n", expr.toStringTree(), expr.getType());
+                    // 6.4 Build ExprNode corresponding to colums
             if (expr.getType() == HiveParser.TOK_ALLCOLREF) {
               pos = genColListRegex(".*", expr.getChildCount() == 0 ? null : SemanticAnalyzer
                               .getUnescapedName((ASTNode) expr.getChild(0)).toLowerCase(), expr, col_list,
@@ -3914,6 +3979,7 @@ public class CalcitePlanner extends SemanticAnalyzer {
                       exp.getWritableObjectInspector(), tabAlias, false);
               colInfo.setSkewedCol((exp instanceof ExprNodeColumnDesc) ? ((ExprNodeColumnDesc) exp)
                       .isSkewedCol() : false);
+              //表名，列别名，OUTPUT的表信息
               if (!out_rwsch.putWithCheck(tabAlias, colAlias, null, colInfo)) {
                 throw new CalciteSemanticException("Cannot add column to RR: " + tabAlias + "."
                         + colAlias + " => " + colInfo + " due to duplication, see previous warnings",
@@ -3936,6 +4002,7 @@ public class CalcitePlanner extends SemanticAnalyzer {
             }
           }
       }
+      System.out.printf("edwin genSelectLogicalPlan out_rwsch is %s %n", out_rwsch.toString());
       selectStar = selectStar && exprList.getChildCount() == posn + 1;
 
       // 7. Convert Hive projections to Calcite
@@ -4150,6 +4217,8 @@ public class CalcitePlanner extends SemanticAnalyzer {
         QBExpr qbexpr = qb.getSubqForAlias(subqAlias);
         RelNode relNode = genLogicalPlan(qbexpr);
         aliasToRel.put(subqAlias, relNode);
+        System.out.printf("edwin genLogicalPlan aliasToRel is %s %n", aliasToRel.toString());
+        //必须得是视图才行
         if (qb.getViewToTabSchema().containsKey(subqAlias)) {
           if (relNode instanceof HiveProject) {
             if (this.viewProjectToTableSchema == null) {
@@ -4221,16 +4290,25 @@ public class CalcitePlanner extends SemanticAnalyzer {
       //如果GB和GB HAVING为空 那么srcRel为filterRel(包含的有hiveTableScan)
       selectRel = genSelectLogicalPlan(qb, srcRel, starSrcRel, outerNameToPosMap, outerRR);
       srcRel = (selectRel == null) ? srcRel : selectRel;
+      if (selectRel == null) {
+        System.out.printf("edwin genLogicalPlan selectRel is null%n");
+      }
 
       // 6. Build Rel for OB Clause
       Pair<RelNode, RelNode> obTopProjPair = genOBLogicalPlan(qb, srcRel, outerMostQB);
       obRel = obTopProjPair.getKey();
       RelNode topConstrainingProjArgsRel = obTopProjPair.getValue();
       srcRel = (obRel == null) ? srcRel : obRel;
+      if (obRel == null) {
+        System.out.printf("edwin genLogicalPlan obRel is null%n");
+      }
 
       // 7. Build Rel for Limit Clause
       limitRel = genLimitLogicalPlan(qb, srcRel);
       srcRel = (limitRel == null) ? srcRel : limitRel;
+      if (srcRel == null) {
+        System.out.printf("edwin genLogicalPlan srcRel is null%n");
+      }
 
       // 8. Introduce top constraining select if needed.
       // NOTES:
@@ -4247,6 +4325,10 @@ public class CalcitePlanner extends SemanticAnalyzer {
       // in the PlanModifierForASTConv we would modify the top level OB to
       // migrate exprs from input sel to SortRel (Note that Calcite doesn't
       // support this; but since we are done with Calcite at this point its OK).
+      if (topConstrainingProjArgsRel == null) {
+        System.out.printf("edwin genLogicalPlan topConstrainingProjArgsRel is null%n");
+
+      }
       if (topConstrainingProjArgsRel != null) {
         List<RexNode> originalInputRefs = Lists.transform(topConstrainingProjArgsRel.getRowType()
             .getFieldList(), new Function<RelDataTypeField, RexNode>() {
@@ -4266,8 +4348,12 @@ public class CalcitePlanner extends SemanticAnalyzer {
       // 9. Incase this QB corresponds to subquery then modify its RR to point
       // to subquery alias
       // TODO: cleanup this
+      //这里多次一举没明白
+      //我的理解是之前select的节点处，table_alias是空的
       if (qb.getParseInfo().getAlias() != null) {
+        System.out.printf("edwin genLogicalPlan ninth step qb.getParseInfo().getAlias() is %s%n", qb.getParseInfo().getAlias());
         RowResolver rr = this.relToHiveRR.get(srcRel);
+        System.out.printf("edwin genLogicalPlan ninth step srcRel is %s%n", srcRel);
         RowResolver newRR = new RowResolver();
         String alias = qb.getParseInfo().getAlias();
         for (ColumnInfo colInfo : rr.getColumnInfos()) {
@@ -4277,18 +4363,24 @@ public class CalcitePlanner extends SemanticAnalyzer {
             // ast expression is not a valid column name for table
             tmp[1] = colInfo.getInternalName();
           }
+          System.out.printf("edwin genLogicalPlan ninth step:internalname is %s, tmp[1](col_alist) is %s%n",
+                  name, tmp[1]);
           ColumnInfo newCi = new ColumnInfo(colInfo);
           newCi.setTabAlias(alias);
           newRR.put(alias, tmp[1], newCi);
         }
         relToHiveRR.put(srcRel, newRR);
         relToHiveColNameCalcitePosMap.put(srcRel, buildHiveToCalciteColumnMap(newRR, srcRel));
+        System.out.printf("edwin genFilterRelNode->genFilterRelNode relToHiveColNameCalcitePosMap is %s," +
+                " relToHiveRR is %s %n", relToHiveColNameCalcitePosMap.toString(), relToHiveRR.toString());
+
       }
 
       if (LOG.isDebugEnabled()) {
         LOG.debug("Created Plan for Query Block " + qb.getId());
       }
 
+      //setQB 不知道干嘛
       setQB(qb);
       return srcRel;
     }

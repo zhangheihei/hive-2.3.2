@@ -178,6 +178,7 @@ public class UnparseTranslator {
    */
   void addIdentifierTranslation(ASTNode identifier) {
     if (!enabled) {
+      System.out.printf("edwin addIdentifierTranslation is false %n");
       return;
     }
     assert (identifier.getToken().getType() == HiveParser.Identifier);

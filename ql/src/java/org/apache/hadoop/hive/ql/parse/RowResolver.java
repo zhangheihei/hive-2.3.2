@@ -51,6 +51,7 @@ public class RowResolver implements Serializable{
    * invRslvMap.
    */
   private final Map<String, String[]> altInvRslvMap;
+  //存放astnode的toStringTree,和ASTNode
   private  Map<String, ASTNode> expressionMap;
 
   // TODO: Refactor this and do in a more object oriented manner
@@ -76,9 +77,12 @@ public class RowResolver implements Serializable{
    * entries is an empty-string ("") as the table alias together with the
    * string rendering of the ASTNode as the column alias.
    */
+  //利用ASTNODE的treeAsString作为列索引，生成rowSolver
   public void putExpression(ASTNode node, ColumnInfo colInfo) {
     String treeAsString = node.toStringTree();
-    expressionMap.put(treeAsString, node);
+      System.out.printf("edwin genGBLogicalPla->addToGBExpr->putExpression treeAsString is %s %n", treeAsString);
+      expressionMap.put(treeAsString, node);
+      //这时候 表示是空字符串
     put("", treeAsString, colInfo);
   }
 

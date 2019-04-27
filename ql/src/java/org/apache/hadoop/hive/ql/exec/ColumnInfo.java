@@ -90,6 +90,7 @@ public class ColumnInfo implements Serializable {
     this(internalName, objectInspector, tabAlias, isVirtualCol, false);
   }
 
+  //为啥存别名，而不是实际表明
   public ColumnInfo(String internalName, ObjectInspector objectInspector,
       String tabAlias, boolean isVirtualCol, boolean isHiddenVirtualCol) {
     this.internalName = internalName;
