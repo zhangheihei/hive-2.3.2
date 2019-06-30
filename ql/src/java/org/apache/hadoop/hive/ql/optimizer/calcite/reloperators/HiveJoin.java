@@ -81,6 +81,7 @@ public class HiveJoin extends Join implements HiveRelNode {
       JoinAlgorithm joinAlgo) throws InvalidRelException, CalciteSemanticException {
     super(cluster, TraitsUtil.getDefaultTraitSet(cluster), left, right, condition, joinType,
         variablesStopped);
+    System.out.printf("edwin hiveJoin traitSet is %s%n",TraitsUtil.getDefaultTraitSet(cluster).toString());
     final List<RelDataTypeField> systemFieldList = ImmutableList.of();
     List<List<RexNode>> joinKeyExprs = new ArrayList<List<RexNode>>();
     List<Integer> filterNulls = new ArrayList<Integer>();

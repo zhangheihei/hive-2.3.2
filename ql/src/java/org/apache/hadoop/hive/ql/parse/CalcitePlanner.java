@@ -1342,6 +1342,8 @@ public class CalcitePlanner extends SemanticAnalyzer {
       try {
         //所有的relNode已经生成
         calciteGenPlan = genLogicalPlan(getQB(), true, null, null);
+        System.out.printf("edwin genLogicalPlan is end, calciteGenPlan is %s %n",
+                calciteGenPlan.toString());
         // if it is to create view, we do not use table alias
         resultSchema = SemanticAnalyzer.convertRowSchemaToResultSetSchema(
             relToHiveRR.get(calciteGenPlan),
@@ -1356,6 +1358,9 @@ public class CalcitePlanner extends SemanticAnalyzer {
       HiveRelFieldTrimmer fieldTrimmer = new HiveRelFieldTrimmer(null,
           HiveRelFactories.HIVE_BUILDER.create(optCluster, null), this.columnAccessInfo,
           this.viewProjectToTableSchema);
+
+      System.out.printf("edwin genLogicalPlan is end, before trim, calciteGenPlan.getRowType().getFieldCount() is" +
+              "  %d %n", calciteGenPlan.getRowType().getFieldCount());
       fieldTrimmer.trim(calciteGenPlan);
 
       // Create and set MD provider
@@ -1936,7 +1941,8 @@ public class CalcitePlanner extends SemanticAnalyzer {
       return setOpRel;
     }
 
-    private RelNode genJoinRelNode(RelNode leftRel, String leftTableAlias, RelNode rightRel, String rightTableAlias, JoinType hiveJoinType,
+    private RelNode genJoinRelNode(RelNode leftRel, String leftTableAlias, RelNode rightRel, String rightTableAlias,
+                                   JoinType hiveJoinType,
         ASTNode joinCond) throws SemanticException {
 
       RowResolver leftRR = this.relToHiveRR.get(leftRel);
@@ -1948,6 +1954,8 @@ public class CalcitePlanner extends SemanticAnalyzer {
       if (joinCond != null) {
         JoinTypeCheckCtx jCtx = new JoinTypeCheckCtx(leftRR, rightRR, hiveJoinType);
         RowResolver input = RowResolver.getCombinedRR(leftRR, rightRR);
+        System.out.printf("edwin genLogicalPlan->genJoinLogicalPlan->genJoinRelNode  CombinedRR input" +
+                " is %s %n", input.toString());
         // named columns join
         // TODO: we can also do the same for semi join but it seems that other
         // DBMS does not support it yet.
@@ -1976,6 +1984,7 @@ public class CalcitePlanner extends SemanticAnalyzer {
           }
           joinCond = count > 1 ? and : equal;
         } else if (unparseTranslator != null && unparseTranslator.isEnabled()) {
+          System.out.printf("edwin genLogicalPlan->genJoinLogicalPlan->genJoinRelNode unparseTranslator != null && unparseTranslator.isEnabled() %n");
           genAllExprNodeDesc(joinCond, input, jCtx);
         }
         Map<ASTNode, ExprNodeDesc> exprNodes = JoinCondTypeCheckProcFactory.genExprNode(joinCond,
@@ -1993,7 +2002,8 @@ public class CalcitePlanner extends SemanticAnalyzer {
       } else {
         calciteJoinCond = cluster.getRexBuilder().makeLiteral(true);
       }
-
+      System.out.printf("edwin genLogicalPlan->genJoinLogicalPlan->genJoinRelNode first step " +
+              "calciteJoinCond is %s %n", calciteJoinCond.toString());
       // 2. Validate that join condition is legal (i.e no function refering to
       // both sides of join, only equi join)
       // TODO: Join filter handling (only supported for OJ by runtime or is it
@@ -2100,6 +2110,8 @@ public class CalcitePlanner extends SemanticAnalyzer {
       // 4. Add new rel & its RR to the maps
       relToHiveColNameCalcitePosMap.put(topRel, this.buildHiveToCalciteColumnMap(topRR, topRel));
       relToHiveRR.put(topRel, topRR);
+      System.out.printf("edwin genGBLogicalPlan relToHiveColNameCalcitePosMap is %s," +
+              "relToHiveRR is %s %n", relToHiveColNameCalcitePosMap.toString(), relToHiveRR.toString());
       return topRel;
     }
 
@@ -2125,7 +2137,8 @@ public class CalcitePlanner extends SemanticAnalyzer {
         LOG.debug(msg);
         throw new CalciteSemanticException(msg, UnsupportedFeature.Unique_join);
       }
-
+      System.out.printf("edwin genLogicalPlan->genJoinLogicalPlan joinParseTree is %s , type is %d %n"
+      , joinParseTree.toStringTree(), joinParseTree.getToken().getType());
       // 1. Determine Join Type
       // TODO: What about TOK_CROSSJOIN, TOK_MAPJOIN
       switch (joinParseTree.getToken().getType()) {
@@ -2152,8 +2165,13 @@ public class CalcitePlanner extends SemanticAnalyzer {
       if ((left.getToken().getType() == HiveParser.TOK_TABREF)
           || (left.getToken().getType() == HiveParser.TOK_SUBQUERY)
           || (left.getToken().getType() == HiveParser.TOK_PTBLFUNCTION)) {
+        System.out.printf("edwin genLogicalPlan->genJoinLogicalPlan joinParseTree  left is %s %n",
+                left.toStringTree());
+
         String tableName = SemanticAnalyzer.getUnescapedUnqualifiedTableName(
             (ASTNode) left.getChild(0)).toLowerCase();
+        System.out.printf("edwin genLogicalPlan->genJoinLogicalPlan tableName   is %s %n",
+                tableName);
         leftTableAlias = left.getChildCount() == 1 ? tableName : SemanticAnalyzer
             .unescapeIdentifier(left.getChild(left.getChildCount() - 1).getText().toLowerCase());
         // ptf node form is: ^(TOK_PTBLFUNCTION $name $alias?
@@ -2188,8 +2206,12 @@ public class CalcitePlanner extends SemanticAnalyzer {
         assert (false);
       }
 
+      System.out.printf("edwin genLogicalPlan->genJoinLogicalPlan leftRel is %s, rightRel is %s %n",
+              leftRel.toString(), rightRel.toString());
       // 4. Get Join Condn
       ASTNode joinCond = (ASTNode) joinParseTree.getChild(2);
+      System.out.printf("edwin genLogicalPlan->genJoinLogicalPlan joinCond is %s %n", joinCond.toStringTree());
+
 
       // 5. Create Join rel
       return genJoinRelNode(leftRel, leftTableAlias, rightRel, rightTableAlias, hiveJoinType, joinCond);
@@ -2815,7 +2837,7 @@ public class CalcitePlanner extends SemanticAnalyzer {
         gbChildProjLst.add(this.cluster.getRexBuilder().makeInputRef(srcRel, 0));
       }
       RelNode gbInputRel = HiveProject.create(srcRel, gbChildProjLst, null);
-
+      System.out.printf("edwin genGBLogicalPlan->genGBRelNode project RelNode is before Aggreage %s %n", gbInputRel.toString());
       //transformedGroupSets熊猫为null
       //在聚合之前 先有映射关系表达式
       HiveRelNode aggregateRel = new HiveAggregate(cluster, cluster.traitSetOf(HiveRelNode.CONVENTION),
@@ -3910,9 +3932,11 @@ public class CalcitePlanner extends SemanticAnalyzer {
                       UnsupportedFeature.Duplicates_in_RR);
             }
           } else {
-            System.out.printf("edwin genSelectLogicalPlan expr is %s, type is %d %n", expr.toStringTree(), expr.getType());
+            System.out.printf("edwin genSelectLogicalPlan expr is %s, type is %d %n",
+                    expr.toStringTree(), expr.getType());
                     // 6.4 Build ExprNode corresponding to colums
             if (expr.getType() == HiveParser.TOK_ALLCOLREF) {
+              System.out.printf("edwin genSelectLogicalPlan is TOK_ALLCOLREF %n");
               pos = genColListRegex(".*", expr.getChildCount() == 0 ? null : SemanticAnalyzer
                               .getUnescapedName((ASTNode) expr.getChild(0)).toLowerCase(), expr, col_list,
                       excludedColumns, inputRR, starRR, pos, out_rwsch, qb.getAliases(), true);
@@ -4258,6 +4282,7 @@ public class CalcitePlanner extends SemanticAnalyzer {
       }
       // 1.3 process join
       if (qb.getParseInfo().getJoinExpr() != null) {
+        System.out.printf("edwin genLogicalPlan->genJoinLogicalPlan ################## %n");
         srcRel = genJoinLogicalPlan(qb.getParseInfo().getJoinExpr(), aliasToRel);
       } else {
         // If no join then there should only be either 1 TS or 1 SubQuery
@@ -4271,6 +4296,9 @@ public class CalcitePlanner extends SemanticAnalyzer {
       filterRel = genFilterLogicalPlan(qb, srcRel, aliasToRel, outerNameToPosMap, outerRR, false);
       srcRel = (filterRel == null) ? srcRel : filterRel;
       RelNode starSrcRel = srcRel;
+      if (filterRel == null) {
+        System.out.printf("edwin genLogicalPlan filterRel is null%n");
+      }
 
       // 3. Build Rel for GB Clause
       gbRel = genGBLogicalPlan(qb, srcRel);
@@ -4306,8 +4334,8 @@ public class CalcitePlanner extends SemanticAnalyzer {
       // 7. Build Rel for Limit Clause
       limitRel = genLimitLogicalPlan(qb, srcRel);
       srcRel = (limitRel == null) ? srcRel : limitRel;
-      if (srcRel == null) {
-        System.out.printf("edwin genLogicalPlan srcRel is null%n");
+      if (limitRel == null) {
+        System.out.printf("edwin genLogicalPlan limitRel is null%n");
       }
 
       // 8. Introduce top constraining select if needed.

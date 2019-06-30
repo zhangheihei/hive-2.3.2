@@ -350,6 +350,8 @@ public class RexNodeConverter {
       retType = expr.getType();
     }
 
+    System.out.printf("edwin RexNode convert final(RexNode) is %s%n", expr.toString());
+
     // TODO: Cast Function in Calcite have a bug where it infer type on cast throws
     // an exception
     if (flattenExpr && (expr instanceof RexCall)
@@ -563,6 +565,7 @@ public class RexNodeConverter {
     }
     int pos = ic.hiveNameToPosMap.get(col.getColumn());
     //makeInputRef 存放类型， 和索引
+    //pos + offset 比如4+1 前四后三 0 1 2 3 4(0) 5(1) 6(2)
     return cluster.getRexBuilder().makeInputRef(
         ic.calciteInpDataType.getFieldList().get(pos).getType(), pos + ic.offsetInCalciteSchema);
   }
@@ -729,6 +732,7 @@ public class RexNodeConverter {
       inputCtxLst.add(new InputCtx(r.getRowType(), relToHiveColNameCalcitePosMap.get(r), relToHiveRR
           .get(r), offSet));
       offSet += r.getRowType().getFieldCount();
+      System.out.printf("edwin joinDesc->joinRexNode offset is %d %n", offSet);
     }
 
     return (new RexNodeConverter(cluster, inputCtxLst, flattenExpr)).convert(joinCondnExprNode);

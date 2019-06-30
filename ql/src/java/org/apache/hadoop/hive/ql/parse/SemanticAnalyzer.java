@@ -11653,8 +11653,10 @@ public class SemanticAnalyzer extends BaseSemanticAnalyzer {
       } else {
         colName = qualifiedColName[1];
       }
+      System.out.printf("edwin convertRowSchemaToViewSchema colName is %s %n", colName);
       fieldSchemas.add(new FieldSchema(colName, colInfo.getType().getTypeName(), null));
     }
+    System.out.printf("edwin convertRowSchemaToViewSchema fieldSchemas is %s %n", fieldSchemas.toString());
     return fieldSchemas;
   }
 

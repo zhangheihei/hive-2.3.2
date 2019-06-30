@@ -355,6 +355,8 @@ public abstract class BaseSemanticAnalyzer {
 
   public static String getUnescapedName(ASTNode tableOrColumnNode, String currentDatabase) {
     int tokenType = tableOrColumnNode.getToken().getType();
+    System.out.printf("edwin genLogicalPlan->genJoinLogicalPlan->getUnescapedUnqualifiedTableName->getUnescapedName" +
+            " is %s  %n", tableOrColumnNode.toStringTree());
     if (tokenType == HiveParser.TOK_TABNAME) {
       // table node
       Map.Entry<String,String> dbTablePair = getDbTableNamePair(tableOrColumnNode);
@@ -413,7 +415,8 @@ public abstract class BaseSemanticAnalyzer {
     if (node.getChildCount() == 2) {
       node = (ASTNode) node.getChild(1);
     }
-
+    System.out.printf("edwin genLogicalPlan->genJoinLogicalPlan->getUnescapedUnqualifiedTableName is %s  %n",
+            node.toStringTree());
     return getUnescapedName(node);
   }
 
@@ -430,6 +433,9 @@ public abstract class BaseSemanticAnalyzer {
     if (val.charAt(0) == '`' && val.charAt(val.length() - 1) == '`') {
       val = val.substring(1, val.length() - 1);
     }
+
+    System.out.printf("edwin genLogicalPlan->genJoinLogicalPlan->getUnescapedUnqualifiedTableName->getUnescapedName" +
+        "->unescapeIdentifier val is %s %n", val);
     return val;
   }
 
