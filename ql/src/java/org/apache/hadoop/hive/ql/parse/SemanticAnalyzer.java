@@ -292,6 +292,7 @@ public class SemanticAnalyzer extends BaseSemanticAnalyzer {
   Map<GroupByOperator, Set<String>> groupOpToInputTables;
   //CBO优化使用
   Map<String, PrunedPartitionList> prunedPartitions;
+  //在CBO中记录关系表达式的最终输出字段
   protected List<FieldSchema> resultSchema;
   protected CreateViewDesc createVwDesc;
   protected ArrayList<String> viewsExpanded;

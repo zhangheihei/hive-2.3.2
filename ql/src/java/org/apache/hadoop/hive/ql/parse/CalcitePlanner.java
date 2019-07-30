@@ -1355,12 +1355,13 @@ public class CalcitePlanner extends SemanticAnalyzer {
       }
       perfLogger.PerfLogEnd(this.getClass().getName(), PerfLogger.OPTIMIZER, "Calcite: Plan generation");
       // We need to get the ColumnAccessInfo and viewToTableSchema for views.
+      //create是创建出了hive
       HiveRelFieldTrimmer fieldTrimmer = new HiveRelFieldTrimmer(null,
           HiveRelFactories.HIVE_BUILDER.create(optCluster, null), this.columnAccessInfo,
           this.viewProjectToTableSchema);
 
       System.out.printf("edwin genLogicalPlan is end, before trim, calciteGenPlan.getRowType().getFieldCount() is" +
-              "  %d %n", calciteGenPlan.getRowType().getFieldCount());
+              "  %d, rowType is %s %n", calciteGenPlan.getRowType().getFieldCount(), calciteGenPlan.getRowType().toString());
       fieldTrimmer.trim(calciteGenPlan);
 
       // Create and set MD provider

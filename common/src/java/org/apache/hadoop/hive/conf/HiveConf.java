@@ -567,6 +567,7 @@ public class HiveConf extends Configuration {
     HIVE_FILE_MAX_FOOTER("hive.file.max.footer", 100,
         "maximum number of lines for footer user can define for a table file"),
 
+    //就是使用唯一指定 表别名+列别名
     HIVE_RESULTSET_USE_UNIQUE_COLUMN_NAMES("hive.resultset.use.unique.column.names", true,
         "Make column names unique in the result set by qualifying column names with table alias if needed.\n" +
         "Table alias will be added to column names for queries of type \"select *\" or \n" +

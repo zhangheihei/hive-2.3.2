@@ -79,6 +79,7 @@ public class HiveRelFactories {
           new HiveSetOpFactoryImpl();
 
   public static final RelBuilderFactory HIVE_BUILDER =
+          //将Impl类 包装到wrapContext
       HiveRelBuilder.proto(
           Contexts.of(HIVE_PROJECT_FACTORY,
               HIVE_FILTER_FACTORY,
