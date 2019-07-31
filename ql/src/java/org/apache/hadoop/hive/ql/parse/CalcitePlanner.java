@@ -1362,7 +1362,7 @@ public class CalcitePlanner extends SemanticAnalyzer {
 
       System.out.printf("edwin genLogicalPlan is end, before trim, calciteGenPlan.getRowType().getFieldCount() is" +
               "  %d, rowType is %s %n", calciteGenPlan.getRowType().getFieldCount(), calciteGenPlan.getRowType().toString());
-
+      //没看明白完整意义,calciteGenPlan看起来没有改变
       fieldTrimmer.trim(calciteGenPlan);
 
       System.out.printf("edwin genLogicalPlan is end, after trim, calciteGenPlan.getRowType().getFieldCount() is" +
@@ -1370,11 +1370,13 @@ public class CalcitePlanner extends SemanticAnalyzer {
 
       // Create and set MD provider
       HiveDefaultRelMetadataProvider mdProvider = new HiveDefaultRelMetadataProvider(conf);
+      //使用ThreadLocal 为每个线程保存一个MetadataProvider
       RelMetadataQuery.THREAD_PROVIDERS.set(
               JaninoRelMetadataProvider.of(mdProvider.getMetadataProvider()));
 
       // Create executor
       Executor executorProvider = new HiveRexExecutorImpl(optCluster);
+      System.out.printf("edwin optCluster after Executor is %s %n", optCluster.toString());
 
       //Remove subquery
       LOG.debug("Plan before removing subquery:\n" + RelOptUtil.toString(calciteGenPlan));

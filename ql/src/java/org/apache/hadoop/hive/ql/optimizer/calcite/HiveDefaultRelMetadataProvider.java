@@ -51,6 +51,7 @@ public class HiveDefaultRelMetadataProvider {
 
     // Create cost metadata provider
     final HiveCostModel cm;
+    //TEZ有单独的COSTMODEL
     if (HiveConf.getVar(this.hiveConf, HiveConf.ConfVars.HIVE_EXECUTION_ENGINE).equals("tez")
             && HiveConf.getBoolVar(this.hiveConf, HiveConf.ConfVars.HIVE_CBO_EXTENDED_COST_MODEL)) {
       cm = HiveOnTezCostModel.getCostModel(hiveConf);
