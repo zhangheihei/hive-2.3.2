@@ -1331,6 +1331,8 @@ public class CalcitePlanner extends SemanticAnalyzer {
       final RelOptCluster optCluster = RelOptCluster.create(planner, rexBuilder);
 
       this.cluster = optCluster;
+      System.out.printf("edwin optCluster before apply is %s %n", optCluster.toString());
+
       //relOptSchema其实是CalciteCatalogReader
       this.relOptSchema = relOptSchema;
       System.out.printf("edwin optCluster emptyTraitSet is %s%n",  this.cluster.traitSet().toString());
