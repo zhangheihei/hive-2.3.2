@@ -1362,7 +1362,11 @@ public class CalcitePlanner extends SemanticAnalyzer {
 
       System.out.printf("edwin genLogicalPlan is end, before trim, calciteGenPlan.getRowType().getFieldCount() is" +
               "  %d, rowType is %s %n", calciteGenPlan.getRowType().getFieldCount(), calciteGenPlan.getRowType().toString());
+
       fieldTrimmer.trim(calciteGenPlan);
+
+      System.out.printf("edwin genLogicalPlan is end, after trim, calciteGenPlan.getRowType().getFieldCount() is" +
+                "  %d, rowType is %s %n", calciteGenPlan.getRowType().getFieldCount(), calciteGenPlan.getRowType().toString());
 
       // Create and set MD provider
       HiveDefaultRelMetadataProvider mdProvider = new HiveDefaultRelMetadataProvider(conf);
