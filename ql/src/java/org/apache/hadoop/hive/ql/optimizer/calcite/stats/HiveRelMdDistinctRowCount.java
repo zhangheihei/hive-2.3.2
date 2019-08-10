@@ -84,6 +84,7 @@ public class HiveRelMdDistinctRowCount extends RelMdDistinctRowCount {
     return Math.min(noDistinctRows, htRel.getRows());
   }
 
+  //该函数不会被反射，要被反射的函数必须是public非static权限
   public static Double getDistinctRowCount(RelNode r, RelMetadataQuery mq, int indx) {
     ImmutableBitSet bitSetOfRqdProj = ImmutableBitSet.of(indx);
     return mq.getDistinctRowCount(r, bitSetOfRqdProj, r
