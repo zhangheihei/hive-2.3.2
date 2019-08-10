@@ -1363,7 +1363,7 @@ public class CalcitePlanner extends SemanticAnalyzer {
           HiveRelFactories.HIVE_BUILDER.create(optCluster, null), this.columnAccessInfo,
           this.viewProjectToTableSchema);
 
-      System.out.printf("edwin  before genLogicalPlan is viewProjectToTableSchema is %s," +
+      System.out.printf("edwin  after genLogicalPlan is viewProjectToTableSchema is %s," +
               " columnAccessInfo is %s%n",   viewProjectToTableSchema.toString(), columnAccessInfo.toString());
 
       System.out.printf("edwin genLogicalPlan is end, before trim, calciteGenPlan.getRowType().getFieldCount() is" +
