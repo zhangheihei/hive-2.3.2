@@ -1332,7 +1332,8 @@ public class CalcitePlanner extends SemanticAnalyzer {
 
       this.cluster = optCluster;
       System.out.printf("edwin optCluster before genLogicalPlan is %s,  viewProjectToTableSchema is %s," +
-              " columnAccessInfo is %s%n",  optCluster.toString(), viewProjectToTableSchema.toString(), columnAccessInfo.toString());
+              " columnAccessInfo is %s%n",  optCluster.toString(),
+              (viewProjectToTableSchema != null)?viewProjectToTableSchema.toString():"null", columnAccessInfo.toString());
 
       //relOptSchema其实是CalciteCatalogReader
       this.relOptSchema = relOptSchema;
@@ -1364,7 +1365,8 @@ public class CalcitePlanner extends SemanticAnalyzer {
           this.viewProjectToTableSchema);
 
       System.out.printf("edwin  after genLogicalPlan is viewProjectToTableSchema is %s," +
-              " columnAccessInfo is %s%n",   viewProjectToTableSchema.toString(), columnAccessInfo.toString());
+              " columnAccessInfo is %s%n",   (viewProjectToTableSchema != null)?viewProjectToTableSchema.toString():"null",
+              columnAccessInfo.toString());
 
       System.out.printf("edwin genLogicalPlan is end, before trim, calciteGenPlan.getRowType().getFieldCount() is" +
               "  %d, rowType is %s %n", calciteGenPlan.getRowType().getFieldCount(), calciteGenPlan.getRowType().toString());
