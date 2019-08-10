@@ -1277,6 +1277,7 @@ public class CalcitePlanner extends SemanticAnalyzer {
     private RelOptSchema                                  relOptSchema;
     private final Map<String, PrunedPartitionList>        partitionCache;
     private final ColumnAccessInfo columnAccessInfo;
+    //有视图才会使用这个参数
     private Map<HiveProject, Table> viewProjectToTableSchema;
 
     //correlated vars across subqueries within same query needs to have different ID
@@ -1333,7 +1334,8 @@ public class CalcitePlanner extends SemanticAnalyzer {
       this.cluster = optCluster;
       System.out.printf("edwin optCluster before genLogicalPlan is %s,  viewProjectToTableSchema is %s," +
               " columnAccessInfo is %s%n",  optCluster.toString(),
-              (viewProjectToTableSchema != null)?viewProjectToTableSchema.toString():"null", columnAccessInfo.toString());
+              (viewProjectToTableSchema != null)?viewProjectToTableSchema.toString():"null",
+              columnAccessInfo.GetTableToColumnMap().toString());
 
       //relOptSchema其实是CalciteCatalogReader
       this.relOptSchema = relOptSchema;
@@ -1360,13 +1362,14 @@ public class CalcitePlanner extends SemanticAnalyzer {
       perfLogger.PerfLogEnd(this.getClass().getName(), PerfLogger.OPTIMIZER, "Calcite: Plan generation");
       // We need to get the ColumnAccessInfo and viewToTableSchema for views.
       //create是创建出了hive
+
       HiveRelFieldTrimmer fieldTrimmer = new HiveRelFieldTrimmer(null,
           HiveRelFactories.HIVE_BUILDER.create(optCluster, null), this.columnAccessInfo,
           this.viewProjectToTableSchema);
 
       System.out.printf("edwin  after genLogicalPlan is viewProjectToTableSchema is %s," +
               " columnAccessInfo is %s%n",   (viewProjectToTableSchema != null)?viewProjectToTableSchema.toString():"null",
-              columnAccessInfo.toString());
+              columnAccessInfo.GetTableToColumnMap().toString());
 
       System.out.printf("edwin genLogicalPlan is end, before trim, calciteGenPlan.getRowType().getFieldCount() is" +
               "  %d, rowType is %s %n", calciteGenPlan.getRowType().getFieldCount(), calciteGenPlan.getRowType().toString());

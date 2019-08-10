@@ -39,6 +39,10 @@ public class ColumnAccessInfo {
     tableToColumnAccessMap = new LinkedHashMap<String, Set<String>>();
   }
 
+  public Map<String, Set<String>> GetTableToColumnMap() {
+    return tableToColumnAccessMap;
+  }
+
   public void add(String table, String col) {
     Set<String> tableColumns = tableToColumnAccessMap.get(table);
     if (tableColumns == null) {
