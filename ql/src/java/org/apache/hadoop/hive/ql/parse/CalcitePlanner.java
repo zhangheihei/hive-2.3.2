@@ -1370,6 +1370,10 @@ public class CalcitePlanner extends SemanticAnalyzer {
       System.out.printf("edwin genLogicalPlan is end, before trim, calciteGenPlan.getRowType().getFieldCount() is" +
               "  %d, rowType is %s, input is:%s %n", calciteGenPlan.getRowType().getFieldCount(),
               calciteGenPlan.getRowType().toString(), ((Project)calciteGenPlan).getInput().toString());
+      List<RexNode> edwinTest = ((Project)calciteGenPlan).getProjects();
+      for (RexNode tmp : edwinTest) {
+          System.out.printf("edwin project's rexnode is %s", tmp.toString());
+      }
       //没看明白完整意义,calciteGenPlan看起来没有改变
       fieldTrimmer.trim(calciteGenPlan);
 
