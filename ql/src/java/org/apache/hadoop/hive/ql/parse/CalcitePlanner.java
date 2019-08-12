@@ -67,12 +67,7 @@ import org.apache.calcite.rel.RelCollationImpl;
 import org.apache.calcite.rel.RelCollations;
 import org.apache.calcite.rel.RelFieldCollation;
 import org.apache.calcite.rel.RelNode;
-import org.apache.calcite.rel.core.Aggregate;
-import org.apache.calcite.rel.core.AggregateCall;
-import org.apache.calcite.rel.core.Filter;
-import org.apache.calcite.rel.core.JoinRelType;
-import org.apache.calcite.rel.core.SetOp;
-import org.apache.calcite.rel.core.TableScan;
+import org.apache.calcite.rel.core.*;
 import org.apache.calcite.rel.metadata.CachingRelMetadataProvider;
 import org.apache.calcite.rel.metadata.ChainedRelMetadataProvider;
 import org.apache.calcite.rel.metadata.DefaultRelMetadataProvider;
@@ -1362,7 +1357,8 @@ public class CalcitePlanner extends SemanticAnalyzer {
       perfLogger.PerfLogEnd(this.getClass().getName(), PerfLogger.OPTIMIZER, "Calcite: Plan generation");
       // We need to get the ColumnAccessInfo and viewToTableSchema for views.
       //create是创建出了hive
-
+      //viewProjectToTableSchema:没有视图 该值就为空
+      //columnAccessInfo目前为空
       HiveRelFieldTrimmer fieldTrimmer = new HiveRelFieldTrimmer(null,
           HiveRelFactories.HIVE_BUILDER.create(optCluster, null), this.columnAccessInfo,
           this.viewProjectToTableSchema);
@@ -1372,7 +1368,8 @@ public class CalcitePlanner extends SemanticAnalyzer {
               columnAccessInfo.GetTableToColumnMap().toString());
 
       System.out.printf("edwin genLogicalPlan is end, before trim, calciteGenPlan.getRowType().getFieldCount() is" +
-              "  %d, rowType is %s %n", calciteGenPlan.getRowType().getFieldCount(), calciteGenPlan.getRowType().toString());
+              "  %d, rowType is %s, input is:%s %n", calciteGenPlan.getRowType().getFieldCount(),
+              calciteGenPlan.getRowType().toString(), ((Project)calciteGenPlan).getInput().toString());
       //没看明白完整意义,calciteGenPlan看起来没有改变
       fieldTrimmer.trim(calciteGenPlan);
 

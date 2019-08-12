@@ -68,6 +68,7 @@ public class HiveRelBuilder extends RelBuilder {
    * Just add a {@link RelOptCluster} and a {@link RelOptSchema} */
   public static RelBuilderFactory proto(final Context context) {
     return new RelBuilderFactory() {
+      //HiveRelFieldTrimmer传过来的是schema是NULL
       public RelBuilder create(RelOptCluster cluster, RelOptSchema schema) {
         return new HiveRelBuilder(context, cluster, schema);
       }
