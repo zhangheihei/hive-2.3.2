@@ -1374,6 +1374,12 @@ public class CalcitePlanner extends SemanticAnalyzer {
       for (RexNode tmp : edwinTest) {
           System.out.printf("edwin project's rexnode is %s%n", tmp.toString());
       }
+      RelNode input = ((Project)calciteGenPlan).getInput();
+      final RelMetadataQuery mq = RelMetadataQuery.instance();
+      final ImmutableList<RelCollation> collations = mq.collations(input);
+      for (RelCollation collation : collations) {
+        System.out.printf("edwin joi's RelCollation is %s%n", collation.toString());
+      }
       //没看明白完整意义,calciteGenPlan看起来没有改变
       fieldTrimmer.trim(calciteGenPlan);
 
