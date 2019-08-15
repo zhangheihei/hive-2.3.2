@@ -405,6 +405,7 @@ public class Driver implements CommandProcessor {
         return SessionState.get().getHiveVariables();
       }
     }).substitute(conf, command);
+    System.out.printf("edwin after VariableSubstitution %s %n", command);
 
     String queryStr = command;
 
