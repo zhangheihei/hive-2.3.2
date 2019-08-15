@@ -398,6 +398,7 @@ public class Driver implements CommandProcessor {
       foo=eg_test
       hive>select * from ${foo};
      */
+    System.out.printf("edwin before VariableSubstitution %s %n", command);
     command = new VariableSubstitution(new HiveVariableSource() {
       @Override
       public Map<String, String> getHiveVariable() {
