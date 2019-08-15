@@ -399,6 +399,7 @@ public class Driver implements CommandProcessor {
       hive>select * from ${foo};
      */
     System.out.printf("edwin before VariableSubstitution %s %n", command);
+    LOG.error("edwin before VariableSubstitution" + ": " + command);
     command = new VariableSubstitution(new HiveVariableSource() {
       @Override
       public Map<String, String> getHiveVariable() {
@@ -406,7 +407,7 @@ public class Driver implements CommandProcessor {
       }
     }).substitute(conf, command);
     System.out.printf("edwin after VariableSubstitution %s %n", command);
-
+    LOG.error("edwin after VariableSubstitution" + ": " + command);
     String queryStr = command;
 
     try {
