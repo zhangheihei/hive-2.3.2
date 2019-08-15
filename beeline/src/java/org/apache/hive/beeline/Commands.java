@@ -928,7 +928,7 @@ public class Commands {
     if (!beeLine.isBeeLine()) {
       sql = cliToBeelineCmd(sql);
     }
-
+    System.out.printf("edwin beeline sql:%s %n", sql);
     if (sql == null || sql.length() == 0) {
       return true;
     }
