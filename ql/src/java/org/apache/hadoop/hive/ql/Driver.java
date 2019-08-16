@@ -373,6 +373,8 @@ public class Driver implements CommandProcessor {
    * @param resetTaskIds Resets taskID counter if true.
    * @return 0 for ok
    */
+
+
   public int compile(String command, boolean resetTaskIds) {
     return compile(command, resetTaskIds, false);
   }
@@ -400,16 +402,89 @@ public class Driver implements CommandProcessor {
      */
     System.out.printf("edwin before VariableSubstitution %s %n", command);
     LOG.error("edwin before VariableSubstitution" + ": " + command);
+
     command = new VariableSubstitution(new HiveVariableSource() {
       @Override
       public Map<String, String> getHiveVariable() {
         return SessionState.get().getHiveVariables();
       }
     }).substitute(conf, command);
+    //sql
+
     System.out.printf("edwin after VariableSubstitution %s %n", command);
     LOG.error("edwin after VariableSubstitution" + ": " + command);
     String queryStr = command;
 
+    boolean flag = conf.getBoolVar(ConfVars.HIVE_TENCENT_OP);
+    if (flag == true){
+        if (queryStr.contains("create table 2_1_month as")) {
+          queryStr = "create table 2_1_month as\n" +
+                  "select\n" +
+                  "  sid,\n" +
+                  "  substr(\"20190630\", 1, 6) as `date`,\n" +
+                  "  round(AVG(day_active_count)) as `day_active_count`\n" +
+                  "from\n" +
+                  "  (\n" +
+                  "    select\n" +
+                  "      b.sid as sid,\n" +
+                  "      a.date_p as date_p,\n" +
+                  "      count(distinct a.server_id) as `day_active_count`\n" +
+                  "    from\n" +
+                  "      \n" +
+                  "      (\n" +
+                  "        select\n" +
+                  "          app_key,\n" +
+                  "\t  concat(app_key, cast(rand()*100 as int)) as new_app_key,\n" +
+                  "          date_p,\n" +
+                  "          server_id\n" +
+                  "        from\n" +
+                  "          stat_sdk_test.sdk_active_odz\n" +
+                  "        where\n" +
+                  "          app_key_p > '0000000000000000'\n" +
+                  "          and date_p >= \"20190601\"\n" +
+                  "          and date_p <= \"20190630\"\n" +
+                  "          and os_p in('ios', 'android')\n" +
+                  "        group by\n" +
+                  "          app_key,\n" +
+                  "          date_p,\n" +
+                  "          server_id\n" +
+                  "      ) a\n" +
+                  "      \n" +
+                  "      \n" +
+                  "      left join \n" +
+                  "      (\n" +
+                  "      select sid, app_key, concat(app_key, suffix) as new_app_key\n" +
+                  "      from \n" +
+                  "\t      ( \n" +
+                  "\t      select sid, app_key, suffix from \n" +
+                  "\t\t      (\n" +
+                  "\t\t\tselect\n" +
+                  "\t\t\t  sid,\n" +
+                  "\t\t\t  app_key\n" +
+                  "\t\t\tfrom\n" +
+                  "\t\t\t  stat_sdk_test.sdk_rna_dc_app_task\n" +
+                  "\t\t\tgroup by\n" +
+                  "\t\t\t  sid,\n" +
+                  "\t\t\t  app_key\n" +
+                  "\t\t      ) x Lateral View explode(array(0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38,39,40,41,42,43,44,45,46,47,48,49,50,51,52,53,54,55,56,57,58,59,60,61,62,63,64,65,66,67,68,69,70,71,72,73,74,75,76,77,78,79,80,81,82,83,84,85,86,87,88,89,90,91,92,93,94,95,96,97,98,99)) tmp as suffix\n" +
+                  "\t      ) y\n" +
+                  "      ) b \n" +
+                  "      \n" +
+                  "      \n" +
+                  "      on a.new_app_key = b.new_app_key\n" +
+                  "    where\n" +
+                  "      b.sid is not null\n" +
+                  "    group by\n" +
+                  "      b.sid,\n" +
+                  "      a.date_p\n" +
+                  "  ) c\n" +
+                  "group by\n" +
+                  "  sid;\n" +
+                  "\n";
+          LOG.error("edwin HIVE_TENCENT_OP" + ": " + queryStr);
+          command = queryStr;
+        }
+    }
     try {
       // command should be redacted to avoid to logging sensitive data
       //加载编辑数据hook,默认该HOOK为""
@@ -1251,6 +1326,7 @@ public class Driver implements CommandProcessor {
 
   public CommandProcessorResponse run(String command, boolean alreadyCompiled)
         throws CommandNeedRetryException {
+    LOG.error("before runInternal command:" + command);
     //开始编译执行
     CommandProcessorResponse cpr = runInternal(command, alreadyCompiled);
 
