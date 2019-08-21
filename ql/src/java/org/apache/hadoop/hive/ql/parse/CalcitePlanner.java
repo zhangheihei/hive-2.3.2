@@ -87,12 +87,7 @@ import org.apache.calcite.rel.type.RelDataType;
 import org.apache.calcite.rel.type.RelDataTypeFactory;
 import org.apache.calcite.rel.type.RelDataTypeField;
 import org.apache.calcite.rel.type.RelDataTypeImpl;
-import org.apache.calcite.rex.RexBuilder;
-import org.apache.calcite.rex.RexFieldCollation;
-import org.apache.calcite.rex.RexInputRef;
-import org.apache.calcite.rex.RexNode;
-import org.apache.calcite.rex.RexUtil;
-import org.apache.calcite.rex.RexWindowBound;
+import org.apache.calcite.rex.*;
 import org.apache.calcite.schema.SchemaPlus;
 import org.apache.calcite.sql.SqlAggFunction;
 import org.apache.calcite.sql.SqlCall;
@@ -1383,18 +1378,98 @@ public class CalcitePlanner extends SemanticAnalyzer {
         System.out.printf("edwin joi's RelCollation is %s%n", collation.toString());
       }
 
-      System.out.printf("edwin join's SystemField is %d%n", ((Join)input).getSystemFieldList().size());
+      RexNode tmp = ((Join)input).getCondition();
+      System.out.printf("edwin join's SystemField is %d, condition class is %s, condition is %s, " +
+                      "operator is %s %n", ((Join)input).getSystemFieldList().size(),
+              ((Join)input).getCondition().getClass().toString(), ((Join)input).getCondition().toString(),
+              ((Join)input).getCondition(),
+              (((Join)input).getCondition() instanceof RexCall)?((RexCall)tmp).getOperator().toString():"null");
+      if (((Join)input).getCondition() instanceof RexCall) {
+        for (RexNode operand : ((RexCall)tmp).operands) {
+          System.out.printf("edwin join Rexcall operands is %s, class is%s %n", operand.toString(), operand.getClass().toString());
+        }
+      }
+
+
+
+      System.out.printf("edwin join's operator is %s %n", RexBuilder.GET_OPERATOR);
       if (((Join)input).getSystemFieldList().size() > 0) {
-          for (RelDataTypeField tmp : ((Join)input).getSystemFieldList()) {
-              System.out.printf("edwin join's SystemField is %s%n", tmp.toString());
+          for (RelDataTypeField tmp1 : ((Join)input).getSystemFieldList()) {
+              System.out.printf("edwin join's SystemField is %s%n", tmp1.toString());
 
           }
       }
+      //----------------------------
+      System.out.printf("edwin calciteGenPlan count is %d, type is %s, expression is %s %n", calciteGenPlan.getRowType().getFieldCount(), calciteGenPlan.getRowType().toString(), calciteGenPlan.toString());
+      System.out.printf("edwin calciteGenPlan input is %d, type is %s, expression is %s%n", input.getRowType().getFieldCount(), input.getRowType().toString(), input.toString());
+      List<RelNode> input1 =input.getInputs();
+      for (RelNode innerInput : input1) {
+        System.out.printf("edwin calciteGenPlan innerInput is %d, type is %s, expression is %s%n", innerInput.getRowType().getFieldCount(), innerInput.getRowType().toString(), innerInput.toString());
+        List<RelNode> innerInput1 = innerInput.getInputs();
+        for (RelNode innnerInput2 : innerInput1){
+          System.out.printf("edwin calciteGenPlan innnerInput2 is %d, type is %s, expression is %s%n", innnerInput2.getRowType().getFieldCount(), innnerInput2.getRowType().toString(), innnerInput2.toString());
+          List<RelNode> innerInput3 = innnerInput2.getInputs();
+          for (RelNode innnerInput3 : innerInput3) {
+            System.out.printf("edwin calciteGenPlan innnerInput3 is %d, type is %s, expression is %s%n", innnerInput3.getRowType().getFieldCount(), innnerInput3.getRowType().toString(), innnerInput3.toString());
+            List<RelNode> innerInput4 = innnerInput3.getInputs();
+            for(RelNode innnerInput4 : innerInput4) {
+              System.out.printf("edwin calciteGenPlan innnerInput4 is %d, type is %s, expression is %s%n", innnerInput4.getRowType().getFieldCount(), innnerInput4.getRowType().toString(), innnerInput4.toString());
+              List<RelNode> innerInput5 = innnerInput4.getInputs();
+              for(RelNode innnerInput5 : innerInput5) {
+                System.out.printf("edwin calciteGenPlan innnerInput5 is %d, type is %s, expression is %s%n", innnerInput5.getRowType().getFieldCount(), innnerInput5.getRowType().toString(), innnerInput5.toString());
+                List<RelNode> innerInput6 = innnerInput5.getInputs();
+                for(RelNode innnerInput6 : innerInput6) {
+                  System.out.printf("edwin calciteGenPlan innnerInput6 is %d, type is %s, expression is %s%n", innnerInput6.getRowType().getFieldCount(), innnerInput6.getRowType().toString(), innnerInput6.toString());
+                }
+              }
+
+            }
+
+
+          }
+        }
+
+      }
+      //------------------------------
+
       //没看明白完整意义,calciteGenPlan看起来没有改变
       fieldTrimmer.trim(calciteGenPlan);
 
       System.out.printf("edwin genLogicalPlan is end, after trim, calciteGenPlan.getRowType().getFieldCount() is" +
                 "  %d, rowType is %s %n", calciteGenPlan.getRowType().getFieldCount(), calciteGenPlan.getRowType().toString());
+
+      //----------------------------
+      System.out.printf("edwin calciteGenPlan count is %d, type is %s, expression is %s %n", calciteGenPlan.getRowType().getFieldCount(), calciteGenPlan.getRowType().toString(), calciteGenPlan.toString());
+      System.out.printf("edwin calciteGenPlan input is %d, type is %s, expression is %s%n", input.getRowType().getFieldCount(), input.getRowType().toString(), input.toString());
+      List<RelNode> input1AfterTrim =input.getInputs();
+      for (RelNode innerInput : input1AfterTrim) {
+        System.out.printf("edwin calciteGenPlan innerInput is %d, type is %s, expression is %s%n", innerInput.getRowType().getFieldCount(), innerInput.getRowType().toString(), innerInput.toString());
+        List<RelNode> innerInput1 = innerInput.getInputs();
+        for (RelNode innnerInput2 : innerInput1){
+          System.out.printf("edwin calciteGenPlan innnerInput2 is %d, type is %s, expression is %s%n", innnerInput2.getRowType().getFieldCount(), innnerInput2.getRowType().toString(), innnerInput2.toString());
+          List<RelNode> innerInput3 = innnerInput2.getInputs();
+          for (RelNode innnerInput3 : innerInput3) {
+            System.out.printf("edwin calciteGenPlan innnerInput3 is %d, type is %s, expression is %s%n", innnerInput3.getRowType().getFieldCount(), innnerInput3.getRowType().toString(), innnerInput3.toString());
+            List<RelNode> innerInput4 = innnerInput3.getInputs();
+            for(RelNode innnerInput4 : innerInput4) {
+              System.out.printf("edwin calciteGenPlan innnerInput4 is %d, type is %s, expression is %s%n", innnerInput4.getRowType().getFieldCount(), innnerInput4.getRowType().toString(), innnerInput4.toString());
+              List<RelNode> innerInput5 = innnerInput4.getInputs();
+              for(RelNode innnerInput5 : innerInput5) {
+                System.out.printf("edwin calciteGenPlan innnerInput5 is %d, type is %s, expression is %s%n", innnerInput5.getRowType().getFieldCount(), innnerInput5.getRowType().toString(), innnerInput5.toString());
+                List<RelNode> innerInput6 = innnerInput5.getInputs();
+                for(RelNode innnerInput6 : innerInput6) {
+                  System.out.printf("edwin calciteGenPlan innnerInput6 is %d, type is %s, expression is %s%n", innnerInput6.getRowType().getFieldCount(), innnerInput6.getRowType().toString(), innnerInput6.toString());
+                }
+              }
+
+            }
+
+
+          }
+        }
+
+      }
+      //------------------------------
 
       // Create and set MD provider
       HiveDefaultRelMetadataProvider mdProvider = new HiveDefaultRelMetadataProvider(conf);
@@ -1407,10 +1482,10 @@ public class CalcitePlanner extends SemanticAnalyzer {
       System.out.printf("edwin optCluster after Executor is %s %n", optCluster.toString());
 
       //Remove subquery
-      LOG.debug("Plan before removing subquery:\n" + RelOptUtil.toString(calciteGenPlan));
+      LOG.info("Plan before removing subquery:\n" + RelOptUtil.toString(calciteGenPlan));
       calciteGenPlan = hepPlan(calciteGenPlan, false, mdProvider.getMetadataProvider(), null,
               HiveSubQueryRemoveRule.FILTER, HiveSubQueryRemoveRule.PROJECT);
-      LOG.debug("Plan just after removing subquery:\n" + RelOptUtil.toString(calciteGenPlan));
+      LOG.info("Plan just after removing subquery:\n" + RelOptUtil.toString(calciteGenPlan));
 
       calciteGenPlan = HiveRelDecorrelator.decorrelateQuery(calciteGenPlan);
       LOG.debug("Plan after decorrelation:\n" + RelOptUtil.toString(calciteGenPlan));
