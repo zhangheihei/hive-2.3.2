@@ -1911,22 +1911,27 @@ public class CalcitePlanner extends SemanticAnalyzer {
       // Create planner and copy context
       HepPlanner planner = new HepPlanner(programBuilder.build(),
               basePlan.getCluster().getPlanner().getContext());
-
+      System.out.printf("edwin vertex graph is debug %n");
       List<RelMetadataProvider> list = Lists.newArrayList();
       list.add(mdProvider);
       planner.registerMetadataProviders(list);
+      System.out.printf("edwin vertex graph is debug1 %n");
       RelMetadataProvider chainedProvider = ChainedRelMetadataProvider.of(list);
       basePlan.getCluster().setMetadataProvider(
           new CachingRelMetadataProvider(chainedProvider, planner));
 
+      System.out.printf("edwin vertex graph is debug2 %n");
+
       if (executorProvider != null) {
         basePlan.getCluster().getPlanner().setExecutor(executorProvider);
       }
+      System.out.printf("edwin vertex graph is debug3 %n");
 
       planner.setRoot(basePlan);
+      System.out.printf("edwin vertex graph is debug4 %n");
       RelNode vertexGrapn = planner.getRoot();
-      System.out.printf("edwin vertex graph is %s", ((HepRelVertex)vertexGrapn).toString());
-      boolean flag = conf.getBoolVar(ConfVars.HIVE_TENCENT_OP);
+      System.out.printf("edwin vertex graph is before %n");
+      System.out.printf("edwin vertex graph is %s %n", ((HepRelVertex)vertexGrapn).toString());
       planner.getGraph();
       //开始优化关系表达式
       optimizedRelNode = planner.findBestExp();
