@@ -58,10 +58,7 @@ import org.apache.calcite.plan.RelOptRule;
 import org.apache.calcite.plan.RelOptSchema;
 import org.apache.calcite.plan.RelOptUtil;
 import org.apache.calcite.plan.RelTraitSet;
-import org.apache.calcite.plan.hep.HepMatchOrder;
-import org.apache.calcite.plan.hep.HepPlanner;
-import org.apache.calcite.plan.hep.HepProgram;
-import org.apache.calcite.plan.hep.HepProgramBuilder;
+import org.apache.calcite.plan.hep.*;
 import org.apache.calcite.rel.RelCollation;
 import org.apache.calcite.rel.RelCollationImpl;
 import org.apache.calcite.rel.RelCollations;
@@ -1481,6 +1478,12 @@ public class CalcitePlanner extends SemanticAnalyzer {
       Executor executorProvider = new HiveRexExecutorImpl(optCluster);
       System.out.printf("edwin optCluster after Executor is %s %n", optCluster.toString());
 
+      List<RexNode> projectRex = ((Project)calciteGenPlan).getProjects();
+      for (RexNode proje : projectRex) {
+        System.out.printf("edwin before removing subquery project rex is %s, class is%s %n", proje.toString(), proje.getClass().toString());
+
+      }
+
       //Remove subquery
       LOG.info("Plan before removing subquery:\n" + RelOptUtil.toString(calciteGenPlan));
       calciteGenPlan = hepPlan(calciteGenPlan, false, mdProvider.getMetadataProvider(), null,
@@ -1862,9 +1865,9 @@ public class CalcitePlanner extends SemanticAnalyzer {
      * Run the HEP Planner with the given rule set.
      *
      * @param basePlan
-     * @param followPlanChanges
+     * @param followPlanChanges 传入了false
      * @param mdProvider
-     * @param executorProvider
+     * @param executorProvider  传入了NULL
      * @param rules
      * @return optimized RelNode
      */
@@ -1878,9 +1881,9 @@ public class CalcitePlanner extends SemanticAnalyzer {
      * Run the HEP Planner with the given rule set.
      *
      * @param basePlan
-     * @param followPlanChanges
+     * @param followPlanChanges 传入了false
      * @param mdProvider
-     * @param executorProvider
+     * @param executorProvider  传入了NULL
      * @param order
      * @param rules
      * @return optimized RelNode
@@ -1890,6 +1893,7 @@ public class CalcitePlanner extends SemanticAnalyzer {
         RelOptRule... rules) {
 
       RelNode optimizedRelNode = basePlan;
+      //开始Hep 贪婪算法 加载规则
       HepProgramBuilder programBuilder = new HepProgramBuilder();
       if (followPlanChanges) {
         programBuilder.addMatchOrder(order);
@@ -1900,6 +1904,10 @@ public class CalcitePlanner extends SemanticAnalyzer {
           programBuilder.addRuleInstance(r);
       }
 
+      //cluster的Planner是Volcano
+      System.out.printf("edwin hepPlan RelNode basePlan is %s, cluster is %s, planner is %s, context is %s %n",
+              basePlan, basePlan.getCluster().toString(), basePlan.getCluster().getPlanner().toString(),
+              basePlan.getCluster().getPlanner().getContext().toString());
       // Create planner and copy context
       HepPlanner planner = new HepPlanner(programBuilder.build(),
               basePlan.getCluster().getPlanner().getContext());
@@ -1916,6 +1924,11 @@ public class CalcitePlanner extends SemanticAnalyzer {
       }
 
       planner.setRoot(basePlan);
+      RelNode vertexGrapn = planner.getRoot();
+      System.out.printf("edwin vertex graph is %s", ((HepRelVertex)vertexGrapn).toString());
+      boolean flag = conf.getBoolVar(ConfVars.HIVE_TENCENT_OP);
+      planner.getGraph();
+      //开始优化关系表达式
       optimizedRelNode = planner.findBestExp();
 
       return optimizedRelNode;
