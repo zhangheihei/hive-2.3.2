@@ -116,6 +116,7 @@ public class HiveTableScan extends TableScan implements HiveRelNode {
     this.insideView = insideView;
   }
 
+  //tableScan是取关系，不需要输入
   @Override
   public RelNode copy(RelTraitSet traitSet, List<RelNode> inputs) {
     assert inputs.isEmpty();
@@ -134,6 +135,7 @@ public class HiveTableScan extends TableScan implements HiveRelNode {
             newRowtype, this.useQBIdInDigest, this.insideView);
   }
 
+  //每个RelNode会实现
   @Override public RelWriter explainTerms(RelWriter pw) {
     if (this.useQBIdInDigest) {
       // TODO: Only the qualified name should be left here

@@ -50,14 +50,8 @@ import org.apache.calcite.adapter.druid.DruidQuery;
 import org.apache.calcite.adapter.druid.DruidRules;
 import org.apache.calcite.adapter.druid.DruidSchema;
 import org.apache.calcite.adapter.druid.DruidTable;
-import org.apache.calcite.plan.RelOptCluster;
-import org.apache.calcite.plan.RelOptMaterialization;
-import org.apache.calcite.plan.RelOptPlanner;
+import org.apache.calcite.plan.*;
 import org.apache.calcite.plan.RelOptPlanner.Executor;
-import org.apache.calcite.plan.RelOptRule;
-import org.apache.calcite.plan.RelOptSchema;
-import org.apache.calcite.plan.RelOptUtil;
-import org.apache.calcite.plan.RelTraitSet;
 import org.apache.calcite.plan.hep.*;
 import org.apache.calcite.rel.RelCollation;
 import org.apache.calcite.rel.RelCollationImpl;
@@ -101,6 +95,9 @@ import org.apache.calcite.util.CompositeList;
 import org.apache.calcite.util.ImmutableBitSet;
 import org.apache.calcite.util.ImmutableIntList;
 import org.apache.calcite.util.Pair;
+import org.apache.calcite.util.graph.DefaultDirectedGraph;
+import org.apache.calcite.util.graph.DefaultEdge;
+import org.apache.calcite.util.graph.DirectedGraph;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.hive.common.ObjectPair;
 import org.apache.hadoop.hive.conf.Constants;
@@ -1911,28 +1908,59 @@ public class CalcitePlanner extends SemanticAnalyzer {
       // Create planner and copy context
       HepPlanner planner = new HepPlanner(programBuilder.build(),
               basePlan.getCluster().getPlanner().getContext());
-      System.out.printf("edwin vertex graph is debug %n");
+      //System.out.printf("edwin vertex graph is debug %n");
       List<RelMetadataProvider> list = Lists.newArrayList();
       list.add(mdProvider);
       planner.registerMetadataProviders(list);
-      System.out.printf("edwin vertex graph is debug1 %n");
+      //System.out.printf("edwin vertex graph is debug1 %n");
       RelMetadataProvider chainedProvider = ChainedRelMetadataProvider.of(list);
       basePlan.getCluster().setMetadataProvider(
           new CachingRelMetadataProvider(chainedProvider, planner));
 
-      System.out.printf("edwin vertex graph is debug2 %n");
+      //System.out.printf("edwin vertex graph is debug2 %n");
 
       if (executorProvider != null) {
         basePlan.getCluster().getPlanner().setExecutor(executorProvider);
       }
-      System.out.printf("edwin vertex graph is debug3 %n");
+      //System.out.printf("edwin vertex graph is debug3 %n");
 
       planner.setRoot(basePlan);
-      System.out.printf("edwin vertex graph is debug4 %n");
+      //System.out.printf("edwin vertex graph is debug4 %n");
+      //----------------------------
+
+
       RelNode vertexGrapn = planner.getRoot();
-      System.out.printf("edwin vertex graph is before %n");
+      //System.out.printf("edwin vertex graph is before %n");
       System.out.printf("edwin vertex graph is %s %n", ((HepRelVertex)vertexGrapn).toString());
-      planner.getGraph();
+      DirectedGraph<HepRelVertex, DefaultEdge> ewinDriectGraph = planner.getGraph();
+      Map<String, HepRelVertex> edwinVertexMap = planner.getVertexMap();
+      for(Map.Entry<String, HepRelVertex> entry : edwinVertexMap.entrySet()) {
+        System.out.println("HepRelVertex Map Key = " + entry.getKey() + ", Value = " + entry.getValue());
+      }
+
+
+      System.out.printf("edwin DirectedGraph is %s %n", ewinDriectGraph.toString());
+      Map<HepRelVertex, DefaultDirectedGraph.VertexInfo<HepRelVertex, DefaultEdge>> edwinGraphVertex = ((DefaultDirectedGraph)ewinDriectGraph).getVertexMap();
+        for(Map.Entry<HepRelVertex, DefaultDirectedGraph.VertexInfo<HepRelVertex, DefaultEdge>> entry : edwinGraphVertex.entrySet()){
+            System.out.println("DirectedGraph Vertex Map Key = " + entry.getKey() + ", Value = " + entry.getValue());
+
+        }
+
+      MulticastRelOptListener optListener = planner.getListener();
+      if (optListener != null) {
+        System.out.printf("edwin MulticastRelOptListener len is %d %n", optListener.getListeners().size());
+        for (RelOptListener lis : optListener.getListeners()) {
+          System.out.printf("edwin MulticastRelOptListener listener content is %s %n", lis.toString());
+        }
+      }else {
+        System.out.printf("edwin MulticastRelOptListener  is null %n");
+      }
+
+
+
+
+
+      //----------------------------
       //开始优化关系表达式
       optimizedRelNode = planner.findBestExp();
 
