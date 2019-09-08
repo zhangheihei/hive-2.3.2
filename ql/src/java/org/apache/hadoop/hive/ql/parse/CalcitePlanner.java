@@ -1361,7 +1361,7 @@ public class CalcitePlanner extends SemanticAnalyzer {
               calciteGenPlan.getRowType().toString(), ((Project)calciteGenPlan).getInput().toString());
       List<RexNode> edwinTest = ((Project)calciteGenPlan).getProjects();
       for (RexNode tmp : edwinTest) {
-          System.out.printf("edwin project's rexnode is %s%n", tmp.toString());
+          System.out.printf("edwin project's rexnode is %s, class is %s %n", tmp.toString(), tmp.getClass().toString());
       }
 
 
@@ -1427,6 +1427,7 @@ public class CalcitePlanner extends SemanticAnalyzer {
       //------------------------------
 
       //没看明白完整意义,calciteGenPlan看起来没有改变
+      //递归的剪枝，把没有用到的字段裁剪
       fieldTrimmer.trim(calciteGenPlan);
 
       System.out.printf("edwin genLogicalPlan is end, after trim, calciteGenPlan.getRowType().getFieldCount() is" +
@@ -1483,12 +1484,16 @@ public class CalcitePlanner extends SemanticAnalyzer {
 
       //Remove subquery
       LOG.info("Plan before removing subquery:\n" + RelOptUtil.toString(calciteGenPlan));
+      //这里先FILRER，后PROJECT 有没有讲究
+      //这里只是查询FILTER，PROJECT下面是否有子查询
+      //目的完全是由rule决定的,这两个规则只会去寻找子查询
       calciteGenPlan = hepPlan(calciteGenPlan, false, mdProvider.getMetadataProvider(), null,
               HiveSubQueryRemoveRule.FILTER, HiveSubQueryRemoveRule.PROJECT);
       LOG.info("Plan just after removing subquery:\n" + RelOptUtil.toString(calciteGenPlan));
 
+      //去相关查询？
       calciteGenPlan = HiveRelDecorrelator.decorrelateQuery(calciteGenPlan);
-      LOG.debug("Plan after decorrelation:\n" + RelOptUtil.toString(calciteGenPlan));
+      LOG.info("Plan after decorrelation:\n" + RelOptUtil.toString(calciteGenPlan));
 
       // 2. Apply pre-join order optimizations
       calcitePreCboPlan = applyPreJoinOrderingTransforms(calciteGenPlan,
@@ -1891,6 +1896,7 @@ public class CalcitePlanner extends SemanticAnalyzer {
 
       RelNode optimizedRelNode = basePlan;
       //开始Hep 贪婪算法 加载规则
+      //这边会先增加一个TOP_DOWN ORDER规则，但是followPlanChanges为false
       HepProgramBuilder programBuilder = new HepProgramBuilder();
       if (followPlanChanges) {
         programBuilder.addMatchOrder(order);
@@ -1931,7 +1937,7 @@ public class CalcitePlanner extends SemanticAnalyzer {
 
       RelNode vertexGrapn = planner.getRoot();
       //System.out.printf("edwin vertex graph is before %n");
-      System.out.printf("edwin vertex graph is %s %n", ((HepRelVertex)vertexGrapn).toString());
+      System.out.printf("edwin vertex graph root is %s %n", ((HepRelVertex)vertexGrapn).toString());
       DirectedGraph<HepRelVertex, DefaultEdge> ewinDriectGraph = planner.getGraph();
       Map<String, HepRelVertex> edwinVertexMap = planner.getVertexMap();
       for(Map.Entry<String, HepRelVertex> entry : edwinVertexMap.entrySet()) {

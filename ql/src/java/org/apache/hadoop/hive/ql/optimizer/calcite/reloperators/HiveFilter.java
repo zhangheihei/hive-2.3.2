@@ -47,6 +47,7 @@ public class HiveFilter extends Filter implements HiveRelNode {
   }
 
   @Override
+  //input是一个HepRelVertex
   public Filter copy(RelTraitSet traitSet, RelNode input, RexNode condition) {
     assert traitSet.containsIfApplicable(HiveRelNode.CONVENTION);
     return new HiveFilter(getCluster(), traitSet, input, condition);
