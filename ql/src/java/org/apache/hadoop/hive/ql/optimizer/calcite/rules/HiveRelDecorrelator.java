@@ -2976,7 +2976,9 @@ public class HiveRelDecorrelator implements ReflectiveVisitor {
     final List<RelNode> stack = new ArrayList<>();
 
     /** Creates a CorelMap by iterating over a {@link RelNode} tree. */
+    //只对根节点做操作
     CorelMap build(RelNode rel) {
+      //这种到底有什么用
       stripHep(rel).accept(this);
       return new CorelMap(mapRefRelToCorRef, mapCorToCorRel,
               mapFieldAccessToCorVar);

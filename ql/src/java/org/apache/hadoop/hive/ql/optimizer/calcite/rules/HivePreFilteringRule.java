@@ -75,6 +75,7 @@ public class HivePreFilteringRule extends RelOptRule {
 
     // If the filter is already on top of a TableScan,
     // we can bail out
+    //如果是tablescan 就不优化
     if (filterChild instanceof TableScan) {
       return false;
     }

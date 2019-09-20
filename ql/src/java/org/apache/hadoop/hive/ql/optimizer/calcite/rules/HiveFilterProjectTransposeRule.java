@@ -39,7 +39,7 @@ import org.apache.calcite.tools.RelBuilderFactory;
 import org.apache.hadoop.hive.ql.optimizer.calcite.HiveCalciteUtil;
 import org.apache.hadoop.hive.ql.optimizer.calcite.HiveRelFactories;
 import org.apache.hadoop.hive.ql.optimizer.calcite.reloperators.HiveProject;
-
+//转换Filter和Project的顺序，先做Filter 缩小关系，再project
 public class HiveFilterProjectTransposeRule extends FilterProjectTransposeRule {
 
   public static final HiveFilterProjectTransposeRule INSTANCE_DETERMINISTIC_WINDOWING =

@@ -41,6 +41,7 @@ public class HiveProjectOverIntersectRemoveRule extends RelOptRule {
   // ~ Constructors -----------------------------------------------------------
 
   /** Creates a HiveProjectOverIntersectRemoveRule. */
+  //检测project的时候 有没有intersect(交集)
   private HiveProjectOverIntersectRemoveRule() {
     super(operand(HiveProject.class, operand(HiveIntersect.class, any())));
   }

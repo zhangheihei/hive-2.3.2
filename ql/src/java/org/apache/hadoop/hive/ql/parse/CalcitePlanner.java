@@ -1484,20 +1484,29 @@ public class CalcitePlanner extends SemanticAnalyzer {
 
       //Remove subquery
       LOG.info("Plan before removing subquery:\n" + RelOptUtil.toString(calciteGenPlan));
+      System.out.printf("Plan before removing subquery:\n %s \n only tostring: \n %s \n", RelOptUtil.toString(calciteGenPlan), calciteGenPlan.toString());
       //这里先FILRER，后PROJECT 有没有讲究
       //这里只是查询FILTER，PROJECT下面是否有子查询
       //目的完全是由rule决定的,这两个规则只会去寻找子查询
       calciteGenPlan = hepPlan(calciteGenPlan, false, mdProvider.getMetadataProvider(), null,
               HiveSubQueryRemoveRule.FILTER, HiveSubQueryRemoveRule.PROJECT);
       LOG.info("Plan just after removing subquery:\n" + RelOptUtil.toString(calciteGenPlan));
+      System.out.printf("Plan just after removing subquery:\n %s \n only tostring: \n %s \n", RelOptUtil.toString(calciteGenPlan), calciteGenPlan.toString());
+
 
       //去相关查询？
+      //熊猫的没有相关查询
       calciteGenPlan = HiveRelDecorrelator.decorrelateQuery(calciteGenPlan);
       LOG.info("Plan after decorrelation:\n" + RelOptUtil.toString(calciteGenPlan));
+      System.out.printf("Plan after decorrelation:\n %s \n only tostring: \n %s \n",RelOptUtil.toString(calciteGenPlan), calciteGenPlan.toString());
 
       // 2. Apply pre-join order optimizations
       calcitePreCboPlan = applyPreJoinOrderingTransforms(calciteGenPlan,
               mdProvider.getMetadataProvider(), executorProvider);
+
+      System.out.printf("Plan after applyPreJoinOrderingTransforms calciteGenPlan:\n %s \n only tostring: \n %s \n",RelOptUtil.toString(calciteGenPlan), calciteGenPlan.toString());
+      System.out.printf("Plan after applyPreJoinOrderingTransforms calcitePreCboPlan:\n %s \n only tostring: \n %s \n",RelOptUtil.toString(calcitePreCboPlan), calcitePreCboPlan.toString());
+
 
       // 3. Apply join order optimizations: reordering MST algorithm
       //    If join optimizations failed because of missing stats, we continue with
@@ -1683,6 +1692,12 @@ public class CalcitePlanner extends SemanticAnalyzer {
                 HiveInsertExchange4JoinRule.EXCHANGE_BELOW_MULTIJOIN);
         perfLogger.PerfLogEnd(this.getClass().getName(), PerfLogger.OPTIMIZER, "Calcite: Translation from Calcite tree to Hive tree");
       }
+      System.out.printf("CBO Planning details:\n");
+      System.out.printf("Original Plan:\n %s \n", RelOptUtil.toString(calciteGenPlan));
+      System.out.printf("Plan After PPD, PartPruning, ColumnPruning:\n %s \n", RelOptUtil.toString(calcitePreCboPlan));
+      System.out.printf("edwin is calciteOptimizedPlan is %s, class is %s \n", calciteOptimizedPlan.toString(),
+              calciteOptimizedPlan.getClass());
+      //System.out.printf("Plan After Join Reordering:\n %s \n", RelOptUtil.toString(calciteOptimizedPlan, SqlExplainLevel.ALL_ATTRIBUTES));
 
       if (LOG.isDebugEnabled() && !conf.getBoolVar(ConfVars.HIVE_IN_TEST)) {
         LOG.debug("CBO Planning details:\n");
@@ -1723,18 +1738,24 @@ public class CalcitePlanner extends SemanticAnalyzer {
           HiveProjectOverIntersectRemoveRule.INSTANCE, HiveIntersectMergeRule.INSTANCE);
       perfLogger.PerfLogEnd(this.getClass().getName(), PerfLogger.OPTIMIZER,
           "Calcite: HiveProjectOverIntersectRemoveRule and HiveIntersectMerge rules");
+      System.out.printf("Plan after HiveProjectOverIntersectRemoveRule，mergeRulue calciteGenPlan:\n %s \n only tostring: \n %s \n",RelOptUtil.toString(basePlan), basePlan.toString());
+
 
       perfLogger.PerfLogBegin(this.getClass().getName(), PerfLogger.OPTIMIZER);
       basePlan = hepPlan(basePlan, false, mdProvider, null, HepMatchOrder.BOTTOM_UP,
           HiveIntersectRewriteRule.INSTANCE);
       perfLogger.PerfLogEnd(this.getClass().getName(), PerfLogger.OPTIMIZER,
           "Calcite: HiveIntersectRewrite rule");
+      System.out.printf("Plan after HiveIntersectRewrite rule calciteGenPlan:\n %s \n only tostring: \n %s \n",RelOptUtil.toString(basePlan), basePlan.toString());
+
 
       perfLogger.PerfLogBegin(this.getClass().getName(), PerfLogger.OPTIMIZER);
       basePlan = hepPlan(basePlan, false, mdProvider, null, HepMatchOrder.BOTTOM_UP,
           HiveExceptRewriteRule.INSTANCE);
       perfLogger.PerfLogEnd(this.getClass().getName(), PerfLogger.OPTIMIZER,
           "Calcite: HiveExceptRewrite rule");
+      System.out.printf("Plan after HiveExceptRewrite rule calciteGenPlan:\n %s \n only tostring: \n %s \n",RelOptUtil.toString(basePlan), basePlan.toString());
+
 
       //1. Distinct aggregate rewrite
       // Run this optimization early, since it is expanding the operator pipeline.
@@ -1749,54 +1770,144 @@ public class CalcitePlanner extends SemanticAnalyzer {
          "Calcite: Prejoin ordering transformation, Distinct aggregate rewrite");
       }
 
+      System.out.printf("Plan after Calcite: Prejoin ordering transformation calciteGenPlan:\n %s \n only tostring: \n %s \n",RelOptUtil.toString(basePlan), basePlan.toString());
+
+
       // 2. Try factoring out common filter elements & separating deterministic
       // vs non-deterministic UDF. This needs to run before PPD so that PPD can
       // add on-clauses for old style Join Syntax
       // Ex: select * from R1 join R2 where ((R1.x=R2.x) and R1.y<10) or
-      // ((R1.x=R2.x) and R1.z=10)) and rand(1) < 0.1
+      // ((R1.x=R2.x) and R1.z=10)) and rand(1) < 0.1(PredicatePushDown 是PPD)
       perfLogger.PerfLogBegin(this.getClass().getName(), PerfLogger.OPTIMIZER);
       basePlan = hepPlan(basePlan, false, mdProvider, null, HepMatchOrder.ARBITRARY,
           new HivePreFilteringRule(maxCNFNodeCount));
       perfLogger.PerfLogEnd(this.getClass().getName(), PerfLogger.OPTIMIZER,
         "Calcite: Prejoin ordering transformation, factor out common filter elements and separating deterministic vs non-deterministic UDF");
 
+      System.out.printf("Plan after factor out common filter elements calciteGenPlan:\n %s \n only tostring: \n %s \n",RelOptUtil.toString(basePlan), basePlan.toString());
+
       // 3. Run exhaustive PPD, add not null filters, transitive inference,
       // constant propagation, constant folding
-      List<RelOptRule> rules = Lists.newArrayList();
+      //运行详尽的PPD，添加非空过滤器，传递推理，常量传播，常量折叠
+//      List<RelOptRule> rules = Lists.newArrayList();
+//      if (conf.getBoolVar(HiveConf.ConfVars.HIVEOPTPPD_WINDOWING)) {
+//        rules.add(HiveFilterProjectTransposeRule.INSTANCE_DETERMINISTIC_WINDOWING);
+//      } else {
+//        rules.add(HiveFilterProjectTransposeRule.INSTANCE_DETERMINISTIC);
+//      }
+//      rules.add(HiveFilterSetOpTransposeRule.INSTANCE);
+//      rules.add(HiveFilterSortTransposeRule.INSTANCE);
+//      rules.add(HiveFilterJoinRule.JOIN);
+//      rules.add(HiveFilterJoinRule.FILTER_ON_JOIN);
+//      rules.add(new HiveFilterAggregateTransposeRule(Filter.class, HiveRelFactories.HIVE_FILTER_FACTORY, Aggregate.class));
+//      rules.add(new FilterMergeRule(HiveRelFactories.HIVE_BUILDER));
+//      if (conf.getBoolVar(HiveConf.ConfVars.HIVE_OPTIMIZE_REDUCE_WITH_STATS)) {
+//        rules.add(HiveReduceExpressionsWithStatsRule.INSTANCE);
+//      }
+//      rules.add(HiveProjectFilterPullUpConstantsRule.INSTANCE);
+//      rules.add(HiveReduceExpressionsRule.PROJECT_INSTANCE);
+//      rules.add(HiveReduceExpressionsRule.FILTER_INSTANCE);
+//      rules.add(HiveReduceExpressionsRule.JOIN_INSTANCE);
+//      if (conf.getBoolVar(HiveConf.ConfVars.HIVEPOINTLOOKUPOPTIMIZER)) {
+//        rules.add(new HivePointLookupOptimizerRule(minNumORClauses));
+//      }
+//      rules.add(HiveJoinAddNotNullRule.INSTANCE_JOIN);
+//      rules.add(HiveJoinAddNotNullRule.INSTANCE_SEMIJOIN);
+//      rules.add(HiveJoinPushTransitivePredicatesRule.INSTANCE_JOIN);
+//      rules.add(HiveJoinPushTransitivePredicatesRule.INSTANCE_SEMIJOIN);
+//      rules.add(HiveSortMergeRule.INSTANCE);
+//      rules.add(HiveSortLimitPullUpConstantsRule.INSTANCE);
+//      rules.add(HiveUnionPullUpConstantsRule.INSTANCE);
+//      rules.add(HiveAggregatePullUpConstantsRule.INSTANCE);
+//      perfLogger.PerfLogBegin(this.getClass().getName(), PerfLogger.OPTIMIZER);
+//      basePlan = hepPlan(basePlan, true, mdProvider, executorProvider, HepMatchOrder.BOTTOM_UP,
+//              rules.toArray(new RelOptRule[rules.size()]));
+//      perfLogger.PerfLogEnd(this.getClass().getName(), PerfLogger.OPTIMIZER,
+//        "Calcite: Prejoin ordering transformation, PPD, not null predicates, transitive inference, constant folding");
+//
+//      System.out.printf("Plan after fPrejoin ordering transformation, PPD calciteGenPlan:\n %s \n only tostring: \n %s \n",RelOptUtil.toString(basePlan), basePlan.toString());
+
+      //3 PPD edwin test
+//      //-----------------------------
       if (conf.getBoolVar(HiveConf.ConfVars.HIVEOPTPPD_WINDOWING)) {
-        rules.add(HiveFilterProjectTransposeRule.INSTANCE_DETERMINISTIC_WINDOWING);
+        basePlan = hepPlan(basePlan, true, mdProvider, executorProvider, HepMatchOrder.BOTTOM_UP,
+                HiveFilterProjectTransposeRule.INSTANCE_DETERMINISTIC_WINDOWING);
       } else {
-        rules.add(HiveFilterProjectTransposeRule.INSTANCE_DETERMINISTIC);
+        basePlan = hepPlan(basePlan, true, mdProvider, executorProvider, HepMatchOrder.BOTTOM_UP,
+                HiveFilterProjectTransposeRule.INSTANCE_DETERMINISTIC);
       }
-      rules.add(HiveFilterSetOpTransposeRule.INSTANCE);
-      rules.add(HiveFilterSortTransposeRule.INSTANCE);
-      rules.add(HiveFilterJoinRule.JOIN);
-      rules.add(HiveFilterJoinRule.FILTER_ON_JOIN);
-      rules.add(new HiveFilterAggregateTransposeRule(Filter.class, HiveRelFactories.HIVE_FILTER_FACTORY, Aggregate.class));
-      rules.add(new FilterMergeRule(HiveRelFactories.HIVE_BUILDER));
-      if (conf.getBoolVar(HiveConf.ConfVars.HIVE_OPTIMIZE_REDUCE_WITH_STATS)) {
-        rules.add(HiveReduceExpressionsWithStatsRule.INSTANCE);
-      }
-      rules.add(HiveProjectFilterPullUpConstantsRule.INSTANCE);
-      rules.add(HiveReduceExpressionsRule.PROJECT_INSTANCE);
-      rules.add(HiveReduceExpressionsRule.FILTER_INSTANCE);
-      rules.add(HiveReduceExpressionsRule.JOIN_INSTANCE);
-      if (conf.getBoolVar(HiveConf.ConfVars.HIVEPOINTLOOKUPOPTIMIZER)) {
-        rules.add(new HivePointLookupOptimizerRule(minNumORClauses));
-      }
-      rules.add(HiveJoinAddNotNullRule.INSTANCE_JOIN);
-      rules.add(HiveJoinAddNotNullRule.INSTANCE_SEMIJOIN);
-      rules.add(HiveJoinPushTransitivePredicatesRule.INSTANCE_JOIN);
-      rules.add(HiveJoinPushTransitivePredicatesRule.INSTANCE_SEMIJOIN);
-      rules.add(HiveSortMergeRule.INSTANCE);
-      rules.add(HiveSortLimitPullUpConstantsRule.INSTANCE);
-      rules.add(HiveUnionPullUpConstantsRule.INSTANCE);
-      rules.add(HiveAggregatePullUpConstantsRule.INSTANCE);
-      perfLogger.PerfLogBegin(this.getClass().getName(), PerfLogger.OPTIMIZER);
+      System.out.printf("Plan after HIVEOPTPPD_WINDOWINGD calciteGenPlan:\n %s \n only tostring: \n %s \n",RelOptUtil.toString(basePlan), basePlan.toString());
+
       basePlan = hepPlan(basePlan, true, mdProvider, executorProvider, HepMatchOrder.BOTTOM_UP,
-              rules.toArray(new RelOptRule[rules.size()]));
-      perfLogger.PerfLogEnd(this.getClass().getName(), PerfLogger.OPTIMIZER,
-        "Calcite: Prejoin ordering transformation, PPD, not null predicates, transitive inference, constant folding");
+              HiveFilterSetOpTransposeRule.INSTANCE);
+      System.out.printf("Plan after HiveFilterSetOpTransposeRule calciteGenPlan:\n %s \n only tostring: \n %s \n",RelOptUtil.toString(basePlan), basePlan.toString());
+      basePlan = hepPlan(basePlan, true, mdProvider, executorProvider, HepMatchOrder.BOTTOM_UP,
+              HiveFilterSortTransposeRule.INSTANCE);
+      System.out.printf("Plan after HiveFilterSortTransposeRule calciteGenPlan:\n %s \n only tostring: \n %s \n",RelOptUtil.toString(basePlan), basePlan.toString());
+      basePlan = hepPlan(basePlan, true, mdProvider, executorProvider, HepMatchOrder.BOTTOM_UP,
+              HiveFilterJoinRule.JOIN);
+      System.out.printf("Plan after HiveFilterJoinRule.JOIN calciteGenPlan:\n %s \n only tostring: \n %s \n",RelOptUtil.toString(basePlan), basePlan.toString());
+      basePlan = hepPlan(basePlan, true, mdProvider, executorProvider, HepMatchOrder.BOTTOM_UP,
+              HiveFilterJoinRule.FILTER_ON_JOIN);
+      System.out.printf("Plan after HiveFilterJoinRule.FILTER_ON_JOIN calciteGenPlan:\n %s \n only tostring: \n %s \n",RelOptUtil.toString(basePlan), basePlan.toString());
+      basePlan = hepPlan(basePlan, true, mdProvider, executorProvider, HepMatchOrder.BOTTOM_UP,
+              new HiveFilterAggregateTransposeRule(Filter.class, HiveRelFactories.HIVE_FILTER_FACTORY, Aggregate.class));
+      System.out.printf("Plan after HiveFilterAggregateTransposeRule calciteGenPlan:\n %s \n only tostring: \n %s \n",RelOptUtil.toString(basePlan), basePlan.toString());
+      basePlan = hepPlan(basePlan, true, mdProvider, executorProvider, HepMatchOrder.BOTTOM_UP,
+              new FilterMergeRule(HiveRelFactories.HIVE_BUILDER));
+      System.out.printf("Plan after FilterMergeRule calciteGenPlan:\n %s \n only tostring: \n %s \n",RelOptUtil.toString(basePlan), basePlan.toString());
+      if (conf.getBoolVar(HiveConf.ConfVars.HIVE_OPTIMIZE_REDUCE_WITH_STATS)) {
+        basePlan = hepPlan(basePlan, true, mdProvider, executorProvider, HepMatchOrder.BOTTOM_UP,
+                HiveReduceExpressionsWithStatsRule.INSTANCE);
+      }
+      System.out.printf("Plan after HiveReduceExpressionsWithStatsRule calciteGenPlan:\n %s \n only tostring: \n %s \n",RelOptUtil.toString(basePlan), basePlan.toString());
+      basePlan = hepPlan(basePlan, true, mdProvider, executorProvider, HepMatchOrder.BOTTOM_UP,
+              HiveProjectFilterPullUpConstantsRule.INSTANCE);
+      System.out.printf("Plan after HiveProjectFilterPullUpConstantsRule calciteGenPlan:\n %s \n only tostring: \n %s \n",RelOptUtil.toString(basePlan), basePlan.toString());
+      basePlan = hepPlan(basePlan, true, mdProvider, executorProvider, HepMatchOrder.BOTTOM_UP,
+              HiveReduceExpressionsRule.PROJECT_INSTANCE);
+      System.out.printf("Plan after HiveReduceExpressionsRule calciteGenPlan:\n %s \n only tostring: \n %s \n",RelOptUtil.toString(basePlan), basePlan.toString());
+      basePlan = hepPlan(basePlan, true, mdProvider, executorProvider, HepMatchOrder.BOTTOM_UP,
+              HiveReduceExpressionsRule.FILTER_INSTANCE);
+      System.out.printf("Plan after HiveReduceExpressionsRule calciteGenPlan:\n %s \n only tostring: \n %s \n",RelOptUtil.toString(basePlan), basePlan.toString());
+      basePlan = hepPlan(basePlan, true, mdProvider, executorProvider, HepMatchOrder.BOTTOM_UP,
+              HiveReduceExpressionsRule.JOIN_INSTANCE);
+      System.out.printf("Plan after HiveReduceExpressionsRule calciteGenPlan:\n %s \n only tostring: \n %s \n",RelOptUtil.toString(basePlan), basePlan.toString());
+      if (conf.getBoolVar(HiveConf.ConfVars.HIVEPOINTLOOKUPOPTIMIZER)) {
+        basePlan = hepPlan(basePlan, true, mdProvider, executorProvider, HepMatchOrder.BOTTOM_UP,
+                new HivePointLookupOptimizerRule(minNumORClauses));
+      }
+      System.out.printf("Plan after HivePointLookupOptimizerRule calciteGenPlan:\n %s \n only tostring: \n %s \n",RelOptUtil.toString(basePlan), basePlan.toString());
+
+      basePlan = hepPlan(basePlan, true, mdProvider, executorProvider, HepMatchOrder.BOTTOM_UP,
+              HiveJoinAddNotNullRule.INSTANCE_JOIN);
+      System.out.printf("Plan after HiveJoinAddNotNullRule.INSTANCE_JOIN calciteGenPlan:\n %s \n only tostring: \n %s \n",RelOptUtil.toString(basePlan), basePlan.toString());
+
+      basePlan = hepPlan(basePlan, true, mdProvider, executorProvider, HepMatchOrder.BOTTOM_UP,
+              HiveJoinAddNotNullRule.INSTANCE_SEMIJOIN);
+      System.out.printf("Plan after HiveJoinAddNotNullRule.INSTANCE_SEMIJOIN calciteGenPlan:\n %s \n only tostring: \n %s \n",RelOptUtil.toString(basePlan), basePlan.toString());
+      basePlan = hepPlan(basePlan, true, mdProvider, executorProvider, HepMatchOrder.BOTTOM_UP,
+              HiveJoinPushTransitivePredicatesRule.INSTANCE_JOIN);
+      System.out.printf("Plan after HiveJoinPushTransitivePredicatesRule.INSTANCE_JOIN calciteGenPlan:\n %s \n only tostring: \n %s \n",RelOptUtil.toString(basePlan), basePlan.toString());
+      basePlan = hepPlan(basePlan, true, mdProvider, executorProvider, HepMatchOrder.BOTTOM_UP,
+              HiveJoinPushTransitivePredicatesRule.INSTANCE_SEMIJOIN);
+      System.out.printf("Plan after HiveJoinPushTransitivePredicatesRule.INSTANCE_SEMIJOIN calciteGenPlan:\n %s \n only tostring: \n %s \n",RelOptUtil.toString(basePlan), basePlan.toString());
+      basePlan = hepPlan(basePlan, true, mdProvider, executorProvider, HepMatchOrder.BOTTOM_UP,
+              HiveSortMergeRule.INSTANCE);
+      System.out.printf("Plan after HiveSortMergeRule.INSTANCE calciteGenPlan:\n %s \n only tostring: \n %s \n",RelOptUtil.toString(basePlan), basePlan.toString());
+      basePlan = hepPlan(basePlan, true, mdProvider, executorProvider, HepMatchOrder.BOTTOM_UP,
+              HiveSortLimitPullUpConstantsRule.INSTANCE);
+      System.out.printf("Plan after HiveSortLimitPullUpConstantsRule.INSTANCE calciteGenPlan:\n %s \n only tostring: \n %s \n",RelOptUtil.toString(basePlan), basePlan.toString());
+      basePlan = hepPlan(basePlan, true, mdProvider, executorProvider, HepMatchOrder.BOTTOM_UP,
+              HiveUnionPullUpConstantsRule.INSTANCE);
+      System.out.printf("Plan after HiveUnionPullUpConstantsRule.INSTANCE calciteGenPlan:\n %s \n only tostring: \n %s \n",RelOptUtil.toString(basePlan), basePlan.toString());
+      basePlan = hepPlan(basePlan, true, mdProvider, executorProvider, HepMatchOrder.BOTTOM_UP,
+              HiveAggregatePullUpConstantsRule.INSTANCE);
+      System.out.printf("Plan after fPrejoin ordering transformation, " +
+              "PPD calciteGenPlan:\n %s \n only tostring: \n %s \n",RelOptUtil.toString(basePlan), basePlan.toString());
+
+      //-----------------------------
+
 
       // 4. Push down limit through outer join
       // NOTE: We run this after PPD to support old style join syntax.
@@ -1883,7 +1994,7 @@ public class CalcitePlanner extends SemanticAnalyzer {
      * Run the HEP Planner with the given rule set.
      *
      * @param basePlan
-     * @param followPlanChanges 传入了false
+     * @param followPlanChanges 传入了
      * @param mdProvider
      * @param executorProvider  传入了NULL
      * @param order
