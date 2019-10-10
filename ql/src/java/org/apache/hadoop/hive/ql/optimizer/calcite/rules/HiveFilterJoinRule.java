@@ -56,6 +56,7 @@ public abstract class HiveFilterJoinRule extends FilterJoinRule {
    * Rule that tries to push filter expressions into a join condition and into
    * the inputs of the join.
    */
+  //把filter下推到join的条件中
   public static class HiveFilterJoinMergeRule extends HiveFilterJoinRule {
     public HiveFilterJoinMergeRule() {
       super(RelOptRule.operand(Filter.class, RelOptRule.operand(Join.class, RelOptRule.any())),
@@ -66,8 +67,10 @@ public abstract class HiveFilterJoinRule extends FilterJoinRule {
     public boolean matches(RelOptRuleCall call) {
       Filter filter = call.rel(0);
       if (!HiveCalciteUtil.isDeterministic(filter.getCondition())) {
+        System.out.printf("edwin HiveFilterJoinMergeRule matches is false \n");
         return false;
       }
+      System.out.printf("edwin HiveFilterJoinMergeRule matches is true \n");
       return true;
     }
 
@@ -88,14 +91,23 @@ public abstract class HiveFilterJoinRule extends FilterJoinRule {
     @Override
     public boolean matches(RelOptRuleCall call) {
       Join join = call.rel(0);
+      System.out.printf("edwin HiveFilterJoinTransposeRule matches condition is %s, class is %s, kind is %s, joinType is %s, " +
+                      "join class is %s, fieldList is %s, left fieldList is %s, right fieldList is %s \n",
+              join.getCondition().toString(), join.getCondition().getClass(),
+              join.getCondition().getKind(), join.getJoinType(), join.getClass(), join.getRowType().getFieldList().toString(),
+              join.getInputs().get(0).getRowType().getFieldList().toString(),
+              join.getInputs().get(1).getRowType().getFieldList().toString());
       List<RexNode> joinConds = RelOptUtil.conjunctions(join.getCondition());
 
       for (RexNode joinCnd : joinConds) {
+        System.out.printf("edwin HiveFilterJoinTransposeRule matches joinCnd is %s, class is %s, kind is %s \n",
+                joinCnd.toString(), joinCnd.getClass(), joinCnd.getKind());
         if (!HiveCalciteUtil.isDeterministic(joinCnd)) {
+          System.out.printf("edwin HiveFilterJoinTransposeRule matches is false \n");
           return false;
         }
       }
-
+      System.out.printf("edwin HiveFilterJoinTransposeRule matches is true \n");
       return true;
     }
 

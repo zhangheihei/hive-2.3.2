@@ -24,7 +24,7 @@ import org.apache.calcite.rel.core.RelFactories.FilterFactory;
 import org.apache.calcite.rel.rules.FilterAggregateTransposeRule;
 import org.apache.calcite.rex.RexNode;
 import org.apache.hadoop.hive.ql.optimizer.calcite.HiveCalciteUtil;
-
+//Filter 往Aggregate之后下推
 public class HiveFilterAggregateTransposeRule extends FilterAggregateTransposeRule {
 
   public HiveFilterAggregateTransposeRule(Class<? extends Filter> filterClass,

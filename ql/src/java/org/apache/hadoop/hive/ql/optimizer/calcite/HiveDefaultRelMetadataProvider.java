@@ -65,6 +65,8 @@ public class HiveDefaultRelMetadataProvider {
             HiveConf.ConfVars.MAPREDMAXSPLITSIZE);
 
     // Return MD provider
+    //扫描provider时，会以逆序的方式扫描，如果有重复的metadata.
+    //最终会以HIVE的单独实现为准，因为HIVE的方法会覆盖
     return ChainedRelMetadataProvider.of(ImmutableList
             .of(
                     HiveRelMdDistinctRowCount.SOURCE,

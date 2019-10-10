@@ -52,6 +52,7 @@ import com.google.common.collect.Lists;
  * is the same as the type of the resulting cast expression
  * </ul>
  */
+//reduce 减少表达式中的字段信息 1能用常量就用常量 2减少冗余字段
 public abstract class HiveReduceExpressionsRule extends ReduceExpressionsRule {
 
   protected static final Logger LOG = LoggerFactory.getLogger(HiveReduceExpressionsRule.class);

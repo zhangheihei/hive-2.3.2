@@ -44,10 +44,13 @@ import org.slf4j.LoggerFactory;
 
 import com.google.common.collect.Lists;
 
+import static org.apache.calcite.sql.SqlKind.EQUALS;
+
 /**
  * Planner rule that infers constant expressions from Filter into
  * a Project operator.
  */
+//就where语句中的常量，扫描到Project中
 public class HiveProjectFilterPullUpConstantsRule extends RelOptRule {
 
   protected static final Logger LOG = LoggerFactory.getLogger(
@@ -68,12 +71,28 @@ public class HiveProjectFilterPullUpConstantsRule extends RelOptRule {
 
   @Override
   public boolean matches(RelOptRuleCall call) {
+      //取filter关系
     final Filter filterRel = call.rel(1);
+    //---------------------------------------------------
+      System.out.printf("edwin HiveProjectFilterPullUpConstantsRule matches condition is %s, class is %s, kind is %s \n",
+              filterRel.getCondition().toString(), filterRel.getCondition().getClass(),
+              filterRel.getCondition().getKind());
+    final List<RexNode> conjunctions = RelOptUtil.conjunctions(filterRel.getCondition());
+    for (RexNode conjunction: conjunctions) {
+      if (((RexCall)conjunction).getOperator().getKind() == EQUALS){
+        System.out.printf("edwin HiveProjectFilterPullUpConstantsRule matches condition " +
+                "conjunction is %s, operands0 is %s, operands0 class is %s, operands1 is %s, operands1 class is %s \n",
+                conjunction.toString(), ((RexCall) conjunction).operands.get(0).toString(), ((RexCall) conjunction).operands.get(0).getClass(),
+                ((RexCall) conjunction).operands.get(1).toString(), ((RexCall) conjunction).operands.get(1).getClass());
+      }
+    }
+    //---------------------------------------------------
     RexNode condition = filterRel.getCondition();
     if (!HiveCalciteUtil.isDeterministic(condition)) {
+      System.out.printf("edwin HiveProjectFilterPullUpConstantsRule matches is false \n");
       return false;
     }
-
+    System.out.printf("edwin HiveProjectFilterPullUpConstantsRule matches is true \n");
     return super.matches(call);
   }
 
@@ -83,11 +102,19 @@ public class HiveProjectFilterPullUpConstantsRule extends RelOptRule {
     final RelBuilder builder = call.builder();
 
     List<RexNode> projects = project.getChildExps();
+    for (RexNode node : projects) {
+      System.out.printf("edwin HiveProjectFilterPullUpConstantsRule onMatch " +
+              "project is %s, class is %s \n", node.toString(), node.getClass());
+    }
+
     List<RexNode> newProjects = rewriteProjects(projects, filter.getCondition(), builder);
     if (newProjects == null) {
+      System.out.printf("edwin HiveProjectFilterPullUpConstantsRule onMatch nothing to do \n");
       return;
     }
 
+    System.out.printf("edwin HiveProjectFilterPullUpConstantsRule transformTo, " +
+            "FieldNames is %s \n", project.getRowType().getFieldNames());
     RelNode newProjRel = builder.push(filter)
             .project(newProjects, project.getRowType().getFieldNames()).build();
     call.transformTo(newProjRel);
@@ -163,11 +190,17 @@ public class HiveProjectFilterPullUpConstantsRule extends RelOptRule {
       return super.visitCall(call);
     }
 
+    //目的是替换常量,将where语句中已经的常量
+    //替换到project字段中
     private RexNode visit(final RexNode call) {
       RexNode replacement = replacements.get(call.toString());
       if (replacement == null) {
         return null;
       }
+
+      System.out.printf("edwin RexReplacer replacement is %s, type is %s, class is %s, " +
+              "call is %s, type is %s, class is %s \n", replacement.toString(), replacement.getType().toString(),
+              replacement.getType().getClass(), call.toString(), call.getType().toString(), call.getType().getClass());
       if (replacement.getType().equals(call.getType())) {
         return replacement;
       }

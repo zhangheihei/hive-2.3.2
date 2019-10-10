@@ -26,6 +26,7 @@ import org.apache.hadoop.hive.ql.optimizer.calcite.reloperators.HiveSortLimit;
 
 import com.google.common.collect.ImmutableList;
 
+//Filter和Sort切换
 public class HiveFilterSortTransposeRule extends RelOptRule {
 
   public static final HiveFilterSortTransposeRule INSTANCE =

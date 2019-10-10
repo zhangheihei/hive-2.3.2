@@ -719,6 +719,8 @@ public class HiveCalciteUtil {
     RexVisitor<Void> visitor = new RexVisitorImpl<Void>(true) {
       @Override
       public Void visitCall(org.apache.calcite.rex.RexCall call) {
+        System.out.printf("edwin calcite RexCall sqlOperator is %s, class is %s \n",
+                call.getOperator().toString(), call.getOperator().getClass());
         if (!call.getOperator().isDeterministic()) {
           throw new Util.FoundOne(call);
         }

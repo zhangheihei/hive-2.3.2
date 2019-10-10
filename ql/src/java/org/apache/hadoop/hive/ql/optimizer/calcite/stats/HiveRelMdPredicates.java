@@ -33,6 +33,7 @@ import org.apache.calcite.linq4j.Ord;
 import org.apache.calcite.linq4j.function.Predicate1;
 import org.apache.calcite.plan.RelOptPredicateList;
 import org.apache.calcite.plan.RelOptUtil;
+import org.apache.calcite.plan.hep.HepRelVertex;
 import org.apache.calcite.rel.RelNode;
 import org.apache.calcite.rel.core.Aggregate;
 import org.apache.calcite.rel.core.Join;
@@ -117,19 +118,27 @@ public class HiveRelMdPredicates implements MetadataHandler<BuiltInMetadata.Pred
    *
    * </ol>
    */
+  //Project是把所把调用链上所有的 常量搜齐
   public RelOptPredicateList getPredicates(Project project, RelMetadataQuery mq) {
 
     RelNode child = project.getInput();
     final RexBuilder rexBuilder = project.getCluster().getRexBuilder();
     RelOptPredicateList childInfo = mq.getPulledUpPredicates(child);
 
+
     List<RexNode> projectPullUpPredicates = new ArrayList<RexNode>();
     HashMultimap<Integer, Integer> inpIndxToOutIndxMap = HashMultimap.create();
-
     ImmutableBitSet.Builder columnsMappedBuilder = ImmutableBitSet.builder();
     Mapping m = Mappings.create(MappingType.PARTIAL_FUNCTION, child.getRowType().getFieldCount(),
         project.getRowType().getFieldCount());
+    System.out.printf("edwin getPredicates Project child is %s, class is %s \n",
+            (child instanceof HepRelVertex)?((HepRelVertex) child).getCurrentRel().toString():child.toString(),
+            (child instanceof HepRelVertex)?((HepRelVertex) child).getCurrentRel().getClass():child.getClass());
+    System.out.printf("edwin getPredicates Project m.soucre is %d, target is %d \n",
+            m.getSourceCount(), m.getTargetCount());
 
+    //source:就是源表，比如源表有23字段
+    //target是要映射的字段 比如映射3个
     for (Ord<RexNode> o : Ord.zip(project.getProjects())) {
       if (o.e instanceof RexInputRef) {
         int sIdx = ((RexInputRef) o.e).getIndex();
@@ -143,6 +152,7 @@ public class HiveRelMdPredicates implements MetadataHandler<BuiltInMetadata.Pred
     // 'columnsMapped' construct a new predicate based on mapping.
     final ImmutableBitSet columnsMapped = columnsMappedBuilder.build();
     for (RexNode r : childInfo.pulledUpPredicates) {
+      //常量就没有占位
       ImmutableBitSet rCols = RelOptUtil.InputFinder.bits(r);
       if (columnsMapped.contains(rCols)) {
         r = r.accept(new RexPermuteInputsShuttle(m, child));
@@ -165,6 +175,8 @@ public class HiveRelMdPredicates implements MetadataHandler<BuiltInMetadata.Pred
             rexBuilder.makeInputRef(project, expr.i), expr.e));
       }
     }
+    System.out.printf("edwin getPredicates Project  projectPullUpPredicates is %s\n",
+            projectPullUpPredicates.toString());
     return RelOptPredicateList.of(projectPullUpPredicates);
   }
 
@@ -173,6 +185,13 @@ public class HiveRelMdPredicates implements MetadataHandler<BuiltInMetadata.Pred
     RexBuilder rB = join.getCluster().getRexBuilder();
     RelNode left = join.getInput(0);
     RelNode right = join.getInput(1);
+    System.out.printf("edwin getPredicates Project Join left is %s, class is %s \n",
+            (left instanceof HepRelVertex)?((HepRelVertex) left).getCurrentRel().toString():left.toString(),
+            (left instanceof HepRelVertex)?((HepRelVertex) left).getCurrentRel().getClass():left.getClass());
+
+    System.out.printf("edwin getPredicates Project Join right is %s, class is %s \n",
+            (left instanceof HepRelVertex)?((HepRelVertex) right).getCurrentRel().toString():right.toString(),
+            (left instanceof HepRelVertex)?((HepRelVertex) right).getCurrentRel().getClass():right.getClass());
 
     final RelOptPredicateList leftInfo = mq.getPulledUpPredicates(left);
     final RelOptPredicateList rightInfo = mq.getPulledUpPredicates(right);
@@ -207,6 +226,8 @@ public class HiveRelMdPredicates implements MetadataHandler<BuiltInMetadata.Pred
     Mapping m = Mappings.create(MappingType.PARTIAL_FUNCTION,
         input.getRowType().getFieldCount(), agg.getRowType().getFieldCount());
 
+    System.out.printf("edwin getPredicates Aggregate m.soucre is %d, target is %d \n",
+            m.getSourceCount(), m.getTargetCount());
     int i = 0;
     for (int j : groupKeys) {
       m.set(j, i++);
@@ -219,6 +240,9 @@ public class HiveRelMdPredicates implements MetadataHandler<BuiltInMetadata.Pred
         aggPullUpPredicates.add(r);
       }
     }
+
+    System.out.printf("edwin getPredicates Aggregate  projectPullUpPredicates is %s\n",
+            aggPullUpPredicates.toString());
     return RelOptPredicateList.of(aggPullUpPredicates);
   }
 

@@ -1469,6 +1469,7 @@ public class CalcitePlanner extends SemanticAnalyzer {
       // Create and set MD provider
       HiveDefaultRelMetadataProvider mdProvider = new HiveDefaultRelMetadataProvider(conf);
       //使用ThreadLocal 为每个线程保存一个MetadataProvider
+      //将JaninoRelMetadataProvider中的RelMetadataProvider 设置为mdProvider(HiveDefaultRelMetadataProvider)
       RelMetadataQuery.THREAD_PROVIDERS.set(
               JaninoRelMetadataProvider.of(mdProvider.getMetadataProvider()));
 
@@ -1866,13 +1867,13 @@ public class CalcitePlanner extends SemanticAnalyzer {
       System.out.printf("Plan after HiveProjectFilterPullUpConstantsRule calciteGenPlan:\n %s \n only tostring: \n %s \n",RelOptUtil.toString(basePlan), basePlan.toString());
       basePlan = hepPlan(basePlan, true, mdProvider, executorProvider, HepMatchOrder.BOTTOM_UP,
               HiveReduceExpressionsRule.PROJECT_INSTANCE);
-      System.out.printf("Plan after HiveReduceExpressionsRule calciteGenPlan:\n %s \n only tostring: \n %s \n",RelOptUtil.toString(basePlan), basePlan.toString());
+      System.out.printf("Plan after HiveReduceExpressionsRule_PROJECT_INSTANCE calciteGenPlan:\n %s \n only tostring: \n %s \n",RelOptUtil.toString(basePlan), basePlan.toString());
       basePlan = hepPlan(basePlan, true, mdProvider, executorProvider, HepMatchOrder.BOTTOM_UP,
               HiveReduceExpressionsRule.FILTER_INSTANCE);
-      System.out.printf("Plan after HiveReduceExpressionsRule calciteGenPlan:\n %s \n only tostring: \n %s \n",RelOptUtil.toString(basePlan), basePlan.toString());
+      System.out.printf("Plan after HiveReduceExpressionsRule_FILTER_INSTANCE calciteGenPlan:\n %s \n only tostring: \n %s \n",RelOptUtil.toString(basePlan), basePlan.toString());
       basePlan = hepPlan(basePlan, true, mdProvider, executorProvider, HepMatchOrder.BOTTOM_UP,
               HiveReduceExpressionsRule.JOIN_INSTANCE);
-      System.out.printf("Plan after HiveReduceExpressionsRule calciteGenPlan:\n %s \n only tostring: \n %s \n",RelOptUtil.toString(basePlan), basePlan.toString());
+      System.out.printf("Plan after HiveReduceExpressionsRule_JOIN_INSTANCE calciteGenPlan:\n %s \n only tostring: \n %s \n",RelOptUtil.toString(basePlan), basePlan.toString());
       if (conf.getBoolVar(HiveConf.ConfVars.HIVEPOINTLOOKUPOPTIMIZER)) {
         basePlan = hepPlan(basePlan, true, mdProvider, executorProvider, HepMatchOrder.BOTTOM_UP,
                 new HivePointLookupOptimizerRule(minNumORClauses));
@@ -2059,7 +2060,8 @@ public class CalcitePlanner extends SemanticAnalyzer {
       System.out.printf("edwin DirectedGraph is %s %n", ewinDriectGraph.toString());
       Map<HepRelVertex, DefaultDirectedGraph.VertexInfo<HepRelVertex, DefaultEdge>> edwinGraphVertex = ((DefaultDirectedGraph)ewinDriectGraph).getVertexMap();
         for(Map.Entry<HepRelVertex, DefaultDirectedGraph.VertexInfo<HepRelVertex, DefaultEdge>> entry : edwinGraphVertex.entrySet()){
-            System.out.println("DirectedGraph Vertex Map Key = " + entry.getKey() + ", Value = " + entry.getValue());
+            System.out.println("DirectedGraph Vertex Map Key = " + entry.getKey() + ", Value = " + entry.getValue()
+                    + ", RelNode is " + entry.getKey().getCurrentRel().toString() + ", class is " + entry.getKey().getCurrentRel().getClass());
 
         }
 
