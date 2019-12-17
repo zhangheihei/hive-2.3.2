@@ -366,6 +366,25 @@ public class Driver implements CommandProcessor {
     return compile(command, true);
   }
 
+  public void handleTezQueueName(String value) throws HiveException {
+    String delimeter = "[.]";
+    String[] tmp = value.split(delimeter);
+    if (tmp.length <= 0) {
+      throw new HiveException("tez.queue.name value format is not as expected\n");
+    }
+    conf.verifyAndSet("tez.queue.name", tmp[tmp.length-1]);
+  }
+
+  public void handleMRQueueName(String value) throws HiveException {
+    String delimeter = "[.]";
+    String[] tmp = value.split(delimeter);
+    if (tmp.length <= 0) {
+      throw new HiveException("mapred.job.queue.name value format is not as expected\n");
+    }
+    conf.verifyAndSet("mapred.job.queue.name", tmp[tmp.length-1]);
+  }
+
+
   /**
    * Compile a new query, but potentially reset taskID counter.  Not resetting task counter
    * is useful for generating re-entrant QL queries.
@@ -415,76 +434,111 @@ public class Driver implements CommandProcessor {
     LOG.error("edwin after VariableSubstitution" + ": " + command);
     String queryStr = command;
 
-    boolean flag = conf.getBoolVar(ConfVars.HIVE_TENCENT_OP);
-    if (flag == true){
-        if (queryStr.contains("create table 2_1_month as")) {
-          queryStr = "create table 2_1_month as\n" +
-                  "select\n" +
-                  "  sid,\n" +
-                  "  substr(\"20190630\", 1, 6) as `date`,\n" +
-                  "  round(AVG(day_active_count)) as `day_active_count`\n" +
-                  "from\n" +
-                  "  (\n" +
-                  "    select\n" +
-                  "      b.sid as sid,\n" +
-                  "      a.date_p as date_p,\n" +
-                  "      count(distinct a.server_id) as `day_active_count`\n" +
-                  "    from\n" +
-                  "      \n" +
-                  "      (\n" +
-                  "        select\n" +
-                  "          app_key,\n" +
-                  "\t  concat(app_key, cast(rand()*100 as int)) as new_app_key,\n" +
-                  "          date_p,\n" +
-                  "          server_id\n" +
-                  "        from\n" +
-                  "          stat_sdk_test.sdk_active_odz\n" +
-                  "        where\n" +
-                  "          app_key_p > '0000000000000000'\n" +
-                  "          and date_p >= \"20190601\"\n" +
-                  "          and date_p <= \"20190630\"\n" +
-                  "          and os_p in('ios', 'android')\n" +
-                  "        group by\n" +
-                  "          app_key,\n" +
-                  "          date_p,\n" +
-                  "          server_id\n" +
-                  "      ) a\n" +
-                  "      \n" +
-                  "      \n" +
-                  "      left join \n" +
-                  "      (\n" +
-                  "      select sid, app_key, concat(app_key, suffix) as new_app_key\n" +
-                  "      from \n" +
-                  "\t      ( \n" +
-                  "\t      select sid, app_key, suffix from \n" +
-                  "\t\t      (\n" +
-                  "\t\t\tselect\n" +
-                  "\t\t\t  sid,\n" +
-                  "\t\t\t  app_key\n" +
-                  "\t\t\tfrom\n" +
-                  "\t\t\t  stat_sdk_test.sdk_rna_dc_app_task\n" +
-                  "\t\t\tgroup by\n" +
-                  "\t\t\t  sid,\n" +
-                  "\t\t\t  app_key\n" +
-                  "\t\t      ) x Lateral View explode(array(0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38,39,40,41,42,43,44,45,46,47,48,49,50,51,52,53,54,55,56,57,58,59,60,61,62,63,64,65,66,67,68,69,70,71,72,73,74,75,76,77,78,79,80,81,82,83,84,85,86,87,88,89,90,91,92,93,94,95,96,97,98,99)) tmp as suffix\n" +
-                  "\t      ) y\n" +
-                  "      ) b \n" +
-                  "      \n" +
-                  "      \n" +
-                  "      on a.new_app_key = b.new_app_key\n" +
-                  "    where\n" +
-                  "      b.sid is not null\n" +
-                  "    group by\n" +
-                  "      b.sid,\n" +
-                  "      a.date_p\n" +
-                  "  ) c\n" +
-                  "group by\n" +
-                  "  sid;\n" +
-                  "\n";
-          LOG.error("edwin HIVE_TENCENT_OP" + ": " + queryStr);
-          command = queryStr;
-        }
+    if (conf.get("tez.queue.name") != null) {
+      System.out.printf("edwin compile tez.queue.name:%s \n", conf.get("tez.queue.name"));
+      LOG.info("edwin compile tez.queue.name" + ": " + conf.get("tez.queue.name"));
     }
+    boolean flag = conf.getBoolVar(ConfVars.HIVE_TENCENT_OP);
+    LOG.info("edwin compile tencent.emr.optimizations :{}\n",  flag);
+    if (flag == true){
+      if (conf.get("tez.queue.name") != null) {
+        try {
+          handleTezQueueName(conf.get("tez.queue.name"));
+        }catch (Exception e) {
+          SQLState = "TENCENT:OP:ERR";  //SQLState for cancel operation
+          errorMessage = "FAILED: substitute tez.queue.name";
+          console.printError(errorMessage);
+          return 50001;
+        }
+      }
+
+      if (conf.get("mapred.job.queue.name") != null) {
+        try {
+          handleMRQueueName(conf.get("mapred.job.queue.name"));
+        }catch (Exception e) {
+          SQLState = "TENCENT:OP:ERR";  //SQLState for cancel operation
+          errorMessage = "FAILED: substitute mapred.job.queue.name";
+          console.printError(errorMessage);
+          return 50002;
+        }
+      }
+    }
+
+    System.out.printf("edwin compile check queue name:%s\n",  conf.get("tez.queue.name"));
+    LOG.info("edwin log compile check tez queue name:" + conf.get("tez.queue.name"));
+    LOG.info("edwin log compile check mr queue name:" + conf.get("mapred.job.queue.name"));
+
+
+//    if (flag == true){
+//        if (queryStr.contains("create table 2_1_month as")) {
+//          queryStr = "create table 2_1_month as\n" +
+//                  "select\n" +
+//                  "  sid,\n" +
+//                  "  substr(\"20190630\", 1, 6) as `date`,\n" +
+//                  "  round(AVG(day_active_count)) as `day_active_count`\n" +
+//                  "from\n" +
+//                  "  (\n" +
+//                  "    select\n" +
+//                  "      b.sid as sid,\n" +
+//                  "      a.date_p as date_p,\n" +
+//                  "      count(distinct a.server_id) as `day_active_count`\n" +
+//                  "    from\n" +
+//                  "      \n" +
+//                  "      (\n" +
+//                  "        select\n" +
+//                  "          app_key,\n" +
+//                  "\t  concat(app_key, cast(rand()*100 as int)) as new_app_key,\n" +
+//                  "          date_p,\n" +
+//                  "          server_id\n" +
+//                  "        from\n" +
+//                  "          stat_sdk_test.sdk_active_odz\n" +
+//                  "        where\n" +
+//                  "          app_key_p > '0000000000000000'\n" +
+//                  "          and date_p >= \"20190601\"\n" +
+//                  "          and date_p <= \"20190630\"\n" +
+//                  "          and os_p in('ios', 'android')\n" +
+//                  "        group by\n" +
+//                  "          app_key,\n" +
+//                  "          date_p,\n" +
+//                  "          server_id\n" +
+//                  "      ) a\n" +
+//                  "      \n" +
+//                  "      \n" +
+//                  "      left join \n" +
+//                  "      (\n" +
+//                  "      select sid, app_key, concat(app_key, suffix) as new_app_key\n" +
+//                  "      from \n" +
+//                  "\t      ( \n" +
+//                  "\t      select sid, app_key, suffix from \n" +
+//                  "\t\t      (\n" +
+//                  "\t\t\tselect\n" +
+//                  "\t\t\t  sid,\n" +
+//                  "\t\t\t  app_key\n" +
+//                  "\t\t\tfrom\n" +
+//                  "\t\t\t  stat_sdk_test.sdk_rna_dc_app_task\n" +
+//                  "\t\t\tgroup by\n" +
+//                  "\t\t\t  sid,\n" +
+//                  "\t\t\t  app_key\n" +
+//                  "\t\t      ) x Lateral View explode(array(0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38,39,40,41,42,43,44,45,46,47,48,49,50,51,52,53,54,55,56,57,58,59,60,61,62,63,64,65,66,67,68,69,70,71,72,73,74,75,76,77,78,79,80,81,82,83,84,85,86,87,88,89,90,91,92,93,94,95,96,97,98,99)) tmp as suffix\n" +
+//                  "\t      ) y\n" +
+//                  "      ) b \n" +
+//                  "      \n" +
+//                  "      \n" +
+//                  "      on a.new_app_key = b.new_app_key\n" +
+//                  "    where\n" +
+//                  "      b.sid is not null\n" +
+//                  "    group by\n" +
+//                  "      b.sid,\n" +
+//                  "      a.date_p\n" +
+//                  "  ) c\n" +
+//                  "group by\n" +
+//                  "  sid;\n" +
+//                  "\n";
+//          LOG.error("edwin HIVE_TENCENT_OP" + ": " + queryStr);
+//          command = queryStr;
+//        }
+//    }
+
     try {
       // command should be redacted to avoid to logging sensitive data
       //加载编辑数据hook,默认该HOOK为""
@@ -1326,8 +1380,9 @@ public class Driver implements CommandProcessor {
 
   public CommandProcessorResponse run(String command, boolean alreadyCompiled)
         throws CommandNeedRetryException {
-    LOG.error("before runInternal command:" + command);
+    LOG.info("before runInternal command:" + command);
     //开始编译执行
+    //System.out.printf("before runInternal command:%s \n" + command);
     CommandProcessorResponse cpr = runInternal(command, alreadyCompiled);
 
     if(cpr.getResponseCode() == 0) {
@@ -1623,6 +1678,7 @@ public class Driver implements CommandProcessor {
           return rollback(createProcessorResponse(ret));
         }
       }
+
       ret = execute(true);
       if (ret != 0) {
         //if needRequireLock is false, the release here will do nothing because there is no lock
@@ -1794,6 +1850,13 @@ public class Driver implements CommandProcessor {
   }
 
   public int execute(boolean deferClose) throws CommandNeedRetryException {
+    //测试beeline 此时的环境变量
+    boolean flag = conf.getBoolVar(ConfVars.HIVE_TENCENT_OP);
+    String queueName = conf.get("tez.queue.name");
+    String tmpLog = String.format("edwin beeline tencent.emr.optimizations is %s,  queueName:%s \n", flag, queueName);
+    LOG.info(tmpLog);
+
+
     PerfLogger perfLogger = SessionState.getPerfLogger();
     perfLogger.PerfLogBegin(CLASS_NAME, PerfLogger.DRIVER_EXECUTE);
 
@@ -1930,6 +1993,9 @@ public class Driver implements CommandProcessor {
       }
 
       perfLogger.PerfLogBegin(CLASS_NAME, PerfLogger.RUN_TASKS);
+      String tmpStr = conf.get("tez.queue.name");
+      System.out.printf("edwin execute phase check queue name:%s\n",  tmpStr);
+      LOG.info("edwin log execute phase check queue name:" + tmpStr);
       // Loop while you either have tasks running, or tasks queued up
       while (driverCxt.isRunning()) {
 

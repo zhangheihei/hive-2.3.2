@@ -271,6 +271,7 @@ public class TezSessionState {
 
     // and finally we're ready to create and start the session
     // generate basic tez config
+    //拿到所有hive的conf
     final TezConfiguration tezConfig = new TezConfiguration(conf);
 
     // set up the staging directory to use
@@ -317,7 +318,7 @@ public class TezSessionState {
 
     LOG.info("Opening new Tez Session (id: " + sessionId
         + ", scratch dir: " + tezScratchDir + ")");
-
+    LOG.info("edwin openInternal before start session queue:{} \n", conf.get("tez.queue.name"));
     TezJobMonitor.initShutdownHook();
     if (!isAsync) {
       startSessionAndContainers(session, conf, commonLocalResources, tezConfig, false);
@@ -373,6 +374,9 @@ public class TezSessionState {
   private TezClient startSessionAndContainers(TezClient session, HiveConf conf,
       Map<String, LocalResource> commonLocalResources, TezConfiguration tezConfig,
       boolean isOnThread) throws TezException, IOException {
+    String tmpStr = conf.get("tez.queue.name");
+    System.out.printf("edwin TezSessionState phase check queue name:%s\n",  tmpStr);
+    LOG.info("edwin log TezSessionState phase check queue name:{}  sessionState:{}", tmpStr, queueName);
     session.start();
     boolean isSuccessful = false;
     try {
@@ -407,7 +411,7 @@ public class TezSessionState {
       // Unset this after opening the session so that reopening of session uses the correct queue
       // names i.e, if client has not died and if the user has explicitly set a queue name
       // then reopened session will use user specified queue name else default cluster queue names.
-      conf.unset(TezConfiguration.TEZ_QUEUE_NAME);
+      //conf.unset(TezConfiguration.TEZ_QUEUE_NAME);
       return session;
     } finally {
       if (isOnThread && !isSuccessful) {

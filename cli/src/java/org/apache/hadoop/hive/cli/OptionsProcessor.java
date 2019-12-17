@@ -41,6 +41,7 @@ public class OptionsProcessor {
   protected static final Logger l4j = LoggerFactory.getLogger(OptionsProcessor.class.getName());
   private final Options options = new Options();
   private org.apache.commons.cli.CommandLine commandLine;
+  //存储当前session:hive变量,只存储-d, -hivevar
   Map<String, String> hiveVariables = new HashMap<String, String>();
 
   @SuppressWarnings("static-access")

@@ -510,7 +510,9 @@ public class TezSessionPoolManager {
     if (!session.isDefault()) {
       String queueName = session.getQueueName();
       String confQueueName = conf.get(TezConfiguration.TEZ_QUEUE_NAME);
-      LOG.info("Current queue name is " + queueName + " incoming queue name is " + confQueueName);
+      //LOG.info("Current queue name is " + queueName + " incoming queue name is " + confQueueName);
+      LOG.info("Current queue name is " + queueName + " incoming queue name is " + confQueueName +
+              "current session conf queue name is " + session.getConf().get(TezConfiguration.TEZ_QUEUE_NAME));
       return (queueName == null) ? confQueueName == null : queueName.equals(confQueueName);
     } else {
       // this session should never be a default session unless something has messed up.
@@ -527,6 +529,9 @@ public class TezSessionPoolManager {
     if (canWorkWithSameSession(session, conf)) {
       return session;
     }
+
+    Boolean sessionCheck = (session == null ? true : false);
+    LOG.info("edwin TezSessionPoolManager sessionCheck {}" ,sessionCheck);
 
     if (session != null) {
       closeIfNotDefault(session, false);

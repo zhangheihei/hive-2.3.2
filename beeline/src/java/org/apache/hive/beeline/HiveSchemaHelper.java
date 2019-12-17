@@ -240,14 +240,18 @@ public class HiveSchemaHelper {
         } else {
           currentCommand = currentCommand + " " + currLine;
         }
+
+        //如果是--开头 就是无效语句;同时检查到；才是完整语句
         if (isPartialCommand(currLine)) {
           // if its a partial line, continue collecting the pieces
           continue;
         }
 
         // if this is a valid executable command then add it to the buffer
+        //-- # 开头的不能执行
         if (!isNonExecCommand(currentCommand)) {
           currentCommand = cleanseCommand(currentCommand);
+          //source 起始的语句
           if (isNestedScript(currentCommand)) {
             // if this is a nested sql script then flatten it
             String currScript = getScriptName(currentCommand);

@@ -124,6 +124,7 @@ public class CliDriver {
     ss.err.flush();
     //清空头尾 空白字符
     String cmd_trimmed = cmd.trim();
+    System.out.printf("edwin processCmd cmd_trimmed is %s \n", cmd_trimmed);
     String[] tokens = tokenizeCmd(cmd_trimmed);
     int ret = 0;
 
@@ -287,7 +288,7 @@ public class CliDriver {
           } else {
             String firstToken = tokenizeCmd(cmd.trim())[0];
             String cmd_1 = getFirstCmd(cmd.trim(), firstToken.length());
-
+            System.out.printf("edwin processLocalCmd fistToke: %s, cmd_1:%s \n", firstToken, cmd_1);
             if (ss.getIsVerbose()) {
               ss.out.println(firstToken + " " + cmd_1);
             }
@@ -355,7 +356,7 @@ public class CliDriver {
   public int processLine(String line, boolean allowInterrupting) {
     SignalHandler oldSignal = null;
     Signal interruptSignal = null;
-
+    System.out.printf("edwin processLIst line is %s \n", line);
     if (allowInterrupting) {
       // Remember all threads that were running at the time we started line processing.
       // Hook up the custom Ctrl+C handler while processing this line
@@ -689,6 +690,24 @@ public class CliDriver {
     return new Completer[] {propCompleter, customCompletor};
   }
 
+  public void handleTezQueueName(String value, HiveConf conf) throws Exception  {
+    String delimeter = "[.]";
+    String[] tmp = value.split(delimeter);
+    if (tmp.length <= 0) {
+      throw new Exception("tez.queue.name value format is not as expected\n");
+    }
+    conf.verifyAndSet("tez.queue.name", tmp[tmp.length-1]);
+  }
+
+  public void handleMRQueueName(String value, HiveConf conf) throws Exception {
+    String delimeter = "[.]";
+    String[] tmp = value.split(delimeter);
+    if (tmp.length <= 0) {
+      throw new Exception("mapred.job.queue.name value format is not as expected\n");
+    }
+    conf.verifyAndSet("mapred.job.queue.name", tmp[tmp.length-1]);
+  }
+
   public static void main(String[] args) throws Exception {
     //CLI入口
     int ret = new CliDriver().run(args);
@@ -714,6 +733,7 @@ public class CliDriver {
       logInitDetailMessage = e.getMessage();
     }
 
+    //读取所有配置
     CliSessionState ss = new CliSessionState(new HiveConf(SessionState.class));
     ss.in = System.in;
     try {
@@ -738,11 +758,42 @@ public class CliDriver {
 
     // set all properties specified via command line
     //set 属性 由hiveconf指定的
+    //第一次填充conf，通过hiveconf指定的字段来，写入session中的conf
     HiveConf conf = ss.getConf();
     for (Map.Entry<Object, Object> item : ss.cmdProperties.entrySet()) {
       conf.set((String) item.getKey(), (String) item.getValue());
       ss.getOverriddenConfigurations().put((String) item.getKey(), (String) item.getValue());
     }
+
+    System.out.printf("conf queue name%s , ss.getConf.queue:%s \n", conf.get("tez.queue.name"), ss.getConf().get("tez.queue.name"));
+    System.out.printf("conf mr queue name%s , ss.getConf.queue:%s \n", conf.get("mapred.job.queue.name"),
+            conf.get("mapreduce.job.queuename"));
+
+//    boolean flag = conf.getBoolVar(ConfVars.HIVE_TENCENT_OP);
+//    if (flag == true){
+//      if (conf.get("tez.queue.name") != null) {
+//        try {
+//          handleTezQueueName(conf.get("tez.queue.name"), conf);
+//        }catch (Exception e) {
+//          String errorMessage = "FAILED: substitute tez.queue.name";
+//          console.printError(errorMessage);
+//          return 50001;
+//        }
+//      }
+//
+//      if (conf.get("mapred.job.queue.name") != null) {
+//        try {
+//          handleMRQueueName(conf.get("mapred.job.queue.name"), conf);
+//        }catch (Exception e) {
+//          String errorMessage = "FAILED: substitute mapred.job.queue.name";
+//          console.printError(errorMessage);
+//          return 50002;
+//        }
+//      }
+//    }
+    System.out.printf("repalce after conf queue name:%s , ss.getConf.queue:%s \n", conf.get("tez.queue.name"), ss.getConf().get("tez.queue.name"));
+    System.out.printf("conf after mr queue name%s , ss.getConf.queue:%s \n", conf.get("mapred.job.queue.name"),
+            conf.get("mapreduce.job.queuename"));
 
     // read prompt configuration and substitute variables.
     prompt = conf.getVar(HiveConf.ConfVars.CLIPROMPT);
@@ -761,6 +812,8 @@ public class CliDriver {
     } else {
       SessionState.start(ss);
     }
+    System.out.printf("before execute conf queue name:%s , ss.getConf.queue:%s \n", conf.get("tez.queue.name"), ss.getConf().get("tez.queue.name"));
+
 
     ss.updateThreadName();
 
@@ -786,7 +839,7 @@ public class CliDriver {
       throws Exception {
 
     CliDriver cli = new CliDriver();
-    //--hivevar hiveconf等指定的变量
+    //--hivevar -d指定的变量,没有hiveConf指定的
     cli.setHiveVariables(oproc.getHiveVariables());
 
     // use the specified database if specified
@@ -796,13 +849,16 @@ public class CliDriver {
     // Execute -i init files (always in silent mode)
     //-i 指定的SQL文件
     cli.processInitFiles(ss);
-
+    System.out.printf("edwin executeDriver cli conf queue:%s, ss conf queue:%s, conf queue:%s \n",
+            cli.conf.get("tez.queue.name"), ss.getConf().get("tez.queue.name"), conf.get("tez.queue.name"));
+    //execString为 -e指定的SQL，如果指定了，就直接执行
     if (ss.execString != null) {
       int cmdProcessStatus = cli.processLine(ss.execString);
       return cmdProcessStatus;
     }
 
     try {
+      //fileName 为-f指定的文件，读取该文件中的SQL
       if (ss.fileName != null) {
         return cli.processFile(ss.fileName);
       }

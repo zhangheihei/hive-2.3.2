@@ -196,6 +196,7 @@ public class SessionState {
 
   private Map<String, MapRedStats> mapRedStats;
 
+  //存放所有set，hiveConf，（hivevar,-d ）的值
   private Map<String, String> hiveVariables;
 
   // A mapping from a hadoop job ID to the stack traces collected from the map reduce task logs
@@ -622,12 +623,16 @@ public class SessionState {
         }
         return;
       }
+      LOG.info("edwin sessionstate start sessionConf queue:{}", startSs.sessionConf.get("tez.queue.name"));
       // Neither open nor opening.
       if (!isAsync) {
+        LOG.info("edwin sessionstate start sessionConf false");
         startSs.tezSessionState.open(startSs.sessionConf); // should use conf on session start-up
       } else {
         startSs.tezSessionState.beginOpen(startSs.sessionConf, null, console);
       }
+
+      LOG.info("edwin after sessionstate start sessionConf queue:{}", startSs.sessionConf.get("tez.queue.name"));
     } catch (Exception e) {
       throw new RuntimeException(e);
     }

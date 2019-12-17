@@ -1262,6 +1262,7 @@ public class BeeLine implements Closeable {
     if (cmdMap.size() == 0) {
       return error(loc("unknown-command", line));
     }
+    //注意：这里是大于1！！！
     if (cmdMap.size() > 1) {
       // any exact match?
       CommandHandler handler = cmdMap.get(line);

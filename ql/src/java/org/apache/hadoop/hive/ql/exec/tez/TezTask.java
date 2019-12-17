@@ -141,8 +141,17 @@ public class TezTask extends Task<TezWork> {
       // Need to remove this static hack. But this is the way currently to get a session.
       SessionState ss = SessionState.get();
       session = ss.getTezSession();
+
+      if (session != null && (session.getQueueName() == null) && conf.get(TezConfiguration.TEZ_QUEUE_NAME) != null) {
+        LOG.info("edwin teztask execute sessionQueue{}, sessionConfQueue{}, conQueue{}",
+                session.getQueueName(), session.getConf().get(TezConfiguration.TEZ_QUEUE_NAME), conf.get(TezConfiguration.TEZ_QUEUE_NAME));
+        //session.setQueueName(conf.get(TezConfiguration.TEZ_QUEUE_NAME));
+        session.close(false);
+        session = null;
+      }
+
       if (session != null && !session.isOpen()) {
-        LOG.warn("The session: " + session + " has not been opened");
+        LOG.info("The session: " + session + " has not been opened");
       }
       session = TezSessionPoolManager.getInstance().getSession(
           session, conf, false, getWork().getLlapMode());

@@ -127,6 +127,7 @@ public class HiveRelMdPredicates implements MetadataHandler<BuiltInMetadata.Pred
 
 
     List<RexNode> projectPullUpPredicates = new ArrayList<RexNode>();
+    //源表的字段位置-输出（project）的位置
     HashMultimap<Integer, Integer> inpIndxToOutIndxMap = HashMultimap.create();
     ImmutableBitSet.Builder columnsMappedBuilder = ImmutableBitSet.builder();
     Mapping m = Mappings.create(MappingType.PARTIAL_FUNCTION, child.getRowType().getFieldCount(),
@@ -141,6 +142,8 @@ public class HiveRelMdPredicates implements MetadataHandler<BuiltInMetadata.Pred
     //target是要映射的字段 比如映射3个
     for (Ord<RexNode> o : Ord.zip(project.getProjects())) {
       if (o.e instanceof RexInputRef) {
+        //此处是把filter中条件的 引用位置记录次来，引用位置就是表中每个字段的位置
+        //重点：引用类型就是把 当前关系中的字段位置记录起来
         int sIdx = ((RexInputRef) o.e).getIndex();
         m.set(sIdx, o.i);
         inpIndxToOutIndxMap.put(sIdx, o.i);
@@ -153,6 +156,7 @@ public class HiveRelMdPredicates implements MetadataHandler<BuiltInMetadata.Pred
     final ImmutableBitSet columnsMapped = columnsMappedBuilder.build();
     for (RexNode r : childInfo.pulledUpPredicates) {
       //常量就没有占位
+      //把引用位置记录起来，对比和上面记录的是否一致
       ImmutableBitSet rCols = RelOptUtil.InputFinder.bits(r);
       if (columnsMapped.contains(rCols)) {
         r = r.accept(new RexPermuteInputsShuttle(m, child));
@@ -160,7 +164,11 @@ public class HiveRelMdPredicates implements MetadataHandler<BuiltInMetadata.Pred
       }
     }
 
+    System.out.printf("edwin before getPredicates Project  projectPullUpPredicates is %s\n",
+            projectPullUpPredicates.toString());
+
     // Project can also generate constants. We need to include them.
+    //把project中的常量搜集
     for (Ord<RexNode> expr : Ord.zip(project.getProjects())) {
       if (RexLiteral.isNullLiteral(expr.e)) {
         projectPullUpPredicates.add(rexBuilder.makeCall(SqlStdOperatorTable.IS_NULL,
@@ -196,11 +204,29 @@ public class HiveRelMdPredicates implements MetadataHandler<BuiltInMetadata.Pred
     final RelOptPredicateList leftInfo = mq.getPulledUpPredicates(left);
     final RelOptPredicateList rightInfo = mq.getPulledUpPredicates(right);
 
+    System.out.printf("edwin getPredicates Project Join leftInfo is %s \n edwin getPredicates Project Join rightInfo is %s \n",
+            leftInfo.pulledUpPredicates.toString(), rightInfo.pulledUpPredicates.toString());
+
+    RexNode leftNew = RexUtil.composeConjunction(rB, leftInfo.pulledUpPredicates, false);
+    RexNode rightNew = RexUtil.composeConjunction(rB, rightInfo.pulledUpPredicates, false);
+
+    System.out.printf("edwin getPredicates Project Join leftNew is %s, class is %s, operator is %s\n " +
+                    "edwin getPredicates Project Join rightNew is %s, calss is %s, operator is %s \n",
+            leftNew.toString(), leftNew.getClass(), (leftNew instanceof RexCall)?((RexCall) leftNew).getOperator():"not call",
+            rightNew.toString(), rightNew.toString(), (rightNew instanceof  RexCall)? ((RexCall) rightNew).getOperator():"not call");
+    System.out.printf("edwin getPredicates Project Join leftNew is operands is %s\n, " +
+            "edwin getPredicates Project Join rightNew is operands is %s\n",
+            (leftNew instanceof RexCall)?((RexCall) leftNew).getOperands():"not call",
+            (rightNew instanceof  RexCall)? ((RexCall) rightNew).getOperands():"not call");
+
+    System.out.printf("dwin getPredicates Project Join nFieldsLeft is %s\n", join.getLeft().getRowType().getFieldList());
+    System.out.printf("dwin getPredicates Project Join nFieldsRight is %s\n", join.getRight().getRowType().getFieldList());
+    System.out.printf("dwin getPredicates Project Join nSysFields is %s\n", join.getSystemFieldList());
+
     JoinConditionBasedPredicateInference jI =
         new JoinConditionBasedPredicateInference(join,
             RexUtil.composeConjunction(rB, leftInfo.pulledUpPredicates, false),
-            RexUtil.composeConjunction(rB, rightInfo.pulledUpPredicates,
-                false));
+            RexUtil.composeConjunction(rB, rightInfo.pulledUpPredicates, false));
 
     return jI.inferPredicates(false);
   }
@@ -219,6 +245,11 @@ public class HiveRelMdPredicates implements MetadataHandler<BuiltInMetadata.Pred
    */
   public RelOptPredicateList getPredicates(Aggregate agg, RelMetadataQuery mq) {
     final RelNode input = agg.getInput();
+
+    System.out.printf("edwin getPredicates Aggregate input is %s, class is %s \n",
+            (input instanceof HepRelVertex)?((HepRelVertex) input).getCurrentRel().toString():input.toString(),
+            (input instanceof HepRelVertex)?((HepRelVertex) input).getCurrentRel().getClass():input.getClass());
+
     final RelOptPredicateList inputInfo = mq.getPulledUpPredicates(input);
     final List<RexNode> aggPullUpPredicates = new ArrayList<>();
 
@@ -226,8 +257,8 @@ public class HiveRelMdPredicates implements MetadataHandler<BuiltInMetadata.Pred
     Mapping m = Mappings.create(MappingType.PARTIAL_FUNCTION,
         input.getRowType().getFieldCount(), agg.getRowType().getFieldCount());
 
-    System.out.printf("edwin getPredicates Aggregate m.soucre is %d, target is %d \n",
-            m.getSourceCount(), m.getTargetCount());
+    System.out.printf("edwin getPredicates Aggregate m.soucre is %d, target is %d, agg class is %s \n",
+            m.getSourceCount(), m.getTargetCount(), agg.getRowType().getClass());
     int i = 0;
     for (int j : groupKeys) {
       m.set(j, i++);
@@ -330,11 +361,19 @@ public class HiveRelMdPredicates implements MetadataHandler<BuiltInMetadata.Pred
     final ImmutableBitSet leftFieldsBitSet;
     final ImmutableBitSet rightFieldsBitSet;
     final ImmutableBitSet allFieldsBitSet;
+    //记录索引,BitSet中也来记位, $2==$4，会置2位
+    //{0={0, 4}, 1={1}, 2={2, 5}, 3={3}, 4={0, 4}, 5={2, 5}, 6={6}}
     SortedMap<Integer, BitSet> equivalence;
+    //记录RexNode的摘要，同时记录ImmutableBitSet引用位置
     final Map<String, ImmutableBitSet> exprFields;
+    //只是记录左右子句中  预测的RexNode摘要
     final Set<String> allExprsDigests;
+    //一开始为空，
+    //将condition中的 条件(RexCall)记录在equalityPredicates
     final Set<String> equalityPredicates;
+    //预测后的左节点
     final RexNode leftChildPredicates;
+    //预测后的右节点
     final RexNode rightChildPredicates;
 
     public JoinConditionBasedPredicateInference(Join joinRel,
@@ -350,10 +389,13 @@ public class HiveRelMdPredicates implements MetadataHandler<BuiltInMetadata.Pred
       nFieldsLeft = joinRel.getLeft().getRowType().getFieldList().size();
       nFieldsRight = joinRel.getRight().getRowType().getFieldList().size();
       nSysFields = joinRel.getSystemFieldList().size();
+      //0, 0+4
       leftFieldsBitSet = ImmutableBitSet.range(nSysFields,
           nSysFields + nFieldsLeft);
+      //0+4, 0+4+3
       rightFieldsBitSet = ImmutableBitSet.range(nSysFields + nFieldsLeft,
           nSysFields + nFieldsLeft + nFieldsRight);
+      //0, 0+4+3
       allFieldsBitSet = ImmutableBitSet.range(0,
           nSysFields + nFieldsLeft + nFieldsRight);
 
@@ -365,14 +407,21 @@ public class HiveRelMdPredicates implements MetadataHandler<BuiltInMetadata.Pred
       } else {
         Mappings.TargetMapping leftMapping = Mappings.createShiftMapping(
             nSysFields + nFieldsLeft, nSysFields, 0, nFieldsLeft);
+
+        //更新RexCall中的operands
         leftChildPredicates = lPreds.accept(
             new RexPermuteInputsShuttle(leftMapping, joinRel.getInput(0)));
+        System.out.printf("edwin JoinConditionBasedPredicateInference " +
+                "leftChildPredicates is %s \n", leftChildPredicates.toString());
 
         for (RexNode r : RelOptUtil.conjunctions(leftChildPredicates)) {
           exprFields.put(r.toString(), RelOptUtil.InputFinder.bits(r));
           allExprsDigests.add(r.toString());
         }
       }
+
+      System.out.printf("------------------------------ lPreds line\n");
+
       if (rPreds == null) {
         rightChildPredicates = null;
       } else {
@@ -382,11 +431,17 @@ public class HiveRelMdPredicates implements MetadataHandler<BuiltInMetadata.Pred
         rightChildPredicates = rPreds.accept(
             new RexPermuteInputsShuttle(rightMapping, joinRel.getInput(1)));
 
+        System.out.printf("edwin JoinConditionBasedPredicateInference " +
+                "rightChildPredicates is %s \n", rightChildPredicates.toString());
+
         for (RexNode r : RelOptUtil.conjunctions(rightChildPredicates)) {
           exprFields.put(r.toString(), RelOptUtil.InputFinder.bits(r));
           allExprsDigests.add(r.toString());
         }
       }
+
+      System.out.printf("------------------------------ rPreds line\n");
+
 
       equivalence = Maps.newTreeMap();
       equalityPredicates = new HashSet<>();
@@ -398,11 +453,24 @@ public class HiveRelMdPredicates implements MetadataHandler<BuiltInMetadata.Pred
       // Equivalences from the left or right side infer predicates that are
       // already present in the Tree below the join.
       RexBuilder rexBuilder = joinRel.getCluster().getRexBuilder();
+
+      RexNode conditionAfterCompose = compose(rexBuilder, ImmutableList.of(joinRel.getCondition()));
+      System.out.printf("edwin JoinConditionBasedPredicateInference conditionAfterCompose is %s \n", conditionAfterCompose);
+
       List<RexNode> exprs =
           RelOptUtil.conjunctions(
               compose(rexBuilder, ImmutableList.of(joinRel.getCondition())));
 
+      System.out.printf("edwin JoinConditionBasedPredicateInference condition exprs is %s \n", exprs.toString());
+
+
       final EquivalenceFinder eF = new EquivalenceFinder();
+
+      //妈的 这块代码没用
+      //有用，仅仅是transform有用
+      //EquivalenceFinder 对RexCall做两件事
+      //1 equivalence记录 condition中 相互等值的记录
+      //2 将condition中的 条件(RexCall)记录在equalityPredicates
       new ArrayList<>(
           Lists.transform(exprs,
               new Function<RexNode, Void>() {
@@ -411,7 +479,13 @@ public class HiveRelMdPredicates implements MetadataHandler<BuiltInMetadata.Pred
                 }
               }));
 
+      System.out.printf("edwin JoinConditionBasedPredicateInference condition exprs(transform) is %s，equalityPredicates is %s" +
+              " \n", exprs.toString(), equalityPredicates.toString());
+
+      System.out.printf("edwin JoinConditionBasedPredicateInference before closure is %s \n", equivalence.toString());
       equivalence = BitSets.closure(equivalence);
+      System.out.printf("edwin JoinConditionBasedPredicateInference after closure is %s \n", equivalence.toString());
+      System.out.printf("------------------------------ equivalence end line\n");
     }
 
     /**
@@ -442,6 +516,8 @@ public class HiveRelMdPredicates implements MetadataHandler<BuiltInMetadata.Pred
             nonFieldsPredicates, includeEqualityInference,
             joinType == JoinRelType.LEFT ? rightFieldsBitSet
                 : allFieldsBitSet);
+        System.out.printf("edwin inferPredicates after left iner, inferredPredicates is %s, nonFieldsPredicates is %s\n ",
+                inferredPredicates.toString(), nonFieldsPredicates.toString());
         break;
       }
       switch (joinType) {
@@ -451,16 +527,27 @@ public class HiveRelMdPredicates implements MetadataHandler<BuiltInMetadata.Pred
             nonFieldsPredicates, includeEqualityInference,
             joinType == JoinRelType.RIGHT ? leftFieldsBitSet
                 : allFieldsBitSet);
+        System.out.printf("edwin inferPredicates after right iner, inferredPredicates is %s, nonFieldsPredicates is %s\n ",
+                inferredPredicates.toString(), nonFieldsPredicates.toString());
         break;
       }
+
+      System.out.printf("------------------------------ edwin inferPredicates infer end line \n");
 
       Mappings.TargetMapping rightMapping = Mappings.createShiftMapping(
           nSysFields + nFieldsLeft + nFieldsRight,
           0, nSysFields + nFieldsLeft, nFieldsRight);
+
+      System.out.printf("edwin rightMapping is %s \n", rightMapping.toString());
+
       final RexPermuteInputsShuttle rightPermute =
           new RexPermuteInputsShuttle(rightMapping, joinRel);
+
       Mappings.TargetMapping leftMapping = Mappings.createShiftMapping(
           nSysFields + nFieldsLeft, 0, nSysFields, nFieldsLeft);
+      System.out.printf("edwin leftMapping is %s \n", leftMapping.toString());
+
+
       final RexPermuteInputsShuttle leftPermute =
           new RexPermuteInputsShuttle(leftMapping, joinRel);
       final List<RexNode> leftInferredPredicates = new ArrayList<>();
@@ -475,7 +562,11 @@ public class HiveRelMdPredicates implements MetadataHandler<BuiltInMetadata.Pred
         }
       }
 
-      if (joinType == JoinRelType.INNER && !nonFieldsPredicates.isEmpty()) {
+      System.out.printf("edwin inferPredicates leftInferredPredicates is %s \n", leftInferredPredicates.toString());
+        System.out.printf("edwin inferPredicates rightInferredPredicates is %s \n", rightInferredPredicates.toString());
+
+
+        if (joinType == JoinRelType.INNER && !nonFieldsPredicates.isEmpty()) {
         // Predicates without field references can be pushed to both inputs
         final Set<String> leftPredsSet = new HashSet<String>(
                 Lists.transform(leftPreds, HiveCalciteUtil.REX_STR_FN));
@@ -531,11 +622,18 @@ public class HiveRelMdPredicates implements MetadataHandler<BuiltInMetadata.Pred
           continue;
         }
         Iterable<Mapping> ms = mappings(r);
+        //System.out.printf("------------edwin JoinConditionBasedPredicateInference mappings-------------- \n");
         if (ms.iterator().hasNext()) {
+          //System.out.printf("edwin JoinConditionBasedPredicateInference infer ms is %s \n", ms.i);
+          System.out.printf("############################### \n");
           for (Mapping m : ms) {
+            System.out.printf("edwin JoinConditionBasedPredicateInference infer m is %s \n", m.toString());
             RexNode tr = r.accept(
                 new RexPermuteInputsShuttle(m, joinRel.getInput(0),
                     joinRel.getInput(1)));
+            System.out.printf("edwin JoinConditionBasedPredicateInference infer tr is %s, " +
+                    "class is %s; %b, %b ,%b\n", tr.toString(), tr.getClass(), inferringFields.contains(RelOptUtil.InputFinder.bits(tr)),
+                    allExprsDigests.contains(tr.toString()), isAlwaysTrue(tr));
             if (inferringFields.contains(RelOptUtil.InputFinder.bits(tr))
                 && !allExprsDigests.contains(tr.toString())
                 && !isAlwaysTrue(tr)) {
@@ -558,6 +656,8 @@ public class HiveRelMdPredicates implements MetadataHandler<BuiltInMetadata.Pred
           if (fields.cardinality() == 0) {
             return Iterators.emptyIterator();
           }
+          System.out.printf("edwin JoinConditionBasedPredicateInference mappings RexNode is %s, fields is %s, cardinality:%s\n",
+                  predicate.toString(), fields.toString(), fields.cardinality());
           return new ExprsItr(fields);
         }
       };
@@ -652,6 +752,8 @@ public class HiveRelMdPredicates implements MetadataHandler<BuiltInMetadata.Pred
             .nextSetBit(i + 1), j++) {
           columns[j] = i;
           columnSets[j] = equivalence.get(i);
+          System.out.printf("edwin JoinConditionBasedPredicateInference ExprsItr columnSets[j] is %s \n",
+                  columnSets[j].toString());
           iterationIdx[j] = 0;
         }
         firstCall = true;
@@ -701,6 +803,8 @@ public class HiveRelMdPredicates implements MetadataHandler<BuiltInMetadata.Pred
             nextMapping = null;
             return;
           }
+          //0 0
+          //2 2
           nextMapping.set(columns[i], t);
           iterationIdx[i] = t + 1;
         }

@@ -994,6 +994,7 @@ public class Commands {
                       eventNotifier
                   ));
             }
+            System.out.printf("edwin beeline jdbc sql:%s \n", sql);
             hasResults = stmnt.execute(sql);
             logThread.interrupt();
             logThread.join(DEFAULT_QUERY_PROGRESS_THREAD_TIMEOUT);

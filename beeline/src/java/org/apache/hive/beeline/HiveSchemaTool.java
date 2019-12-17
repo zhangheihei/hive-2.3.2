@@ -530,6 +530,7 @@ public class HiveSchemaTool {
       return;
     }
     // Find the list of scripts to execute for this upgrade
+    //拿到需要升级的脚本，fromSchemeVer是从元数库中获取的
     List<String> upgradeScripts =
         metaStoreSchemaInfo.getUpgradeScripts(fromSchemaVer);
     testConnectionToMetastore();
@@ -945,6 +946,8 @@ public class HiveSchemaTool {
       throws IOException, HiveMetaException {
     NestedScriptParser dbCommandParser = getDbCommandParser(dbType);
     // expand the nested script
+
+    //全部将脚本中的语句抽取出来,转换为一条条SQL语句
     String sqlCommands = dbCommandParser.buildCommand(scriptDir, scriptFile);
     File tmpFile = File.createTempFile("schematool", ".sql");
     tmpFile.deleteOnExit();
@@ -952,6 +955,12 @@ public class HiveSchemaTool {
     // write out the buffer into a file. Add beeline commands for autocommit and close
     FileWriter fstream = new FileWriter(tmpFile.getPath());
     BufferedWriter out = new BufferedWriter(fstream);
+    //SQL 结构
+    /*
+    * !autocommit on
+    * all sql
+    * !closeall
+    * */
     out.write("!autocommit on" + System.getProperty("line.separator"));
     out.write(sqlCommands);
     out.write("!closeall" + System.getProperty("line.separator"));
