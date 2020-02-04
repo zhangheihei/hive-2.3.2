@@ -258,6 +258,7 @@ public class HiveTableScan extends TableScan implements HiveRelNode {
 
   // We need to include isInsideView inside digest to differentiate direct
   // tables and tables inside view. Otherwise, Calcite will treat them as the same.
+  //HiveTableScan.HIVE.[](table=[default.student],table:alias=student)[false]
   public String computeDigest() {
     String digest = super.computeDigest();
     return digest + "[" + this.isInsideView() + "]";

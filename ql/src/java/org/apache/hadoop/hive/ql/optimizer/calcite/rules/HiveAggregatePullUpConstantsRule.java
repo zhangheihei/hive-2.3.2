@@ -37,6 +37,8 @@ public class HiveAggregatePullUpConstantsRule extends AggregateProjectPullUpCons
   @Override
   public boolean matches(RelOptRuleCall call) {
     final Aggregate aggregate = call.rel(0);
+    System.out.printf("edwin HiveAggregatePullUpConstantsRule matches aggregate %s, indicator :%b \n",
+            aggregate.toString(), aggregate.indicator);
     // Rule cannot be applied if there are GroupingSets
     if (aggregate.indicator) {
       return false;

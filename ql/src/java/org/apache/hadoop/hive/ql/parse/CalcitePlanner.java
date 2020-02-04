@@ -1372,98 +1372,105 @@ public class CalcitePlanner extends SemanticAnalyzer {
         System.out.printf("edwin joi's RelCollation is %s%n", collation.toString());
       }
 
-      RexNode tmp = ((Join)input).getCondition();
-      System.out.printf("edwin join's SystemField is %d, condition class is %s, condition is %s, " +
-                      "operator is %s %n", ((Join)input).getSystemFieldList().size(),
-              ((Join)input).getCondition().getClass().toString(), ((Join)input).getCondition().toString(),
-              ((Join)input).getCondition(),
-              (((Join)input).getCondition() instanceof RexCall)?((RexCall)tmp).getOperator().toString():"null");
-      if (((Join)input).getCondition() instanceof RexCall) {
-        for (RexNode operand : ((RexCall)tmp).operands) {
-          System.out.printf("edwin join Rexcall operands is %s, class is%s %n", operand.toString(), operand.getClass().toString());
-        }
-      }
+//      if (input instanceof Join) {
+//        RexNode tmp = ((Join)input).getCondition();
+//        System.out.printf("edwin join's SystemField is %d, condition class is %s, condition is %s, " +
+//                        "operator is %s %n", ((Join)input).getSystemFieldList().size(),
+//                ((Join)input).getCondition().getClass().toString(), ((Join)input).getCondition().toString(),
+//                ((Join)input).getCondition(),
+//                (((Join)input).getCondition() instanceof RexCall)?((RexCall)tmp).getOperator().toString():"null");
+//        if (((Join)input).getCondition() instanceof RexCall) {
+//          for (RexNode operand : ((RexCall)tmp).operands) {
+//            System.out.printf("edwin join Rexcall operands is %s, class is%s %n", operand.toString(), operand.getClass().toString());
+//          }
+//        }
+//
+//
+//
+//        System.out.printf("edwin join's operator is %s %n", RexBuilder.GET_OPERATOR);
+//        if (((Join)input).getSystemFieldList().size() > 0) {
+//          for (RelDataTypeField tmp1 : ((Join)input).getSystemFieldList()) {
+//            System.out.printf("edwin join's SystemField is %s%n", tmp1.toString());
+//
+//          }
+//        }
+//
+//        //----------------------------
+//        //此处只是递归检查输入参数，这里只是熊猫那个SQL可以执行
+//        System.out.printf("edwin calciteGenPlan count is %d, type is %s, expression is %s %n", calciteGenPlan.getRowType().getFieldCount(), calciteGenPlan.getRowType().toString(), calciteGenPlan.toString());
+//        System.out.printf("edwin calciteGenPlan input is %d, type is %s, expression is %s%n", input.getRowType().getFieldCount(), input.getRowType().toString(), input.toString());
+//        List<RelNode> input1 =input.getInputs();
+//        for (RelNode innerInput : input1) {
+//          System.out.printf("edwin calciteGenPlan innerInput is %d, type is %s, expression is %s%n", innerInput.getRowType().getFieldCount(), innerInput.getRowType().toString(), innerInput.toString());
+//          List<RelNode> innerInput1 = innerInput.getInputs();
+//          for (RelNode innnerInput2 : innerInput1){
+//            System.out.printf("edwin calciteGenPlan innnerInput2 is %d, type is %s, expression is %s%n", innnerInput2.getRowType().getFieldCount(), innnerInput2.getRowType().toString(), innnerInput2.toString());
+//            List<RelNode> innerInput3 = innnerInput2.getInputs();
+//            for (RelNode innnerInput3 : innerInput3) {
+//              System.out.printf("edwin calciteGenPlan innnerInput3 is %d, type is %s, expression is %s%n", innnerInput3.getRowType().getFieldCount(), innnerInput3.getRowType().toString(), innnerInput3.toString());
+//              List<RelNode> innerInput4 = innnerInput3.getInputs();
+//              for(RelNode innnerInput4 : innerInput4) {
+//                System.out.printf("edwin calciteGenPlan innnerInput4 is %d, type is %s, expression is %s%n", innnerInput4.getRowType().getFieldCount(), innnerInput4.getRowType().toString(), innnerInput4.toString());
+//                List<RelNode> innerInput5 = innnerInput4.getInputs();
+//                for(RelNode innnerInput5 : innerInput5) {
+//                  System.out.printf("edwin calciteGenPlan innnerInput5 is %d, type is %s, expression is %s%n", innnerInput5.getRowType().getFieldCount(), innnerInput5.getRowType().toString(), innnerInput5.toString());
+//                  List<RelNode> innerInput6 = innnerInput5.getInputs();
+//                  for(RelNode innnerInput6 : innerInput6) {
+//                    System.out.printf("edwin calciteGenPlan innnerInput6 is %d, type is %s, expression is %s%n", innnerInput6.getRowType().getFieldCount(), innnerInput6.getRowType().toString(), innnerInput6.toString());
+//                  }
+//                }
+//
+//              }
+//
+//
+//            }
+//          }
+//
+//        }
+//        //------------------------------
+//      }
 
 
 
-      System.out.printf("edwin join's operator is %s %n", RexBuilder.GET_OPERATOR);
-      if (((Join)input).getSystemFieldList().size() > 0) {
-          for (RelDataTypeField tmp1 : ((Join)input).getSystemFieldList()) {
-              System.out.printf("edwin join's SystemField is %s%n", tmp1.toString());
-
-          }
-      }
-      //----------------------------
-      System.out.printf("edwin calciteGenPlan count is %d, type is %s, expression is %s %n", calciteGenPlan.getRowType().getFieldCount(), calciteGenPlan.getRowType().toString(), calciteGenPlan.toString());
-      System.out.printf("edwin calciteGenPlan input is %d, type is %s, expression is %s%n", input.getRowType().getFieldCount(), input.getRowType().toString(), input.toString());
-      List<RelNode> input1 =input.getInputs();
-      for (RelNode innerInput : input1) {
-        System.out.printf("edwin calciteGenPlan innerInput is %d, type is %s, expression is %s%n", innerInput.getRowType().getFieldCount(), innerInput.getRowType().toString(), innerInput.toString());
-        List<RelNode> innerInput1 = innerInput.getInputs();
-        for (RelNode innnerInput2 : innerInput1){
-          System.out.printf("edwin calciteGenPlan innnerInput2 is %d, type is %s, expression is %s%n", innnerInput2.getRowType().getFieldCount(), innnerInput2.getRowType().toString(), innnerInput2.toString());
-          List<RelNode> innerInput3 = innnerInput2.getInputs();
-          for (RelNode innnerInput3 : innerInput3) {
-            System.out.printf("edwin calciteGenPlan innnerInput3 is %d, type is %s, expression is %s%n", innnerInput3.getRowType().getFieldCount(), innnerInput3.getRowType().toString(), innnerInput3.toString());
-            List<RelNode> innerInput4 = innnerInput3.getInputs();
-            for(RelNode innnerInput4 : innerInput4) {
-              System.out.printf("edwin calciteGenPlan innnerInput4 is %d, type is %s, expression is %s%n", innnerInput4.getRowType().getFieldCount(), innnerInput4.getRowType().toString(), innnerInput4.toString());
-              List<RelNode> innerInput5 = innnerInput4.getInputs();
-              for(RelNode innnerInput5 : innerInput5) {
-                System.out.printf("edwin calciteGenPlan innnerInput5 is %d, type is %s, expression is %s%n", innnerInput5.getRowType().getFieldCount(), innnerInput5.getRowType().toString(), innnerInput5.toString());
-                List<RelNode> innerInput6 = innnerInput5.getInputs();
-                for(RelNode innnerInput6 : innerInput6) {
-                  System.out.printf("edwin calciteGenPlan innnerInput6 is %d, type is %s, expression is %s%n", innnerInput6.getRowType().getFieldCount(), innnerInput6.getRowType().toString(), innnerInput6.toString());
-                }
-              }
-
-            }
-
-
-          }
-        }
-
-      }
-      //------------------------------
 
       //没看明白完整意义,calciteGenPlan看起来没有改变
       //递归的剪枝，把没有用到的字段裁剪
       fieldTrimmer.trim(calciteGenPlan);
 
-      System.out.printf("edwin genLogicalPlan is end, after trim, calciteGenPlan.getRowType().getFieldCount() is" +
-                "  %d, rowType is %s %n", calciteGenPlan.getRowType().getFieldCount(), calciteGenPlan.getRowType().toString());
-
-      //----------------------------
-      System.out.printf("edwin calciteGenPlan count is %d, type is %s, expression is %s %n", calciteGenPlan.getRowType().getFieldCount(), calciteGenPlan.getRowType().toString(), calciteGenPlan.toString());
-      System.out.printf("edwin calciteGenPlan input is %d, type is %s, expression is %s%n", input.getRowType().getFieldCount(), input.getRowType().toString(), input.toString());
-      List<RelNode> input1AfterTrim =input.getInputs();
-      for (RelNode innerInput : input1AfterTrim) {
-        System.out.printf("edwin calciteGenPlan innerInput is %d, type is %s, expression is %s%n", innerInput.getRowType().getFieldCount(), innerInput.getRowType().toString(), innerInput.toString());
-        List<RelNode> innerInput1 = innerInput.getInputs();
-        for (RelNode innnerInput2 : innerInput1){
-          System.out.printf("edwin calciteGenPlan innnerInput2 is %d, type is %s, expression is %s%n", innnerInput2.getRowType().getFieldCount(), innnerInput2.getRowType().toString(), innnerInput2.toString());
-          List<RelNode> innerInput3 = innnerInput2.getInputs();
-          for (RelNode innnerInput3 : innerInput3) {
-            System.out.printf("edwin calciteGenPlan innnerInput3 is %d, type is %s, expression is %s%n", innnerInput3.getRowType().getFieldCount(), innnerInput3.getRowType().toString(), innnerInput3.toString());
-            List<RelNode> innerInput4 = innnerInput3.getInputs();
-            for(RelNode innnerInput4 : innerInput4) {
-              System.out.printf("edwin calciteGenPlan innnerInput4 is %d, type is %s, expression is %s%n", innnerInput4.getRowType().getFieldCount(), innnerInput4.getRowType().toString(), innnerInput4.toString());
-              List<RelNode> innerInput5 = innnerInput4.getInputs();
-              for(RelNode innnerInput5 : innerInput5) {
-                System.out.printf("edwin calciteGenPlan innnerInput5 is %d, type is %s, expression is %s%n", innnerInput5.getRowType().getFieldCount(), innnerInput5.getRowType().toString(), innnerInput5.toString());
-                List<RelNode> innerInput6 = innnerInput5.getInputs();
-                for(RelNode innnerInput6 : innerInput6) {
-                  System.out.printf("edwin calciteGenPlan innnerInput6 is %d, type is %s, expression is %s%n", innnerInput6.getRowType().getFieldCount(), innnerInput6.getRowType().toString(), innnerInput6.toString());
-                }
-              }
-
-            }
-
-
-          }
-        }
-
-      }
+//      System.out.printf("edwin genLogicalPlan is end, after trim, calciteGenPlan.getRowType().getFieldCount() is" +
+//                "  %d, rowType is %s %n", calciteGenPlan.getRowType().getFieldCount(), calciteGenPlan.getRowType().toString());
+//
+//      //----------------------------
+//      System.out.printf("edwin calciteGenPlan count is %d, type is %s, expression is %s %n", calciteGenPlan.getRowType().getFieldCount(), calciteGenPlan.getRowType().toString(), calciteGenPlan.toString());
+//      System.out.printf("edwin calciteGenPlan input is %d, type is %s, expression is %s%n", input.getRowType().getFieldCount(), input.getRowType().toString(), input.toString());
+//      List<RelNode> input1AfterTrim =input.getInputs();
+//      for (RelNode innerInput : input1AfterTrim) {
+//        System.out.printf("edwin calciteGenPlan innerInput is %d, type is %s, expression is %s%n", innerInput.getRowType().getFieldCount(), innerInput.getRowType().toString(), innerInput.toString());
+//        List<RelNode> innerInput1 = innerInput.getInputs();
+//        for (RelNode innnerInput2 : innerInput1){
+//          System.out.printf("edwin calciteGenPlan innnerInput2 is %d, type is %s, expression is %s%n", innnerInput2.getRowType().getFieldCount(), innnerInput2.getRowType().toString(), innnerInput2.toString());
+//          List<RelNode> innerInput3 = innnerInput2.getInputs();
+//          for (RelNode innnerInput3 : innerInput3) {
+//            System.out.printf("edwin calciteGenPlan innnerInput3 is %d, type is %s, expression is %s%n", innnerInput3.getRowType().getFieldCount(), innnerInput3.getRowType().toString(), innnerInput3.toString());
+//            List<RelNode> innerInput4 = innnerInput3.getInputs();
+//            for(RelNode innnerInput4 : innerInput4) {
+//              System.out.printf("edwin calciteGenPlan innnerInput4 is %d, type is %s, expression is %s%n", innnerInput4.getRowType().getFieldCount(), innnerInput4.getRowType().toString(), innnerInput4.toString());
+//              List<RelNode> innerInput5 = innnerInput4.getInputs();
+//              for(RelNode innnerInput5 : innerInput5) {
+//                System.out.printf("edwin calciteGenPlan innnerInput5 is %d, type is %s, expression is %s%n", innnerInput5.getRowType().getFieldCount(), innnerInput5.getRowType().toString(), innnerInput5.toString());
+//                List<RelNode> innerInput6 = innnerInput5.getInputs();
+//                for(RelNode innnerInput6 : innerInput6) {
+//                  System.out.printf("edwin calciteGenPlan innnerInput6 is %d, type is %s, expression is %s%n", innnerInput6.getRowType().getFieldCount(), innnerInput6.getRowType().toString(), innnerInput6.toString());
+//                }
+//              }
+//
+//            }
+//
+//
+//          }
+//        }
+//
+//      }
       //------------------------------
 
       // Create and set MD provider
@@ -1513,6 +1520,7 @@ public class CalcitePlanner extends SemanticAnalyzer {
       //    If join optimizations failed because of missing stats, we continue with
       //    the rest of optimizations
       if (profilesCBO.contains(ExtendedCBOProfile.JOIN_REORDERING)) {
+        System.out.printf("Apply join order optimizations: reordering MST algorithm");
         perfLogger.PerfLogBegin(this.getClass().getName(), PerfLogger.OPTIMIZER);
         try {
           List<RelMetadataProvider> list = Lists.newArrayList();
@@ -1790,122 +1798,124 @@ public class CalcitePlanner extends SemanticAnalyzer {
       // 3. Run exhaustive PPD, add not null filters, transitive inference,
       // constant propagation, constant folding
       //运行详尽的PPD，添加非空过滤器，传递推理，常量传播，常量折叠
-//      List<RelOptRule> rules = Lists.newArrayList();
-//      if (conf.getBoolVar(HiveConf.ConfVars.HIVEOPTPPD_WINDOWING)) {
-//        rules.add(HiveFilterProjectTransposeRule.INSTANCE_DETERMINISTIC_WINDOWING);
-//      } else {
-//        rules.add(HiveFilterProjectTransposeRule.INSTANCE_DETERMINISTIC);
-//      }
-//      rules.add(HiveFilterSetOpTransposeRule.INSTANCE);
-//      rules.add(HiveFilterSortTransposeRule.INSTANCE);
-//      rules.add(HiveFilterJoinRule.JOIN);
-//      rules.add(HiveFilterJoinRule.FILTER_ON_JOIN);
-//      rules.add(new HiveFilterAggregateTransposeRule(Filter.class, HiveRelFactories.HIVE_FILTER_FACTORY, Aggregate.class));
-//      rules.add(new FilterMergeRule(HiveRelFactories.HIVE_BUILDER));
-//      if (conf.getBoolVar(HiveConf.ConfVars.HIVE_OPTIMIZE_REDUCE_WITH_STATS)) {
-//        rules.add(HiveReduceExpressionsWithStatsRule.INSTANCE);
-//      }
-//      rules.add(HiveProjectFilterPullUpConstantsRule.INSTANCE);
-//      rules.add(HiveReduceExpressionsRule.PROJECT_INSTANCE);
-//      rules.add(HiveReduceExpressionsRule.FILTER_INSTANCE);
-//      rules.add(HiveReduceExpressionsRule.JOIN_INSTANCE);
-//      if (conf.getBoolVar(HiveConf.ConfVars.HIVEPOINTLOOKUPOPTIMIZER)) {
-//        rules.add(new HivePointLookupOptimizerRule(minNumORClauses));
-//      }
-//      rules.add(HiveJoinAddNotNullRule.INSTANCE_JOIN);
-//      rules.add(HiveJoinAddNotNullRule.INSTANCE_SEMIJOIN);
-//      rules.add(HiveJoinPushTransitivePredicatesRule.INSTANCE_JOIN);
-//      rules.add(HiveJoinPushTransitivePredicatesRule.INSTANCE_SEMIJOIN);
-//      rules.add(HiveSortMergeRule.INSTANCE);
-//      rules.add(HiveSortLimitPullUpConstantsRule.INSTANCE);
-//      rules.add(HiveUnionPullUpConstantsRule.INSTANCE);
-//      rules.add(HiveAggregatePullUpConstantsRule.INSTANCE);
-//      perfLogger.PerfLogBegin(this.getClass().getName(), PerfLogger.OPTIMIZER);
-//      basePlan = hepPlan(basePlan, true, mdProvider, executorProvider, HepMatchOrder.BOTTOM_UP,
-//              rules.toArray(new RelOptRule[rules.size()]));
-//      perfLogger.PerfLogEnd(this.getClass().getName(), PerfLogger.OPTIMIZER,
-//        "Calcite: Prejoin ordering transformation, PPD, not null predicates, transitive inference, constant folding");
-//
-//      System.out.printf("Plan after fPrejoin ordering transformation, PPD calciteGenPlan:\n %s \n only tostring: \n %s \n",RelOptUtil.toString(basePlan), basePlan.toString());
+      List<RelOptRule> rules = Lists.newArrayList();
+      if (conf.getBoolVar(HiveConf.ConfVars.HIVEOPTPPD_WINDOWING)) {
+        rules.add(HiveFilterProjectTransposeRule.INSTANCE_DETERMINISTIC_WINDOWING);
+      } else {
+        rules.add(HiveFilterProjectTransposeRule.INSTANCE_DETERMINISTIC);
+      }
+      rules.add(HiveFilterSetOpTransposeRule.INSTANCE);
+      rules.add(HiveFilterSortTransposeRule.INSTANCE);
+      rules.add(HiveFilterJoinRule.JOIN);
+      rules.add(HiveFilterJoinRule.FILTER_ON_JOIN);
+      rules.add(new HiveFilterAggregateTransposeRule(Filter.class, HiveRelFactories.HIVE_FILTER_FACTORY, Aggregate.class));
+      rules.add(new FilterMergeRule(HiveRelFactories.HIVE_BUILDER));
+      if (conf.getBoolVar(HiveConf.ConfVars.HIVE_OPTIMIZE_REDUCE_WITH_STATS)) {
+        rules.add(HiveReduceExpressionsWithStatsRule.INSTANCE);
+      }
+      rules.add(HiveProjectFilterPullUpConstantsRule.INSTANCE);
+      rules.add(HiveReduceExpressionsRule.PROJECT_INSTANCE);
+      rules.add(HiveReduceExpressionsRule.FILTER_INSTANCE);
+      rules.add(HiveReduceExpressionsRule.JOIN_INSTANCE);
+      if (conf.getBoolVar(HiveConf.ConfVars.HIVEPOINTLOOKUPOPTIMIZER)) {
+        rules.add(new HivePointLookupOptimizerRule(minNumORClauses));
+      }
+      rules.add(HiveJoinAddNotNullRule.INSTANCE_JOIN);
+      rules.add(HiveJoinAddNotNullRule.INSTANCE_SEMIJOIN);
+      rules.add(HiveJoinPushTransitivePredicatesRule.INSTANCE_JOIN);
+      rules.add(HiveJoinPushTransitivePredicatesRule.INSTANCE_SEMIJOIN);
+      rules.add(HiveSortMergeRule.INSTANCE);
+      rules.add(HiveSortLimitPullUpConstantsRule.INSTANCE);
+      rules.add(HiveUnionPullUpConstantsRule.INSTANCE);
+      rules.add(HiveAggregatePullUpConstantsRule.INSTANCE);
+      perfLogger.PerfLogBegin(this.getClass().getName(), PerfLogger.OPTIMIZER);
+      basePlan = hepPlan(basePlan, true, mdProvider, executorProvider, HepMatchOrder.BOTTOM_UP,
+              rules.toArray(new RelOptRule[rules.size()]));
+      perfLogger.PerfLogEnd(this.getClass().getName(), PerfLogger.OPTIMIZER,
+        "Calcite: Prejoin ordering transformation, PPD, not null predicates, transitive inference, constant folding");
+
+      System.out.printf("Plan after fPrejoin ordering transformation, " +
+              "PPD calciteGenPlan:\n %s \n only tostring: \n %s \n",RelOptUtil.toString(basePlan), basePlan.toString());
+
 
       //3 PPD edwin test
 //      //-----------------------------
-      if (conf.getBoolVar(HiveConf.ConfVars.HIVEOPTPPD_WINDOWING)) {
-        basePlan = hepPlan(basePlan, true, mdProvider, executorProvider, HepMatchOrder.BOTTOM_UP,
-                HiveFilterProjectTransposeRule.INSTANCE_DETERMINISTIC_WINDOWING);
-      } else {
-        basePlan = hepPlan(basePlan, true, mdProvider, executorProvider, HepMatchOrder.BOTTOM_UP,
-                HiveFilterProjectTransposeRule.INSTANCE_DETERMINISTIC);
-      }
-      System.out.printf("Plan after HIVEOPTPPD_WINDOWINGD calciteGenPlan:\n %s \n only tostring: \n %s \n",RelOptUtil.toString(basePlan), basePlan.toString());
-
-      basePlan = hepPlan(basePlan, true, mdProvider, executorProvider, HepMatchOrder.BOTTOM_UP,
-              HiveFilterSetOpTransposeRule.INSTANCE);
-      System.out.printf("Plan after HiveFilterSetOpTransposeRule calciteGenPlan:\n %s \n only tostring: \n %s \n",RelOptUtil.toString(basePlan), basePlan.toString());
-      basePlan = hepPlan(basePlan, true, mdProvider, executorProvider, HepMatchOrder.BOTTOM_UP,
-              HiveFilterSortTransposeRule.INSTANCE);
-      System.out.printf("Plan after HiveFilterSortTransposeRule calciteGenPlan:\n %s \n only tostring: \n %s \n",RelOptUtil.toString(basePlan), basePlan.toString());
-      basePlan = hepPlan(basePlan, true, mdProvider, executorProvider, HepMatchOrder.BOTTOM_UP,
-              HiveFilterJoinRule.JOIN);
-      System.out.printf("Plan after HiveFilterJoinRule.JOIN calciteGenPlan:\n %s \n only tostring: \n %s \n",RelOptUtil.toString(basePlan), basePlan.toString());
-      basePlan = hepPlan(basePlan, true, mdProvider, executorProvider, HepMatchOrder.BOTTOM_UP,
-              HiveFilterJoinRule.FILTER_ON_JOIN);
-      System.out.printf("Plan after HiveFilterJoinRule.FILTER_ON_JOIN calciteGenPlan:\n %s \n only tostring: \n %s \n",RelOptUtil.toString(basePlan), basePlan.toString());
-      basePlan = hepPlan(basePlan, true, mdProvider, executorProvider, HepMatchOrder.BOTTOM_UP,
-              new HiveFilterAggregateTransposeRule(Filter.class, HiveRelFactories.HIVE_FILTER_FACTORY, Aggregate.class));
-      System.out.printf("Plan after HiveFilterAggregateTransposeRule calciteGenPlan:\n %s \n only tostring: \n %s \n",RelOptUtil.toString(basePlan), basePlan.toString());
-      basePlan = hepPlan(basePlan, true, mdProvider, executorProvider, HepMatchOrder.BOTTOM_UP,
-              new FilterMergeRule(HiveRelFactories.HIVE_BUILDER));
-      System.out.printf("Plan after FilterMergeRule calciteGenPlan:\n %s \n only tostring: \n %s \n",RelOptUtil.toString(basePlan), basePlan.toString());
-      if (conf.getBoolVar(HiveConf.ConfVars.HIVE_OPTIMIZE_REDUCE_WITH_STATS)) {
-        basePlan = hepPlan(basePlan, true, mdProvider, executorProvider, HepMatchOrder.BOTTOM_UP,
-                HiveReduceExpressionsWithStatsRule.INSTANCE);
-      }
-      System.out.printf("Plan after HiveReduceExpressionsWithStatsRule calciteGenPlan:\n %s \n only tostring: \n %s \n",RelOptUtil.toString(basePlan), basePlan.toString());
-      basePlan = hepPlan(basePlan, true, mdProvider, executorProvider, HepMatchOrder.BOTTOM_UP,
-              HiveProjectFilterPullUpConstantsRule.INSTANCE);
-      System.out.printf("Plan after HiveProjectFilterPullUpConstantsRule calciteGenPlan:\n %s \n only tostring: \n %s \n",RelOptUtil.toString(basePlan), basePlan.toString());
-      basePlan = hepPlan(basePlan, true, mdProvider, executorProvider, HepMatchOrder.BOTTOM_UP,
-              HiveReduceExpressionsRule.PROJECT_INSTANCE);
-      System.out.printf("Plan after HiveReduceExpressionsRule_PROJECT_INSTANCE calciteGenPlan:\n %s \n only tostring: \n %s \n",RelOptUtil.toString(basePlan), basePlan.toString());
-      basePlan = hepPlan(basePlan, true, mdProvider, executorProvider, HepMatchOrder.BOTTOM_UP,
-              HiveReduceExpressionsRule.FILTER_INSTANCE);
-      System.out.printf("Plan after HiveReduceExpressionsRule_FILTER_INSTANCE calciteGenPlan:\n %s \n only tostring: \n %s \n",RelOptUtil.toString(basePlan), basePlan.toString());
-      basePlan = hepPlan(basePlan, true, mdProvider, executorProvider, HepMatchOrder.BOTTOM_UP,
-              HiveReduceExpressionsRule.JOIN_INSTANCE);
-      System.out.printf("Plan after HiveReduceExpressionsRule_JOIN_INSTANCE calciteGenPlan:\n %s \n only tostring: \n %s \n",RelOptUtil.toString(basePlan), basePlan.toString());
-      if (conf.getBoolVar(HiveConf.ConfVars.HIVEPOINTLOOKUPOPTIMIZER)) {
-        basePlan = hepPlan(basePlan, true, mdProvider, executorProvider, HepMatchOrder.BOTTOM_UP,
-                new HivePointLookupOptimizerRule(minNumORClauses));
-      }
-      System.out.printf("Plan after HivePointLookupOptimizerRule calciteGenPlan:\n %s \n only tostring: \n %s \n",RelOptUtil.toString(basePlan), basePlan.toString());
-
-      basePlan = hepPlan(basePlan, true, mdProvider, executorProvider, HepMatchOrder.BOTTOM_UP,
-              HiveJoinAddNotNullRule.INSTANCE_JOIN);
-      System.out.printf("Plan after HiveJoinAddNotNullRule.INSTANCE_JOIN calciteGenPlan:\n %s \n only tostring: \n %s \n",RelOptUtil.toString(basePlan), basePlan.toString());
-
-      basePlan = hepPlan(basePlan, true, mdProvider, executorProvider, HepMatchOrder.BOTTOM_UP,
-              HiveJoinAddNotNullRule.INSTANCE_SEMIJOIN);
-      System.out.printf("Plan after HiveJoinAddNotNullRule.INSTANCE_SEMIJOIN calciteGenPlan:\n %s \n only tostring: \n %s \n",RelOptUtil.toString(basePlan), basePlan.toString());
-      basePlan = hepPlan(basePlan, true, mdProvider, executorProvider, HepMatchOrder.BOTTOM_UP,
-              HiveJoinPushTransitivePredicatesRule.INSTANCE_JOIN);
-      System.out.printf("Plan after HiveJoinPushTransitivePredicatesRule.INSTANCE_JOIN calciteGenPlan:\n %s \n only tostring: \n %s \n",RelOptUtil.toString(basePlan), basePlan.toString());
-      basePlan = hepPlan(basePlan, true, mdProvider, executorProvider, HepMatchOrder.BOTTOM_UP,
-              HiveJoinPushTransitivePredicatesRule.INSTANCE_SEMIJOIN);
-      System.out.printf("Plan after HiveJoinPushTransitivePredicatesRule.INSTANCE_SEMIJOIN calciteGenPlan:\n %s \n only tostring: \n %s \n",RelOptUtil.toString(basePlan), basePlan.toString());
-      basePlan = hepPlan(basePlan, true, mdProvider, executorProvider, HepMatchOrder.BOTTOM_UP,
-              HiveSortMergeRule.INSTANCE);
-      System.out.printf("Plan after HiveSortMergeRule.INSTANCE calciteGenPlan:\n %s \n only tostring: \n %s \n",RelOptUtil.toString(basePlan), basePlan.toString());
-      basePlan = hepPlan(basePlan, true, mdProvider, executorProvider, HepMatchOrder.BOTTOM_UP,
-              HiveSortLimitPullUpConstantsRule.INSTANCE);
-      System.out.printf("Plan after HiveSortLimitPullUpConstantsRule.INSTANCE calciteGenPlan:\n %s \n only tostring: \n %s \n",RelOptUtil.toString(basePlan), basePlan.toString());
-      basePlan = hepPlan(basePlan, true, mdProvider, executorProvider, HepMatchOrder.BOTTOM_UP,
-              HiveUnionPullUpConstantsRule.INSTANCE);
-      System.out.printf("Plan after HiveUnionPullUpConstantsRule.INSTANCE calciteGenPlan:\n %s \n only tostring: \n %s \n",RelOptUtil.toString(basePlan), basePlan.toString());
-      basePlan = hepPlan(basePlan, true, mdProvider, executorProvider, HepMatchOrder.BOTTOM_UP,
-              HiveAggregatePullUpConstantsRule.INSTANCE);
-      System.out.printf("Plan after fPrejoin ordering transformation, " +
-              "PPD calciteGenPlan:\n %s \n only tostring: \n %s \n",RelOptUtil.toString(basePlan), basePlan.toString());
+//      if (conf.getBoolVar(HiveConf.ConfVars.HIVEOPTPPD_WINDOWING)) {
+//        basePlan = hepPlan(basePlan, true, mdProvider, executorProvider, HepMatchOrder.BOTTOM_UP,
+//                HiveFilterProjectTransposeRule.INSTANCE_DETERMINISTIC_WINDOWING);
+//      } else {
+//        basePlan = hepPlan(basePlan, true, mdProvider, executorProvider, HepMatchOrder.BOTTOM_UP,
+//                HiveFilterProjectTransposeRule.INSTANCE_DETERMINISTIC);
+//      }
+//      System.out.printf("Plan after HIVEOPTPPD_WINDOWINGD calciteGenPlan:\n %s \n only tostring: \n %s \n",RelOptUtil.toString(basePlan), basePlan.toString());
+//
+//      basePlan = hepPlan(basePlan, true, mdProvider, executorProvider, HepMatchOrder.BOTTOM_UP,
+//              HiveFilterSetOpTransposeRule.INSTANCE);
+//      System.out.printf("Plan after HiveFilterSetOpTransposeRule calciteGenPlan:\n %s \n only tostring: \n %s \n",RelOptUtil.toString(basePlan), basePlan.toString());
+//      basePlan = hepPlan(basePlan, true, mdProvider, executorProvider, HepMatchOrder.BOTTOM_UP,
+//              HiveFilterSortTransposeRule.INSTANCE);
+//      System.out.printf("Plan after HiveFilterSortTransposeRule calciteGenPlan:\n %s \n only tostring: \n %s \n",RelOptUtil.toString(basePlan), basePlan.toString());
+//      basePlan = hepPlan(basePlan, true, mdProvider, executorProvider, HepMatchOrder.BOTTOM_UP,
+//              HiveFilterJoinRule.JOIN);
+//      System.out.printf("Plan after HiveFilterJoinRule.JOIN calciteGenPlan:\n %s \n only tostring: \n %s \n",RelOptUtil.toString(basePlan), basePlan.toString());
+//      basePlan = hepPlan(basePlan, true, mdProvider, executorProvider, HepMatchOrder.BOTTOM_UP,
+//              HiveFilterJoinRule.FILTER_ON_JOIN);
+//      System.out.printf("Plan after HiveFilterJoinRule.FILTER_ON_JOIN calciteGenPlan:\n %s \n only tostring: \n %s \n",RelOptUtil.toString(basePlan), basePlan.toString());
+//      basePlan = hepPlan(basePlan, true, mdProvider, executorProvider, HepMatchOrder.BOTTOM_UP,
+//              new HiveFilterAggregateTransposeRule(Filter.class, HiveRelFactories.HIVE_FILTER_FACTORY, Aggregate.class));
+//      System.out.printf("Plan after HiveFilterAggregateTransposeRule calciteGenPlan:\n %s \n only tostring: \n %s \n",RelOptUtil.toString(basePlan), basePlan.toString());
+//      basePlan = hepPlan(basePlan, true, mdProvider, executorProvider, HepMatchOrder.BOTTOM_UP,
+//              new FilterMergeRule(HiveRelFactories.HIVE_BUILDER));
+//      System.out.printf("Plan after FilterMergeRule calciteGenPlan:\n %s \n only tostring: \n %s \n",RelOptUtil.toString(basePlan), basePlan.toString());
+//      if (conf.getBoolVar(HiveConf.ConfVars.HIVE_OPTIMIZE_REDUCE_WITH_STATS)) {
+//        basePlan = hepPlan(basePlan, true, mdProvider, executorProvider, HepMatchOrder.BOTTOM_UP,
+//                HiveReduceExpressionsWithStatsRule.INSTANCE);
+//      }
+//      System.out.printf("Plan after HiveReduceExpressionsWithStatsRule calciteGenPlan:\n %s \n only tostring: \n %s \n",RelOptUtil.toString(basePlan), basePlan.toString());
+//      basePlan = hepPlan(basePlan, true, mdProvider, executorProvider, HepMatchOrder.BOTTOM_UP,
+//              HiveProjectFilterPullUpConstantsRule.INSTANCE);
+//      System.out.printf("Plan after HiveProjectFilterPullUpConstantsRule calciteGenPlan:\n %s \n only tostring: \n %s \n",RelOptUtil.toString(basePlan), basePlan.toString());
+//      basePlan = hepPlan(basePlan, true, mdProvider, executorProvider, HepMatchOrder.BOTTOM_UP,
+//              HiveReduceExpressionsRule.PROJECT_INSTANCE);
+//      System.out.printf("Plan after HiveReduceExpressionsRule_PROJECT_INSTANCE calciteGenPlan:\n %s \n only tostring: \n %s \n",RelOptUtil.toString(basePlan), basePlan.toString());
+//      basePlan = hepPlan(basePlan, true, mdProvider, executorProvider, HepMatchOrder.BOTTOM_UP,
+//              HiveReduceExpressionsRule.FILTER_INSTANCE);
+//      System.out.printf("Plan after HiveReduceExpressionsRule_FILTER_INSTANCE calciteGenPlan:\n %s \n only tostring: \n %s \n",RelOptUtil.toString(basePlan), basePlan.toString());
+//      basePlan = hepPlan(basePlan, true, mdProvider, executorProvider, HepMatchOrder.BOTTOM_UP,
+//              HiveReduceExpressionsRule.JOIN_INSTANCE);
+//      System.out.printf("Plan after HiveReduceExpressionsRule_JOIN_INSTANCE calciteGenPlan:\n %s \n only tostring: \n %s \n",RelOptUtil.toString(basePlan), basePlan.toString());
+//      if (conf.getBoolVar(HiveConf.ConfVars.HIVEPOINTLOOKUPOPTIMIZER)) {
+//        basePlan = hepPlan(basePlan, true, mdProvider, executorProvider, HepMatchOrder.BOTTOM_UP,
+//                new HivePointLookupOptimizerRule(minNumORClauses));
+//      }
+//      System.out.printf("Plan after HivePointLookupOptimizerRule calciteGenPlan:\n %s \n only tostring: \n %s \n",RelOptUtil.toString(basePlan), basePlan.toString());
+//
+//      basePlan = hepPlan(basePlan, true, mdProvider, executorProvider, HepMatchOrder.BOTTOM_UP,
+//              HiveJoinAddNotNullRule.INSTANCE_JOIN);
+//      System.out.printf("Plan after HiveJoinAddNotNullRule.INSTANCE_JOIN calciteGenPlan:\n %s \n only tostring: \n %s \n",RelOptUtil.toString(basePlan), basePlan.toString());
+//
+//      basePlan = hepPlan(basePlan, true, mdProvider, executorProvider, HepMatchOrder.BOTTOM_UP,
+//              HiveJoinAddNotNullRule.INSTANCE_SEMIJOIN);
+//      System.out.printf("Plan after HiveJoinAddNotNullRule.INSTANCE_SEMIJOIN calciteGenPlan:\n %s \n only tostring: \n %s \n",RelOptUtil.toString(basePlan), basePlan.toString());
+//      basePlan = hepPlan(basePlan, true, mdProvider, executorProvider, HepMatchOrder.BOTTOM_UP,
+//              HiveJoinPushTransitivePredicatesRule.INSTANCE_JOIN);
+//      System.out.printf("Plan after HiveJoinPushTransitivePredicatesRule.INSTANCE_JOIN calciteGenPlan:\n %s \n only tostring: \n %s \n",RelOptUtil.toString(basePlan), basePlan.toString());
+//      basePlan = hepPlan(basePlan, true, mdProvider, executorProvider, HepMatchOrder.BOTTOM_UP,
+//              HiveJoinPushTransitivePredicatesRule.INSTANCE_SEMIJOIN);
+//      System.out.printf("Plan after HiveJoinPushTransitivePredicatesRule.INSTANCE_SEMIJOIN calciteGenPlan:\n %s \n only tostring: \n %s \n",RelOptUtil.toString(basePlan), basePlan.toString());
+//      basePlan = hepPlan(basePlan, true, mdProvider, executorProvider, HepMatchOrder.BOTTOM_UP,
+//              HiveSortMergeRule.INSTANCE);
+//      System.out.printf("Plan after HiveSortMergeRule.INSTANCE calciteGenPlan:\n %s \n only tostring: \n %s \n",RelOptUtil.toString(basePlan), basePlan.toString());
+//      basePlan = hepPlan(basePlan, true, mdProvider, executorProvider, HepMatchOrder.BOTTOM_UP,
+//              HiveSortLimitPullUpConstantsRule.INSTANCE);
+//      System.out.printf("Plan after HiveSortLimitPullUpConstantsRule.INSTANCE calciteGenPlan:\n %s \n only tostring: \n %s \n",RelOptUtil.toString(basePlan), basePlan.toString());
+//      basePlan = hepPlan(basePlan, true, mdProvider, executorProvider, HepMatchOrder.BOTTOM_UP,
+//              HiveUnionPullUpConstantsRule.INSTANCE);
+//      System.out.printf("Plan after HiveUnionPullUpConstantsRule.INSTANCE calciteGenPlan:\n %s \n only tostring: \n %s \n",RelOptUtil.toString(basePlan), basePlan.toString());
+//      basePlan = hepPlan(basePlan, true, mdProvider, executorProvider, HepMatchOrder.BOTTOM_UP,
+//              HiveAggregatePullUpConstantsRule.INSTANCE);
+//      System.out.printf("Plan after fPrejoin ordering transformation, " +
+//              "PPD calciteGenPlan:\n %s \n only tostring: \n %s \n",RelOptUtil.toString(basePlan), basePlan.toString());
 
       //-----------------------------
 
@@ -1932,18 +1942,28 @@ public class CalcitePlanner extends SemanticAnalyzer {
           "Calcite: Prejoin ordering transformation, Push down limit through outer join");
       }
 
+      System.out.printf("Plan after HIVE_OPTIMIZE_LIMIT_TRANSPOSE, " +
+              "PPD calciteGenPlan:\n %s \n only tostring: \n %s \n",RelOptUtil.toString(basePlan), basePlan.toString());
+
       // 5. Push Down Semi Joins
+      //处理半查询
       perfLogger.PerfLogBegin(this.getClass().getName(), PerfLogger.OPTIMIZER);
       basePlan = hepPlan(basePlan, true, mdProvider, null, SemiJoinJoinTransposeRule.INSTANCE,
           SemiJoinFilterTransposeRule.INSTANCE, SemiJoinProjectTransposeRule.INSTANCE);
       perfLogger.PerfLogEnd(this.getClass().getName(), PerfLogger.OPTIMIZER,
         "Calcite: Prejoin ordering transformation, Push Down Semi Joins");
+      System.out.printf("Plan after SemiJoin, " +
+              "PPD calciteGenPlan:\n %s \n only tostring: \n %s \n",RelOptUtil.toString(basePlan), basePlan.toString());
+
 
       // 6. Apply Partition Pruning
       perfLogger.PerfLogBegin(this.getClass().getName(), PerfLogger.OPTIMIZER);
       basePlan = hepPlan(basePlan, false, mdProvider, null, new HivePartitionPruneRule(conf));
       perfLogger.PerfLogEnd(this.getClass().getName(), PerfLogger.OPTIMIZER,
         "Calcite: Prejoin ordering transformation, Partition Pruning");
+      System.out.printf("Plan after Apply Partition Pruning, " +
+              "PPD calciteGenPlan:\n %s \n only tostring: \n %s \n",RelOptUtil.toString(basePlan), basePlan.toString());
+
 
       // 7. Projection Pruning (this introduces select above TS & hence needs to be run last due to PP)
       perfLogger.PerfLogBegin(this.getClass().getName(), PerfLogger.OPTIMIZER);
@@ -1953,6 +1973,10 @@ public class CalcitePlanner extends SemanticAnalyzer {
       basePlan = fieldTrimmer.trim(basePlan);
       perfLogger.PerfLogEnd(this.getClass().getName(), PerfLogger.OPTIMIZER,
         "Calcite: Prejoin ordering transformation, Projection Pruning");
+
+      System.out.printf("Plan after Projection Pruning, " +
+              "PPD calciteGenPlan:\n %s \n only tostring: \n %s \n",RelOptUtil.toString(basePlan), basePlan.toString());
+
 
       // 8. Merge, remove and reduce Project if possible
       perfLogger.PerfLogBegin(this.getClass().getName(), PerfLogger.OPTIMIZER);
@@ -2035,7 +2059,7 @@ public class CalcitePlanner extends SemanticAnalyzer {
       basePlan.getCluster().setMetadataProvider(
           new CachingRelMetadataProvider(chainedProvider, planner));
 
-      //System.out.printf("edwin vertex graph is debug2 %n");
+      System.out.printf("edwin vertex graph is debug2 %n");
 
       if (executorProvider != null) {
         basePlan.getCluster().getPlanner().setExecutor(executorProvider);

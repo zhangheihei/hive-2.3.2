@@ -272,7 +272,7 @@ public class HiveRelMdPredicates implements MetadataHandler<BuiltInMetadata.Pred
       }
     }
 
-    System.out.printf("edwin getPredicates Aggregate  projectPullUpPredicates is %s\n",
+    System.out.printf("edwin getPredicates Aggregate projectPullUpPredicates is %s\n",
             aggPullUpPredicates.toString());
     return RelOptPredicateList.of(aggPullUpPredicates);
   }

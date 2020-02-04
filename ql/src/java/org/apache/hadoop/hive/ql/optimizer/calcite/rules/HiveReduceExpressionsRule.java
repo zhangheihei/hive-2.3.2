@@ -105,15 +105,18 @@ public abstract class HiveReduceExpressionsRule extends ReduceExpressionsRule {
     }
 
     @Override public void onMatch(RelOptRuleCall call) {
+      //rel是binging，0是这个关系表达式的根节点
       final Filter filter = call.rel(0);
       final List<RexNode> expList =
           Lists.newArrayList(filter.getCondition());
+      System.out.printf("edwin FilterReduceExpressionsRule onMatch filter is %s, expList is %s \n", filter, expList);
       RexNode newConditionExp;
       boolean reduced;
       final RelMetadataQuery mq = RelMetadataQuery.instance();
       final RelOptPredicateList predicates =
           mq.getPulledUpPredicates(filter.getInput());
-      if (reduceExpressions(filter, expList, predicates, true)) {
+        System.out.printf("edwin FilterReduceExpressionsRule onMatch predicates is %s  \n", predicates);
+        if (reduceExpressions(filter, expList, predicates, true)) {
         assert expList.size() == 1;
         newConditionExp = expList.get(0);
         reduced = true;
