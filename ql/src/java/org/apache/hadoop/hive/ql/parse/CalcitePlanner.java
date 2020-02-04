@@ -1985,6 +1985,9 @@ public class CalcitePlanner extends SemanticAnalyzer {
       perfLogger.PerfLogEnd(this.getClass().getName(), PerfLogger.OPTIMIZER,
         "Calcite: Prejoin ordering transformation, Merge Project-Project");
 
+      System.out.printf("Prejoin ordering transformation, Merge Project-Project, " +
+              ":\n %s \n only tostring: \n %s \n",RelOptUtil.toString(basePlan), basePlan.toString());
+
       // 9. Rerun PPD through Project as column pruning would have introduced
       // DT above scans; By pushing filter just above TS, Hive can push it into
       // storage (incase there are filters on non partition cols). This only
@@ -1995,6 +1998,8 @@ public class CalcitePlanner extends SemanticAnalyzer {
           HiveProjectFilterPullUpConstantsRule.INSTANCE);
       perfLogger.PerfLogEnd(this.getClass().getName(), PerfLogger.OPTIMIZER,
         "Calcite: Prejoin ordering transformation, Rerun PPD");
+      System.out.printf("Prejoin ordering transformation, " +
+              "PPD calciteGenPlan:\n %s \n only tostring: \n %s \n",RelOptUtil.toString(basePlan), basePlan.toString());
 
       return basePlan;
     }
