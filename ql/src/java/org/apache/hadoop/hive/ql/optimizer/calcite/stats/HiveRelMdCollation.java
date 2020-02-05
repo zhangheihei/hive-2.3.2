@@ -70,7 +70,7 @@ public class HiveRelMdCollation implements MetadataHandler<BuiltInMetadata.Colla
   }
 
   public ImmutableList<RelCollation> collations(HiveJoin join, RelMetadataQuery mq) {
-    System.out.printf("edwin hive collations:%s", join.getCollation().toString());
+    System.out.printf("edwin HiveJoin collations:%s \n", join.getCollation().toString());
     return join.getCollation();
   }
 
