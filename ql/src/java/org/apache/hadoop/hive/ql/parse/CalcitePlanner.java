@@ -1563,6 +1563,8 @@ public class CalcitePlanner extends SemanticAnalyzer {
         calciteOptimizedPlan = calcitePreCboPlan;
         disableSemJoinReordering = false;
       }
+      System.out.printf("Plan after Apply join order optimizations calcitePreCboPlan:\n %s \n " +
+              "only tostring: \n %s \n",RelOptUtil.toString(calciteOptimizedPlan), calciteOptimizedPlan.toString());
 
       // 4. Run other optimizations that do not need stats
       perfLogger.PerfLogBegin(this.getClass().getName(), PerfLogger.OPTIMIZER);
@@ -1571,6 +1573,9 @@ public class CalcitePlanner extends SemanticAnalyzer {
               HiveProjectMergeRule.INSTANCE_NO_FORCE, HiveAggregateProjectMergeRule.INSTANCE,
               HiveJoinCommuteRule.INSTANCE);
       perfLogger.PerfLogEnd(this.getClass().getName(), PerfLogger.OPTIMIZER, "Calcite: Optimizations without stats");
+
+      System.out.printf("Plan after other optimizations that do not need stats calcitePreCboPlan:\n %s \n " +
+              "only tostring: \n %s \n",RelOptUtil.toString(calciteOptimizedPlan), calciteOptimizedPlan.toString());
 
       // 5. Materialized view based rewriting
       // We disable it for CTAS and MV creation queries (trying to avoid any problem
