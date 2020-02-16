@@ -53,6 +53,12 @@ public class HiveProjectMergeRule extends ProjectMergeRule {
     // other
     final Project topProject = call.rel(0);
     final Project bottomProject = call.rel(1);
+    System.out.printf("edwin HiveProjectMergeRule match,0:%s\n", topProject.toString());
+    System.out.printf("edwin HiveProjectMergeRule match,1:%s\n", bottomProject.toString());
+    System.out.printf("edwin HiveProjectMergeRule match,0 chilld:%s\n", topProject.getChildExps());
+    System.out.printf("edwin HiveProjectMergeRule match,1 chilld:%s\n", bottomProject.getChildExps());
+
+
     for (RexNode expr : topProject.getChildExps()) {
       if (expr instanceof RexOver) {
         Set<Integer> positions = HiveCalciteUtil.getInputRefs(expr);
