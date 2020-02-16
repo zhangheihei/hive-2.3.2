@@ -61,6 +61,7 @@ public class HiveProjectMergeRule extends ProjectMergeRule {
 
     for (RexNode expr : topProject.getChildExps()) {
       if (expr instanceof RexOver) {
+        System.out.printf("edwin HiveProjectMergeRule expr is RexOver");
         Set<Integer> positions = HiveCalciteUtil.getInputRefs(expr);
         for (int pos : positions) {
           if (bottomProject.getChildExps().get(pos) instanceof RexOver) {
