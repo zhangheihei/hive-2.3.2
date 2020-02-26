@@ -1573,6 +1573,7 @@ public class DDLSemanticAnalyzer extends BaseSemanticAnalyzer {
   private void analyzeAlterTablePartMergeFiles(ASTNode ast,
       String tableName, HashMap<String, String> partSpec)
       throws SemanticException {
+    LOG.info("edwin analyzeAlterTablePartMergeFiles");
     AlterTablePartMergeFilesDesc mergeDesc = new AlterTablePartMergeFilesDesc(
         tableName, partSpec);
 
