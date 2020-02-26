@@ -504,8 +504,9 @@ public class MoveTask extends Task<MoveWork> implements Serializable {
                 tbd.getPartitionSpec(), tbd.getReplace(),
                 tbd.getInheritTableSpecs(), isSkewedStoredAsDirs(tbd), work.isSrcLocal(),
                 work.getLoadTableWork().getWriteType() != AcidUtils.Operation.NOT_ACID, hasFollowingStatsTask());
-            Partition partn = db.getPartition(table, tbd.getPartitionSpec(), false);
 
+            Partition partn = db.getPartition(table, tbd.getPartitionSpec(), false);
+            LOG.info("edwin movetask after loadPartition");
             if (bucketCols != null || sortCols != null) {
               updatePartitionBucketSortColumns(db, table, partn, bucketCols,
                   numBuckets, sortCols);
