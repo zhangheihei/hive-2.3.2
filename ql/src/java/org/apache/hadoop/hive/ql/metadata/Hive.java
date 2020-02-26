@@ -1710,6 +1710,7 @@ public class Hive {
         }
       } else {
         setStatsPropAndAlterPartition(hasFollowingStatsTask, tbl, newTPart);
+        System.out.printf("edwin metadata oldPart != null \n");
       }
       return newTPart;
     } catch (IOException e) {
