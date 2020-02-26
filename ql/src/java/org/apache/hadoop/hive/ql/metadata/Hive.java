@@ -1711,6 +1711,7 @@ public class Hive {
       } else {
         setStatsPropAndAlterPartition(hasFollowingStatsTask, tbl, newTPart);
         System.out.printf("edwin metadata oldPart != null \n");
+        LOG.debug("edwin metadata oldPart != null");
       }
       return newTPart;
     } catch (IOException e) {
