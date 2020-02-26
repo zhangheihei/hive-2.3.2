@@ -11430,6 +11430,9 @@ public class SemanticAnalyzer extends BaseSemanticAnalyzer {
     }
     LOG.info("Completed plan generation");
     LOG.info("Completed plan generation: " + this.rootTasks);
+    for (int i = 0; i < this.rootTasks.size(); i++) {
+      LOG.info("Completed plan generation: " + this.rootTasks.get(i));
+    }
 
     // 10. put accessed columns to readEntity
     if (HiveConf.getBoolVar(this.conf, HiveConf.ConfVars.HIVE_STATS_COLLECT_SCANCOLS)) {
