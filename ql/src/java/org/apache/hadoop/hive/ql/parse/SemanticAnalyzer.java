@@ -11432,6 +11432,14 @@ public class SemanticAnalyzer extends BaseSemanticAnalyzer {
     LOG.info("Completed plan generation: " + this.rootTasks);
     for (int i = 0; i < this.rootTasks.size(); i++) {
       LOG.info("Completed plan generation: " + this.rootTasks.get(i));
+      List<Task<? extends Serializable>> tmp = this.rootTasks.get(i).getChildTasks();
+      if (tmp.size() > 0) {
+        for (int j = 0; j < tmp.size(); j++) {
+            //boolean childFlag = false;
+          LOG.info("Completed plan generation child: " + tmp.get(i));
+
+        }
+      }
     }
 
     // 10. put accessed columns to readEntity
