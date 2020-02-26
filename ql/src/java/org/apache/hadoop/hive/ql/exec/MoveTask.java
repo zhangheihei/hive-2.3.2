@@ -236,8 +236,11 @@ public class MoveTask extends Task<MoveWork> implements Serializable {
   // we check if there is only one immediate child task and it is stats task
   public boolean hasFollowingStatsTask() {
     if (this.getNumChild() == 1) {
+      LOG.info("edwin movetask after loadPartition" + (this.getChildTasks().get(0) instanceof StatsTask));
+
       return this.getChildTasks().get(0) instanceof StatsTask;
     }
+    LOG.info("edwin movetask after loadPartition false");
     return false;
   }
 
