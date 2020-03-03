@@ -1728,7 +1728,7 @@ public class CalcitePlanner extends SemanticAnalyzer {
       System.out.printf("CBO Planning details:\n");
       System.out.printf("Original Plan:\n %s \n", RelOptUtil.toString(calciteGenPlan));
       System.out.printf("Plan After PPD, PartPruning, ColumnPruning:\n %s \n", RelOptUtil.toString(calcitePreCboPlan));
-      System.out.printf("edwin is calciteOptimizedPlan is %s, class is %s \n", calciteOptimizedPlan.toString(),
+      System.out.printf("edwin is calciteOptimizedPlan is %s, class is %s \n", RelOptUtil.toString(calciteOptimizedPlan),
               calciteOptimizedPlan.getClass());
       //System.out.printf("Plan After Join Reordering:\n %s \n", RelOptUtil.toString(calciteOptimizedPlan, SqlExplainLevel.ALL_ATTRIBUTES));
 
