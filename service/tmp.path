@@ -1,0 +1,859 @@
+diff --git a/beeline/src/java/org/apache/hive/beeline/Commands.java b/beeline/src/java/org/apache/hive/beeline/Commands.java
+index c564f6b8..5a8ec11b 100644
+--- a/beeline/src/java/org/apache/hive/beeline/Commands.java
++++ b/beeline/src/java/org/apache/hive/beeline/Commands.java
+@@ -994,6 +994,7 @@ private boolean executeInternal(String sql, boolean call) {
+                       eventNotifier
+                   ));
+             }
++            System.out.printf("edwin beeline jdbc sql:%s \n", sql);
+             hasResults = stmnt.execute(sql);
+             logThread.interrupt();
+             logThread.join(DEFAULT_QUERY_PROGRESS_THREAD_TIMEOUT);
+diff --git a/cli/src/java/org/apache/hadoop/hive/cli/CliDriver.java b/cli/src/java/org/apache/hadoop/hive/cli/CliDriver.java
+index a71c71dd..1751cae4 100644
+--- a/cli/src/java/org/apache/hadoop/hive/cli/CliDriver.java
++++ b/cli/src/java/org/apache/hadoop/hive/cli/CliDriver.java
+@@ -124,6 +124,7 @@ public int processCmd(String cmd) {
+     ss.err.flush();
+     //清空头尾 空白字符
+     String cmd_trimmed = cmd.trim();
++    System.out.printf("edwin processCmd cmd_trimmed is %s \n", cmd_trimmed);
+     String[] tokens = tokenizeCmd(cmd_trimmed);
+     int ret = 0;
+ 
+@@ -287,7 +288,7 @@ int processLocalCmd(String cmd, CommandProcessor proc, CliSessionState ss) {
+           } else {
+             String firstToken = tokenizeCmd(cmd.trim())[0];
+             String cmd_1 = getFirstCmd(cmd.trim(), firstToken.length());
+-
++            System.out.printf("edwin processLocalCmd fistToke: %s, cmd_1:%s \n", firstToken, cmd_1);
+             if (ss.getIsVerbose()) {
+               ss.out.println(firstToken + " " + cmd_1);
+             }
+@@ -355,7 +356,7 @@ public int processLine(String line) {
+   public int processLine(String line, boolean allowInterrupting) {
+     SignalHandler oldSignal = null;
+     Signal interruptSignal = null;
+-
++    System.out.printf("edwin processLIst line is %s \n", line);
+     if (allowInterrupting) {
+       // Remember all threads that were running at the time we started line processing.
+       // Hook up the custom Ctrl+C handler while processing this line
+@@ -689,6 +690,24 @@ public int complete(String buffer, int offset, List<CharSequence> completions) {
+     return new Completer[] {propCompleter, customCompletor};
+   }
+ 
++  public void handleTezQueueName(String value, HiveConf conf) throws Exception  {
++    String delimeter = "[.]";
++    String[] tmp = value.split(delimeter);
++    if (tmp.length <= 0) {
++      throw new Exception("tez.queue.name value format is not as expected\n");
++    }
++    conf.verifyAndSet("tez.queue.name", tmp[tmp.length-1]);
++  }
++
++  public void handleMRQueueName(String value, HiveConf conf) throws Exception {
++    String delimeter = "[.]";
++    String[] tmp = value.split(delimeter);
++    if (tmp.length <= 0) {
++      throw new Exception("mapred.job.queue.name value format is not as expected\n");
++    }
++    conf.verifyAndSet("mapred.job.queue.name", tmp[tmp.length-1]);
++  }
++
+   public static void main(String[] args) throws Exception {
+     //CLI入口
+     int ret = new CliDriver().run(args);
+@@ -714,6 +733,7 @@ public  int run(String[] args) throws Exception {
+       logInitDetailMessage = e.getMessage();
+     }
+ 
++    //读取所有配置
+     CliSessionState ss = new CliSessionState(new HiveConf(SessionState.class));
+     ss.in = System.in;
+     try {
+@@ -738,12 +758,43 @@ public  int run(String[] args) throws Exception {
+ 
+     // set all properties specified via command line
+     //set 属性 由hiveconf指定的
++    //第一次填充conf，通过hiveconf指定的字段来，写入session中的conf
+     HiveConf conf = ss.getConf();
+     for (Map.Entry<Object, Object> item : ss.cmdProperties.entrySet()) {
+       conf.set((String) item.getKey(), (String) item.getValue());
+       ss.getOverriddenConfigurations().put((String) item.getKey(), (String) item.getValue());
+     }
+ 
++    System.out.printf("conf queue name%s , ss.getConf.queue:%s \n", conf.get("tez.queue.name"), ss.getConf().get("tez.queue.name"));
++    System.out.printf("conf mr queue name%s , ss.getConf.queue:%s \n", conf.get("mapred.job.queue.name"),
++            conf.get("mapreduce.job.queuename"));
++
++//    boolean flag = conf.getBoolVar(ConfVars.HIVE_TENCENT_OP);
++//    if (flag == true){
++//      if (conf.get("tez.queue.name") != null) {
++//        try {
++//          handleTezQueueName(conf.get("tez.queue.name"), conf);
++//        }catch (Exception e) {
++//          String errorMessage = "FAILED: substitute tez.queue.name";
++//          console.printError(errorMessage);
++//          return 50001;
++//        }
++//      }
++//
++//      if (conf.get("mapred.job.queue.name") != null) {
++//        try {
++//          handleMRQueueName(conf.get("mapred.job.queue.name"), conf);
++//        }catch (Exception e) {
++//          String errorMessage = "FAILED: substitute mapred.job.queue.name";
++//          console.printError(errorMessage);
++//          return 50002;
++//        }
++//      }
++//    }
++    System.out.printf("repalce after conf queue name:%s , ss.getConf.queue:%s \n", conf.get("tez.queue.name"), ss.getConf().get("tez.queue.name"));
++    System.out.printf("conf after mr queue name%s , ss.getConf.queue:%s \n", conf.get("mapred.job.queue.name"),
++            conf.get("mapreduce.job.queuename"));
++
+     // read prompt configuration and substitute variables.
+     prompt = conf.getVar(HiveConf.ConfVars.CLIPROMPT);
+     prompt = new VariableSubstitution(new HiveVariableSource() {
+@@ -761,6 +812,8 @@ public  int run(String[] args) throws Exception {
+     } else {
+       SessionState.start(ss);
+     }
++    System.out.printf("before execute conf queue name:%s , ss.getConf.queue:%s \n", conf.get("tez.queue.name"), ss.getConf().get("tez.queue.name"));
++
+ 
+     ss.updateThreadName();
+ 
+@@ -786,7 +839,7 @@ private int executeDriver(CliSessionState ss, HiveConf conf, OptionsProcessor op
+       throws Exception {
+ 
+     CliDriver cli = new CliDriver();
+-    //--hivevar hiveconf等指定的变量
++    //--hivevar -d指定的变量,没有hiveConf指定的
+     cli.setHiveVariables(oproc.getHiveVariables());
+ 
+     // use the specified database if specified
+@@ -796,13 +849,16 @@ private int executeDriver(CliSessionState ss, HiveConf conf, OptionsProcessor op
+     // Execute -i init files (always in silent mode)
+     //-i 指定的SQL文件
+     cli.processInitFiles(ss);
+-
++    System.out.printf("edwin executeDriver cli conf queue:%s, ss conf queue:%s, conf queue:%s \n",
++            cli.conf.get("tez.queue.name"), ss.getConf().get("tez.queue.name"), conf.get("tez.queue.name"));
++    //execString为 -e指定的SQL，如果指定了，就直接执行
+     if (ss.execString != null) {
+       int cmdProcessStatus = cli.processLine(ss.execString);
+       return cmdProcessStatus;
+     }
+ 
+     try {
++      //fileName 为-f指定的文件，读取该文件中的SQL
+       if (ss.fileName != null) {
+         return cli.processFile(ss.fileName);
+       }
+diff --git a/cli/src/java/org/apache/hadoop/hive/cli/OptionsProcessor.java b/cli/src/java/org/apache/hadoop/hive/cli/OptionsProcessor.java
+index 233144f8..eba3ce90 100644
+--- a/cli/src/java/org/apache/hadoop/hive/cli/OptionsProcessor.java
++++ b/cli/src/java/org/apache/hadoop/hive/cli/OptionsProcessor.java
+@@ -41,6 +41,7 @@
+   protected static final Logger l4j = LoggerFactory.getLogger(OptionsProcessor.class.getName());
+   private final Options options = new Options();
+   private org.apache.commons.cli.CommandLine commandLine;
++  //存储当前session:hive变量,只存储-d, -hivevar
+   Map<String, String> hiveVariables = new HashMap<String, String>();
+ 
+   @SuppressWarnings("static-access")
+diff --git a/ql/src/java/org/apache/hadoop/hive/ql/Driver.java b/ql/src/java/org/apache/hadoop/hive/ql/Driver.java
+index 6ab8d08c..48ea6260 100644
+--- a/ql/src/java/org/apache/hadoop/hive/ql/Driver.java
++++ b/ql/src/java/org/apache/hadoop/hive/ql/Driver.java
+@@ -366,6 +366,25 @@ public int compile(String command) {
+     return compile(command, true);
+   }
+ 
++  public void handleTezQueueName(String value) throws HiveException {
++    String delimeter = "[.]";
++    String[] tmp = value.split(delimeter);
++    if (tmp.length <= 0) {
++      throw new HiveException("tez.queue.name value format is not as expected\n");
++    }
++    conf.verifyAndSet("tez.queue.name", tmp[tmp.length-1]);
++  }
++
++  public void handleMRQueueName(String value) throws HiveException {
++    String delimeter = "[.]";
++    String[] tmp = value.split(delimeter);
++    if (tmp.length <= 0) {
++      throw new HiveException("mapred.job.queue.name value format is not as expected\n");
++    }
++    conf.verifyAndSet("mapred.job.queue.name", tmp[tmp.length-1]);
++  }
++
++
+   /**
+    * Compile a new query, but potentially reset taskID counter.  Not resetting task counter
+    * is useful for generating re-entrant QL queries.
+@@ -415,76 +434,111 @@ public int compile(String command, boolean resetTaskIds, boolean deferClose) {
+     LOG.error("edwin after VariableSubstitution" + ": " + command);
+     String queryStr = command;
+ 
++    if (conf.get("tez.queue.name") != null) {
++      System.out.printf("edwin compile tez.queue.name:%s \n", conf.get("tez.queue.name"));
++      LOG.info("edwin compile tez.queue.name" + ": " + conf.get("tez.queue.name"));
++    }
+     boolean flag = conf.getBoolVar(ConfVars.HIVE_TENCENT_OP);
++    LOG.info("edwin compile tencent.emr.optimizations :{}\n",  flag);
+     if (flag == true){
+-        if (queryStr.contains("create table 2_1_month as")) {
+-          queryStr = "create table 2_1_month as\n" +
+-                  "select\n" +
+-                  "  sid,\n" +
+-                  "  substr(\"20190630\", 1, 6) as `date`,\n" +
+-                  "  round(AVG(day_active_count)) as `day_active_count`\n" +
+-                  "from\n" +
+-                  "  (\n" +
+-                  "    select\n" +
+-                  "      b.sid as sid,\n" +
+-                  "      a.date_p as date_p,\n" +
+-                  "      count(distinct a.server_id) as `day_active_count`\n" +
+-                  "    from\n" +
+-                  "      \n" +
+-                  "      (\n" +
+-                  "        select\n" +
+-                  "          app_key,\n" +
+-                  "\t  concat(app_key, cast(rand()*100 as int)) as new_app_key,\n" +
+-                  "          date_p,\n" +
+-                  "          server_id\n" +
+-                  "        from\n" +
+-                  "          stat_sdk_test.sdk_active_odz\n" +
+-                  "        where\n" +
+-                  "          app_key_p > '0000000000000000'\n" +
+-                  "          and date_p >= \"20190601\"\n" +
+-                  "          and date_p <= \"20190630\"\n" +
+-                  "          and os_p in('ios', 'android')\n" +
+-                  "        group by\n" +
+-                  "          app_key,\n" +
+-                  "          date_p,\n" +
+-                  "          server_id\n" +
+-                  "      ) a\n" +
+-                  "      \n" +
+-                  "      \n" +
+-                  "      left join \n" +
+-                  "      (\n" +
+-                  "      select sid, app_key, concat(app_key, suffix) as new_app_key\n" +
+-                  "      from \n" +
+-                  "\t      ( \n" +
+-                  "\t      select sid, app_key, suffix from \n" +
+-                  "\t\t      (\n" +
+-                  "\t\t\tselect\n" +
+-                  "\t\t\t  sid,\n" +
+-                  "\t\t\t  app_key\n" +
+-                  "\t\t\tfrom\n" +
+-                  "\t\t\t  stat_sdk_test.sdk_rna_dc_app_task\n" +
+-                  "\t\t\tgroup by\n" +
+-                  "\t\t\t  sid,\n" +
+-                  "\t\t\t  app_key\n" +
+-                  "\t\t      ) x Lateral View explode(array(0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38,39,40,41,42,43,44,45,46,47,48,49,50,51,52,53,54,55,56,57,58,59,60,61,62,63,64,65,66,67,68,69,70,71,72,73,74,75,76,77,78,79,80,81,82,83,84,85,86,87,88,89,90,91,92,93,94,95,96,97,98,99)) tmp as suffix\n" +
+-                  "\t      ) y\n" +
+-                  "      ) b \n" +
+-                  "      \n" +
+-                  "      \n" +
+-                  "      on a.new_app_key = b.new_app_key\n" +
+-                  "    where\n" +
+-                  "      b.sid is not null\n" +
+-                  "    group by\n" +
+-                  "      b.sid,\n" +
+-                  "      a.date_p\n" +
+-                  "  ) c\n" +
+-                  "group by\n" +
+-                  "  sid;\n" +
+-                  "\n";
+-          LOG.error("edwin HIVE_TENCENT_OP" + ": " + queryStr);
+-          command = queryStr;
++      if (conf.get("tez.queue.name") != null) {
++        try {
++          handleTezQueueName(conf.get("tez.queue.name"));
++        }catch (Exception e) {
++          SQLState = "TENCENT:OP:ERR";  //SQLState for cancel operation
++          errorMessage = "FAILED: substitute tez.queue.name";
++          console.printError(errorMessage);
++          return 50001;
+         }
+-    }
++      }
++
++      if (conf.get("mapred.job.queue.name") != null) {
++        try {
++          handleMRQueueName(conf.get("mapred.job.queue.name"));
++        }catch (Exception e) {
++          SQLState = "TENCENT:OP:ERR";  //SQLState for cancel operation
++          errorMessage = "FAILED: substitute mapred.job.queue.name";
++          console.printError(errorMessage);
++          return 50002;
++        }
++      }
++    }
++
++    System.out.printf("edwin compile check queue name:%s\n",  conf.get("tez.queue.name"));
++    LOG.info("edwin log compile check tez queue name:" + conf.get("tez.queue.name"));
++    LOG.info("edwin log compile check mr queue name:" + conf.get("mapred.job.queue.name"));
++
++
++//    if (flag == true){
++//        if (queryStr.contains("create table 2_1_month as")) {
++//          queryStr = "create table 2_1_month as\n" +
++//                  "select\n" +
++//                  "  sid,\n" +
++//                  "  substr(\"20190630\", 1, 6) as `date`,\n" +
++//                  "  round(AVG(day_active_count)) as `day_active_count`\n" +
++//                  "from\n" +
++//                  "  (\n" +
++//                  "    select\n" +
++//                  "      b.sid as sid,\n" +
++//                  "      a.date_p as date_p,\n" +
++//                  "      count(distinct a.server_id) as `day_active_count`\n" +
++//                  "    from\n" +
++//                  "      \n" +
++//                  "      (\n" +
++//                  "        select\n" +
++//                  "          app_key,\n" +
++//                  "\t  concat(app_key, cast(rand()*100 as int)) as new_app_key,\n" +
++//                  "          date_p,\n" +
++//                  "          server_id\n" +
++//                  "        from\n" +
++//                  "          stat_sdk_test.sdk_active_odz\n" +
++//                  "        where\n" +
++//                  "          app_key_p > '0000000000000000'\n" +
++//                  "          and date_p >= \"20190601\"\n" +
++//                  "          and date_p <= \"20190630\"\n" +
++//                  "          and os_p in('ios', 'android')\n" +
++//                  "        group by\n" +
++//                  "          app_key,\n" +
++//                  "          date_p,\n" +
++//                  "          server_id\n" +
++//                  "      ) a\n" +
++//                  "      \n" +
++//                  "      \n" +
++//                  "      left join \n" +
++//                  "      (\n" +
++//                  "      select sid, app_key, concat(app_key, suffix) as new_app_key\n" +
++//                  "      from \n" +
++//                  "\t      ( \n" +
++//                  "\t      select sid, app_key, suffix from \n" +
++//                  "\t\t      (\n" +
++//                  "\t\t\tselect\n" +
++//                  "\t\t\t  sid,\n" +
++//                  "\t\t\t  app_key\n" +
++//                  "\t\t\tfrom\n" +
++//                  "\t\t\t  stat_sdk_test.sdk_rna_dc_app_task\n" +
++//                  "\t\t\tgroup by\n" +
++//                  "\t\t\t  sid,\n" +
++//                  "\t\t\t  app_key\n" +
++//                  "\t\t      ) x Lateral View explode(array(0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38,39,40,41,42,43,44,45,46,47,48,49,50,51,52,53,54,55,56,57,58,59,60,61,62,63,64,65,66,67,68,69,70,71,72,73,74,75,76,77,78,79,80,81,82,83,84,85,86,87,88,89,90,91,92,93,94,95,96,97,98,99)) tmp as suffix\n" +
++//                  "\t      ) y\n" +
++//                  "      ) b \n" +
++//                  "      \n" +
++//                  "      \n" +
++//                  "      on a.new_app_key = b.new_app_key\n" +
++//                  "    where\n" +
++//                  "      b.sid is not null\n" +
++//                  "    group by\n" +
++//                  "      b.sid,\n" +
++//                  "      a.date_p\n" +
++//                  "  ) c\n" +
++//                  "group by\n" +
++//                  "  sid;\n" +
++//                  "\n";
++//          LOG.error("edwin HIVE_TENCENT_OP" + ": " + queryStr);
++//          command = queryStr;
++//        }
++//    }
++
+     try {
+       // command should be redacted to avoid to logging sensitive data
+       //加载编辑数据hook,默认该HOOK为""
+@@ -1326,8 +1380,9 @@ public CommandProcessorResponse run()
+ 
+   public CommandProcessorResponse run(String command, boolean alreadyCompiled)
+         throws CommandNeedRetryException {
+-    LOG.error("before runInternal command:" + command);
++    LOG.info("before runInternal command:" + command);
+     //开始编译执行
++    //System.out.printf("before runInternal command:%s \n" + command);
+     CommandProcessorResponse cpr = runInternal(command, alreadyCompiled);
+ 
+     if(cpr.getResponseCode() == 0) {
+@@ -1623,6 +1678,7 @@ else if(!plan.getAutoCommitValue() && txnManager.getAutoCommit()) {
+           return rollback(createProcessorResponse(ret));
+         }
+       }
++
+       ret = execute(true);
+       if (ret != 0) {
+         //if needRequireLock is false, the release here will do nothing because there is no lock
+@@ -1794,6 +1850,13 @@ public int execute() throws CommandNeedRetryException {
+   }
+ 
+   public int execute(boolean deferClose) throws CommandNeedRetryException {
++    //测试beeline 此时的环境变量
++    boolean flag = conf.getBoolVar(ConfVars.HIVE_TENCENT_OP);
++    String queueName = conf.get("tez.queue.name");
++    String tmpLog = String.format("edwin beeline tencent.emr.optimizations is %s,  queueName:%s \n", flag, queueName);
++    LOG.info(tmpLog);
++
++
+     PerfLogger perfLogger = SessionState.getPerfLogger();
+     perfLogger.PerfLogBegin(CLASS_NAME, PerfLogger.DRIVER_EXECUTE);
+ 
+@@ -1930,6 +1993,9 @@ public int execute(boolean deferClose) throws CommandNeedRetryException {
+       }
+ 
+       perfLogger.PerfLogBegin(CLASS_NAME, PerfLogger.RUN_TASKS);
++      String tmpStr = conf.get("tez.queue.name");
++      System.out.printf("edwin execute phase check queue name:%s\n",  tmpStr);
++      LOG.info("edwin log execute phase check queue name:" + tmpStr);
+       // Loop while you either have tasks running, or tasks queued up
+       while (driverCxt.isRunning()) {
+ 
+diff --git a/ql/src/java/org/apache/hadoop/hive/ql/exec/tez/TezSessionPoolManager.java b/ql/src/java/org/apache/hadoop/hive/ql/exec/tez/TezSessionPoolManager.java
+index 8f459473..80a668b3 100644
+--- a/ql/src/java/org/apache/hadoop/hive/ql/exec/tez/TezSessionPoolManager.java
++++ b/ql/src/java/org/apache/hadoop/hive/ql/exec/tez/TezSessionPoolManager.java
+@@ -510,7 +510,9 @@ private static boolean canWorkWithSameSession(TezSessionState session, HiveConf
+     if (!session.isDefault()) {
+       String queueName = session.getQueueName();
+       String confQueueName = conf.get(TezConfiguration.TEZ_QUEUE_NAME);
+-      LOG.info("Current queue name is " + queueName + " incoming queue name is " + confQueueName);
++      //LOG.info("Current queue name is " + queueName + " incoming queue name is " + confQueueName);
++      LOG.info("Current queue name is " + queueName + " incoming queue name is " + confQueueName +
++              "current session conf queue name is " + session.getConf().get(TezConfiguration.TEZ_QUEUE_NAME));
+       return (queueName == null) ? confQueueName == null : queueName.equals(confQueueName);
+     } else {
+       // this session should never be a default session unless something has messed up.
+@@ -528,6 +530,9 @@ public TezSessionState getSession(
+       return session;
+     }
+ 
++    Boolean sessionCheck = (session == null ? true : false);
++    LOG.info("edwin TezSessionPoolManager sessionCheck {}" ,sessionCheck);
++
+     if (session != null) {
+       closeIfNotDefault(session, false);
+     }
+diff --git a/ql/src/java/org/apache/hadoop/hive/ql/exec/tez/TezSessionState.java b/ql/src/java/org/apache/hadoop/hive/ql/exec/tez/TezSessionState.java
+index ed1ba9c3..d32d98cf 100644
+--- a/ql/src/java/org/apache/hadoop/hive/ql/exec/tez/TezSessionState.java
++++ b/ql/src/java/org/apache/hadoop/hive/ql/exec/tez/TezSessionState.java
+@@ -271,6 +271,7 @@ protected void openInternal(final HiveConf conf, Collection<String> additionalFi
+ 
+     // and finally we're ready to create and start the session
+     // generate basic tez config
++    //拿到所有hive的conf
+     final TezConfiguration tezConfig = new TezConfiguration(conf);
+ 
+     // set up the staging directory to use
+@@ -317,7 +318,7 @@ protected void openInternal(final HiveConf conf, Collection<String> additionalFi
+ 
+     LOG.info("Opening new Tez Session (id: " + sessionId
+         + ", scratch dir: " + tezScratchDir + ")");
+-
++    LOG.info("edwin openInternal before start session queue:{} \n", conf.get("tez.queue.name"));
+     TezJobMonitor.initShutdownHook();
+     if (!isAsync) {
+       startSessionAndContainers(session, conf, commonLocalResources, tezConfig, false);
+@@ -373,6 +374,9 @@ public TezClient call() throws Exception {
+   private TezClient startSessionAndContainers(TezClient session, HiveConf conf,
+       Map<String, LocalResource> commonLocalResources, TezConfiguration tezConfig,
+       boolean isOnThread) throws TezException, IOException {
++    String tmpStr = conf.get("tez.queue.name");
++    System.out.printf("edwin TezSessionState phase check queue name:%s\n",  tmpStr);
++    LOG.info("edwin log TezSessionState phase check queue name:{}  sessionState:{}", tmpStr, queueName);
+     session.start();
+     boolean isSuccessful = false;
+     try {
+@@ -407,7 +411,7 @@ private TezClient startSessionAndContainers(TezClient session, HiveConf conf,
+       // Unset this after opening the session so that reopening of session uses the correct queue
+       // names i.e, if client has not died and if the user has explicitly set a queue name
+       // then reopened session will use user specified queue name else default cluster queue names.
+-      conf.unset(TezConfiguration.TEZ_QUEUE_NAME);
++      //conf.unset(TezConfiguration.TEZ_QUEUE_NAME);
+       return session;
+     } finally {
+       if (isOnThread && !isSuccessful) {
+diff --git a/ql/src/java/org/apache/hadoop/hive/ql/exec/tez/TezTask.java b/ql/src/java/org/apache/hadoop/hive/ql/exec/tez/TezTask.java
+index 1c84c6aa..1c1c0ecd 100644
+--- a/ql/src/java/org/apache/hadoop/hive/ql/exec/tez/TezTask.java
++++ b/ql/src/java/org/apache/hadoop/hive/ql/exec/tez/TezTask.java
+@@ -141,8 +141,17 @@ public int execute(DriverContext driverContext) {
+       // Need to remove this static hack. But this is the way currently to get a session.
+       SessionState ss = SessionState.get();
+       session = ss.getTezSession();
++
++      if (session != null && (session.getQueueName() == null) && conf.get(TezConfiguration.TEZ_QUEUE_NAME) != null) {
++        LOG.info("edwin teztask execute sessionQueue{}, sessionConfQueue{}, conQueue{}",
++                session.getQueueName(), session.getConf().get(TezConfiguration.TEZ_QUEUE_NAME), conf.get(TezConfiguration.TEZ_QUEUE_NAME));
++        //session.setQueueName(conf.get(TezConfiguration.TEZ_QUEUE_NAME));
++        session.close(false);
++        session = null;
++      }
++
+       if (session != null && !session.isOpen()) {
+-        LOG.warn("The session: " + session + " has not been opened");
++        LOG.info("The session: " + session + " has not been opened");
+       }
+       session = TezSessionPoolManager.getInstance().getSession(
+           session, conf, false, getWork().getLlapMode());
+diff --git a/ql/src/java/org/apache/hadoop/hive/ql/optimizer/calcite/stats/HiveRelMdPredicates.java b/ql/src/java/org/apache/hadoop/hive/ql/optimizer/calcite/stats/HiveRelMdPredicates.java
+index d3b81923..3020514b 100644
+--- a/ql/src/java/org/apache/hadoop/hive/ql/optimizer/calcite/stats/HiveRelMdPredicates.java
++++ b/ql/src/java/org/apache/hadoop/hive/ql/optimizer/calcite/stats/HiveRelMdPredicates.java
+@@ -127,6 +127,7 @@ public RelOptPredicateList getPredicates(Project project, RelMetadataQuery mq) {
+ 
+ 
+     List<RexNode> projectPullUpPredicates = new ArrayList<RexNode>();
++    //源表的字段位置-输出（project）的位置
+     HashMultimap<Integer, Integer> inpIndxToOutIndxMap = HashMultimap.create();
+     ImmutableBitSet.Builder columnsMappedBuilder = ImmutableBitSet.builder();
+     Mapping m = Mappings.create(MappingType.PARTIAL_FUNCTION, child.getRowType().getFieldCount(),
+@@ -141,6 +142,8 @@ public RelOptPredicateList getPredicates(Project project, RelMetadataQuery mq) {
+     //target是要映射的字段 比如映射3个
+     for (Ord<RexNode> o : Ord.zip(project.getProjects())) {
+       if (o.e instanceof RexInputRef) {
++        //此处是把filter中条件的 引用位置记录次来，引用位置就是表中每个字段的位置
++        //重点：引用类型就是把 当前关系中的字段位置记录起来
+         int sIdx = ((RexInputRef) o.e).getIndex();
+         m.set(sIdx, o.i);
+         inpIndxToOutIndxMap.put(sIdx, o.i);
+@@ -153,6 +156,7 @@ public RelOptPredicateList getPredicates(Project project, RelMetadataQuery mq) {
+     final ImmutableBitSet columnsMapped = columnsMappedBuilder.build();
+     for (RexNode r : childInfo.pulledUpPredicates) {
+       //常量就没有占位
++      //把引用位置记录起来，对比和上面记录的是否一致
+       ImmutableBitSet rCols = RelOptUtil.InputFinder.bits(r);
+       if (columnsMapped.contains(rCols)) {
+         r = r.accept(new RexPermuteInputsShuttle(m, child));
+@@ -160,7 +164,11 @@ public RelOptPredicateList getPredicates(Project project, RelMetadataQuery mq) {
+       }
+     }
+ 
++    System.out.printf("edwin before getPredicates Project  projectPullUpPredicates is %s\n",
++            projectPullUpPredicates.toString());
++
+     // Project can also generate constants. We need to include them.
++    //把project中的常量搜集
+     for (Ord<RexNode> expr : Ord.zip(project.getProjects())) {
+       if (RexLiteral.isNullLiteral(expr.e)) {
+         projectPullUpPredicates.add(rexBuilder.makeCall(SqlStdOperatorTable.IS_NULL,
+@@ -196,11 +204,29 @@ public RelOptPredicateList getPredicates(Join join, RelMetadataQuery mq) {
+     final RelOptPredicateList leftInfo = mq.getPulledUpPredicates(left);
+     final RelOptPredicateList rightInfo = mq.getPulledUpPredicates(right);
+ 
++    System.out.printf("edwin getPredicates Project Join leftInfo is %s \n edwin getPredicates Project Join rightInfo is %s \n",
++            leftInfo.pulledUpPredicates.toString(), rightInfo.pulledUpPredicates.toString());
++
++    RexNode leftNew = RexUtil.composeConjunction(rB, leftInfo.pulledUpPredicates, false);
++    RexNode rightNew = RexUtil.composeConjunction(rB, rightInfo.pulledUpPredicates, false);
++
++    System.out.printf("edwin getPredicates Project Join leftNew is %s, class is %s, operator is %s\n " +
++                    "edwin getPredicates Project Join rightNew is %s, calss is %s, operator is %s \n",
++            leftNew.toString(), leftNew.getClass(), (leftNew instanceof RexCall)?((RexCall) leftNew).getOperator():"not call",
++            rightNew.toString(), rightNew.toString(), (rightNew instanceof  RexCall)? ((RexCall) rightNew).getOperator():"not call");
++    System.out.printf("edwin getPredicates Project Join leftNew is operands is %s\n, " +
++            "edwin getPredicates Project Join rightNew is operands is %s\n",
++            (leftNew instanceof RexCall)?((RexCall) leftNew).getOperands():"not call",
++            (rightNew instanceof  RexCall)? ((RexCall) rightNew).getOperands():"not call");
++
++    System.out.printf("dwin getPredicates Project Join nFieldsLeft is %s\n", join.getLeft().getRowType().getFieldList());
++    System.out.printf("dwin getPredicates Project Join nFieldsRight is %s\n", join.getRight().getRowType().getFieldList());
++    System.out.printf("dwin getPredicates Project Join nSysFields is %s\n", join.getSystemFieldList());
++
+     JoinConditionBasedPredicateInference jI =
+         new JoinConditionBasedPredicateInference(join,
+             RexUtil.composeConjunction(rB, leftInfo.pulledUpPredicates, false),
+-            RexUtil.composeConjunction(rB, rightInfo.pulledUpPredicates,
+-                false));
++            RexUtil.composeConjunction(rB, rightInfo.pulledUpPredicates, false));
+ 
+     return jI.inferPredicates(false);
+   }
+@@ -219,6 +245,11 @@ public RelOptPredicateList getPredicates(Join join, RelMetadataQuery mq) {
+    */
+   public RelOptPredicateList getPredicates(Aggregate agg, RelMetadataQuery mq) {
+     final RelNode input = agg.getInput();
++
++    System.out.printf("edwin getPredicates Aggregate input is %s, class is %s \n",
++            (input instanceof HepRelVertex)?((HepRelVertex) input).getCurrentRel().toString():input.toString(),
++            (input instanceof HepRelVertex)?((HepRelVertex) input).getCurrentRel().getClass():input.getClass());
++
+     final RelOptPredicateList inputInfo = mq.getPulledUpPredicates(input);
+     final List<RexNode> aggPullUpPredicates = new ArrayList<>();
+ 
+@@ -226,8 +257,8 @@ public RelOptPredicateList getPredicates(Aggregate agg, RelMetadataQuery mq) {
+     Mapping m = Mappings.create(MappingType.PARTIAL_FUNCTION,
+         input.getRowType().getFieldCount(), agg.getRowType().getFieldCount());
+ 
+-    System.out.printf("edwin getPredicates Aggregate m.soucre is %d, target is %d \n",
+-            m.getSourceCount(), m.getTargetCount());
++    System.out.printf("edwin getPredicates Aggregate m.soucre is %d, target is %d, agg class is %s \n",
++            m.getSourceCount(), m.getTargetCount(), agg.getRowType().getClass());
+     int i = 0;
+     for (int j : groupKeys) {
+       m.set(j, i++);
+@@ -330,11 +361,19 @@ public RelOptPredicateList getPredicates(Union union, RelMetadataQuery mq) {
+     final ImmutableBitSet leftFieldsBitSet;
+     final ImmutableBitSet rightFieldsBitSet;
+     final ImmutableBitSet allFieldsBitSet;
++    //记录索引,BitSet中也来记位, $2==$4，会置2位
++    //{0={0, 4}, 1={1}, 2={2, 5}, 3={3}, 4={0, 4}, 5={2, 5}, 6={6}}
+     SortedMap<Integer, BitSet> equivalence;
++    //记录RexNode的摘要，同时记录ImmutableBitSet引用位置
+     final Map<String, ImmutableBitSet> exprFields;
++    //只是记录左右子句中  预测的RexNode摘要
+     final Set<String> allExprsDigests;
++    //一开始为空，
++    //将condition中的 条件(RexCall)记录在equalityPredicates
+     final Set<String> equalityPredicates;
++    //预测后的左节点
+     final RexNode leftChildPredicates;
++    //预测后的右节点
+     final RexNode rightChildPredicates;
+ 
+     public JoinConditionBasedPredicateInference(Join joinRel,
+@@ -350,10 +389,13 @@ private JoinConditionBasedPredicateInference(Join joinRel, boolean isSemiJoin,
+       nFieldsLeft = joinRel.getLeft().getRowType().getFieldList().size();
+       nFieldsRight = joinRel.getRight().getRowType().getFieldList().size();
+       nSysFields = joinRel.getSystemFieldList().size();
++      //0, 0+4
+       leftFieldsBitSet = ImmutableBitSet.range(nSysFields,
+           nSysFields + nFieldsLeft);
++      //0+4, 0+4+3
+       rightFieldsBitSet = ImmutableBitSet.range(nSysFields + nFieldsLeft,
+           nSysFields + nFieldsLeft + nFieldsRight);
++      //0, 0+4+3
+       allFieldsBitSet = ImmutableBitSet.range(0,
+           nSysFields + nFieldsLeft + nFieldsRight);
+ 
+@@ -365,14 +407,21 @@ private JoinConditionBasedPredicateInference(Join joinRel, boolean isSemiJoin,
+       } else {
+         Mappings.TargetMapping leftMapping = Mappings.createShiftMapping(
+             nSysFields + nFieldsLeft, nSysFields, 0, nFieldsLeft);
++
++        //更新RexCall中的operands
+         leftChildPredicates = lPreds.accept(
+             new RexPermuteInputsShuttle(leftMapping, joinRel.getInput(0)));
++        System.out.printf("edwin JoinConditionBasedPredicateInference " +
++                "leftChildPredicates is %s \n", leftChildPredicates.toString());
+ 
+         for (RexNode r : RelOptUtil.conjunctions(leftChildPredicates)) {
+           exprFields.put(r.toString(), RelOptUtil.InputFinder.bits(r));
+           allExprsDigests.add(r.toString());
+         }
+       }
++
++      System.out.printf("------------------------------ lPreds line\n");
++
+       if (rPreds == null) {
+         rightChildPredicates = null;
+       } else {
+@@ -382,12 +431,18 @@ private JoinConditionBasedPredicateInference(Join joinRel, boolean isSemiJoin,
+         rightChildPredicates = rPreds.accept(
+             new RexPermuteInputsShuttle(rightMapping, joinRel.getInput(1)));
+ 
++        System.out.printf("edwin JoinConditionBasedPredicateInference " +
++                "rightChildPredicates is %s \n", rightChildPredicates.toString());
++
+         for (RexNode r : RelOptUtil.conjunctions(rightChildPredicates)) {
+           exprFields.put(r.toString(), RelOptUtil.InputFinder.bits(r));
+           allExprsDigests.add(r.toString());
+         }
+       }
+ 
++      System.out.printf("------------------------------ rPreds line\n");
++
++
+       equivalence = Maps.newTreeMap();
+       equalityPredicates = new HashSet<>();
+       for (int i = 0; i < nSysFields + nFieldsLeft + nFieldsRight; i++) {
+@@ -398,11 +453,24 @@ private JoinConditionBasedPredicateInference(Join joinRel, boolean isSemiJoin,
+       // Equivalences from the left or right side infer predicates that are
+       // already present in the Tree below the join.
+       RexBuilder rexBuilder = joinRel.getCluster().getRexBuilder();
++
++      RexNode conditionAfterCompose = compose(rexBuilder, ImmutableList.of(joinRel.getCondition()));
++      System.out.printf("edwin JoinConditionBasedPredicateInference conditionAfterCompose is %s \n", conditionAfterCompose);
++
+       List<RexNode> exprs =
+           RelOptUtil.conjunctions(
+               compose(rexBuilder, ImmutableList.of(joinRel.getCondition())));
+ 
++      System.out.printf("edwin JoinConditionBasedPredicateInference condition exprs is %s \n", exprs.toString());
++
++
+       final EquivalenceFinder eF = new EquivalenceFinder();
++
++      //妈的 这块代码没用
++      //有用，仅仅是transform有用
++      //EquivalenceFinder 对RexCall做两件事
++      //1 equivalence记录 condition中 相互等值的记录
++      //2 将condition中的 条件(RexCall)记录在equalityPredicates
+       new ArrayList<>(
+           Lists.transform(exprs,
+               new Function<RexNode, Void>() {
+@@ -411,7 +479,13 @@ public Void apply(RexNode input) {
+                 }
+               }));
+ 
++      System.out.printf("edwin JoinConditionBasedPredicateInference condition exprs(transform) is %s，equalityPredicates is %s" +
++              " \n", exprs.toString(), equalityPredicates.toString());
++
++      System.out.printf("edwin JoinConditionBasedPredicateInference before closure is %s \n", equivalence.toString());
+       equivalence = BitSets.closure(equivalence);
++      System.out.printf("edwin JoinConditionBasedPredicateInference after closure is %s \n", equivalence.toString());
++      System.out.printf("------------------------------ equivalence end line\n");
+     }
+ 
+     /**
+@@ -442,6 +516,8 @@ public RelOptPredicateList inferPredicates(
+             nonFieldsPredicates, includeEqualityInference,
+             joinType == JoinRelType.LEFT ? rightFieldsBitSet
+                 : allFieldsBitSet);
++        System.out.printf("edwin inferPredicates after left iner, inferredPredicates is %s, nonFieldsPredicates is %s\n ",
++                inferredPredicates.toString(), nonFieldsPredicates.toString());
+         break;
+       }
+       switch (joinType) {
+@@ -451,16 +527,27 @@ public RelOptPredicateList inferPredicates(
+             nonFieldsPredicates, includeEqualityInference,
+             joinType == JoinRelType.RIGHT ? leftFieldsBitSet
+                 : allFieldsBitSet);
++        System.out.printf("edwin inferPredicates after right iner, inferredPredicates is %s, nonFieldsPredicates is %s\n ",
++                inferredPredicates.toString(), nonFieldsPredicates.toString());
+         break;
+       }
+ 
++      System.out.printf("------------------------------ edwin inferPredicates infer end line \n");
++
+       Mappings.TargetMapping rightMapping = Mappings.createShiftMapping(
+           nSysFields + nFieldsLeft + nFieldsRight,
+           0, nSysFields + nFieldsLeft, nFieldsRight);
++
++      System.out.printf("edwin rightMapping is %s \n", rightMapping.toString());
++
+       final RexPermuteInputsShuttle rightPermute =
+           new RexPermuteInputsShuttle(rightMapping, joinRel);
++
+       Mappings.TargetMapping leftMapping = Mappings.createShiftMapping(
+           nSysFields + nFieldsLeft, 0, nSysFields, nFieldsLeft);
++      System.out.printf("edwin leftMapping is %s \n", leftMapping.toString());
++
++
+       final RexPermuteInputsShuttle leftPermute =
+           new RexPermuteInputsShuttle(leftMapping, joinRel);
+       final List<RexNode> leftInferredPredicates = new ArrayList<>();
+@@ -475,7 +562,11 @@ public RelOptPredicateList inferPredicates(
+         }
+       }
+ 
+-      if (joinType == JoinRelType.INNER && !nonFieldsPredicates.isEmpty()) {
++      System.out.printf("edwin inferPredicates leftInferredPredicates is %s \n", leftInferredPredicates.toString());
++        System.out.printf("edwin inferPredicates rightInferredPredicates is %s \n", rightInferredPredicates.toString());
++
++
++        if (joinType == JoinRelType.INNER && !nonFieldsPredicates.isEmpty()) {
+         // Predicates without field references can be pushed to both inputs
+         final Set<String> leftPredsSet = new HashSet<String>(
+                 Lists.transform(leftPreds, HiveCalciteUtil.REX_STR_FN));
+@@ -531,11 +622,18 @@ private void infer(List<RexNode> predicates, Set<String> allExprsDigests,
+           continue;
+         }
+         Iterable<Mapping> ms = mappings(r);
++        //System.out.printf("------------edwin JoinConditionBasedPredicateInference mappings-------------- \n");
+         if (ms.iterator().hasNext()) {
++          //System.out.printf("edwin JoinConditionBasedPredicateInference infer ms is %s \n", ms.i);
++          System.out.printf("############################### \n");
+           for (Mapping m : ms) {
++            System.out.printf("edwin JoinConditionBasedPredicateInference infer m is %s \n", m.toString());
+             RexNode tr = r.accept(
+                 new RexPermuteInputsShuttle(m, joinRel.getInput(0),
+                     joinRel.getInput(1)));
++            System.out.printf("edwin JoinConditionBasedPredicateInference infer tr is %s, " +
++                    "class is %s; %b, %b ,%b\n", tr.toString(), tr.getClass(), inferringFields.contains(RelOptUtil.InputFinder.bits(tr)),
++                    allExprsDigests.contains(tr.toString()), isAlwaysTrue(tr));
+             if (inferringFields.contains(RelOptUtil.InputFinder.bits(tr))
+                 && !allExprsDigests.contains(tr.toString())
+                 && !isAlwaysTrue(tr)) {
+@@ -558,6 +656,8 @@ private void infer(List<RexNode> predicates, Set<String> allExprsDigests,
+           if (fields.cardinality() == 0) {
+             return Iterators.emptyIterator();
+           }
++          System.out.printf("edwin JoinConditionBasedPredicateInference mappings RexNode is %s, fields is %s, cardinality:%s\n",
++                  predicate.toString(), fields.toString(), fields.cardinality());
+           return new ExprsItr(fields);
+         }
+       };
+@@ -652,6 +752,8 @@ protected EquivalenceFinder() {
+             .nextSetBit(i + 1), j++) {
+           columns[j] = i;
+           columnSets[j] = equivalence.get(i);
++          System.out.printf("edwin JoinConditionBasedPredicateInference ExprsItr columnSets[j] is %s \n",
++                  columnSets[j].toString());
+           iterationIdx[j] = 0;
+         }
+         firstCall = true;
+@@ -701,6 +803,8 @@ private void initializeMapping() {
+             nextMapping = null;
+             return;
+           }
++          //0 0
++          //2 2
+           nextMapping.set(columns[i], t);
+           iterationIdx[i] = t + 1;
+         }
+diff --git a/ql/src/java/org/apache/hadoop/hive/ql/session/SessionState.java b/ql/src/java/org/apache/hadoop/hive/ql/session/SessionState.java
+index ffce1d1a..3b28862e 100644
+--- a/ql/src/java/org/apache/hadoop/hive/ql/session/SessionState.java
++++ b/ql/src/java/org/apache/hadoop/hive/ql/session/SessionState.java
+@@ -196,6 +196,7 @@
+ 
+   private Map<String, MapRedStats> mapRedStats;
+ 
++  //存放所有set，hiveConf，（hivevar,-d ）的值
+   private Map<String, String> hiveVariables;
+ 
+   // A mapping from a hadoop job ID to the stack traces collected from the map reduce task logs
+@@ -622,12 +623,16 @@ synchronized private static void start(SessionState startSs, boolean isAsync, Lo
+         }
+         return;
+       }
++      LOG.info("edwin sessionstate start sessionConf queue:{}", startSs.sessionConf.get("tez.queue.name"));
+       // Neither open nor opening.
+       if (!isAsync) {
++        LOG.info("edwin sessionstate start sessionConf false");
+         startSs.tezSessionState.open(startSs.sessionConf); // should use conf on session start-up
+       } else {
+         startSs.tezSessionState.beginOpen(startSs.sessionConf, null, console);
+       }
++
++      LOG.info("edwin after sessionstate start sessionConf queue:{}", startSs.sessionConf.get("tez.queue.name"));
+     } catch (Exception e) {
+       throw new RuntimeException(e);
+     }
+diff --git a/service/pom.xml b/service/pom.xml
+index 06632c23..1f1720b5 100644
+--- a/service/pom.xml
++++ b/service/pom.xml
+@@ -182,6 +182,12 @@
+       <artifactId>apacheds-server-integ</artifactId>
+       <version>${apache-directory-server.version}</version>
+       <scope>test</scope>
++        <exclusions>
++            <exclusion>
++                <groupId>org.apache.directory.client.ldap</groupId>
++                <artifactId>ldap-client-api</artifactId>
++            </exclusion>
++        </exclusions>
+     </dependency>
+ 
+     <dependency>
