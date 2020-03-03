@@ -1737,6 +1737,7 @@ public class CalcitePlanner extends SemanticAnalyzer {
         LOG.debug("Original Plan:\n" + RelOptUtil.toString(calciteGenPlan));
         LOG.debug("Plan After PPD, PartPruning, ColumnPruning:\n"
             + RelOptUtil.toString(calcitePreCboPlan));
+        LOG.debug("edwin!!################");
         LOG.debug("Plan After Join Reordering:\n"
             + RelOptUtil.toString(calciteOptimizedPlan, SqlExplainLevel.ALL_ATTRIBUTES));
       }
