@@ -84,6 +84,7 @@ public class QBParseInfo {
   private boolean isPartialScanAnalyzeCommand; // used for the analyze command (statistics)
                                                // (partialscan)
 
+  //关键 统计信息
   private final HashMap<String, TableSpec> tableSpecs; // used for statistics
 
   private AnalyzeRewriteContext analyzeRewrite;

@@ -1633,6 +1633,10 @@ public class CalcitePlanner extends SemanticAnalyzer {
         perfLogger.PerfLogEnd(this.getClass().getName(), PerfLogger.OPTIMIZER, "Calcite: View-based rewriting");
       }
 
+      System.out.printf("Plan after other Materialized view calcitePreCboPlan:\n %s \n " +
+              "only tostring: \n %s \n",RelOptUtil.toString(calciteOptimizedPlan), calciteOptimizedPlan.toString());
+
+
       // 6. Run aggregate-join transpose (cost based)
       //    If it failed because of missing stats, we continue with
       //    the rest of optimizations
@@ -1653,6 +1657,9 @@ public class CalcitePlanner extends SemanticAnalyzer {
         perfLogger.PerfLogEnd(this.getClass().getName(), PerfLogger.OPTIMIZER, "Calcite: Aggregate join transpose");
       }
 
+      System.out.printf("Plan after other aggregate-join calcitePreCboPlan:\n %s \n " +
+              "only tostring: \n %s \n",RelOptUtil.toString(calciteOptimizedPlan), calciteOptimizedPlan.toString());
+
       // 7.convert Join + GBy to semijoin
       // run this rule at later stages, since many calcite rules cant deal with semijoin
       if (conf.getBoolVar(ConfVars.SEMIJOIN_CONVERSION)) {
@@ -1660,6 +1667,10 @@ public class CalcitePlanner extends SemanticAnalyzer {
         calciteOptimizedPlan = hepPlan(calciteOptimizedPlan, false, mdProvider.getMetadataProvider(), null, HiveSemiJoinRule.INSTANCE);
         perfLogger.PerfLogEnd(this.getClass().getName(), PerfLogger.OPTIMIZER, "Calcite: Semijoin conversion");
       }
+
+      System.out.printf("Plan after other convert Join + GBy to semijoin calcitePreCboPlan:\n %s \n " +
+              "only tostring: \n %s \n",RelOptUtil.toString(calciteOptimizedPlan), calciteOptimizedPlan.toString());
+
 
 
       // 8. Run rule to fix windowing issue when it is done over
@@ -1671,6 +1682,10 @@ public class CalcitePlanner extends SemanticAnalyzer {
         perfLogger.PerfLogEnd(this.getClass().getName(), PerfLogger.OPTIMIZER, "Calcite: Window fixing rule");
       }
 
+      System.out.printf("Plan after other WINDOWING_POSTPROCESSING calcitePreCboPlan:\n %s \n " +
+              "only tostring: \n %s \n",RelOptUtil.toString(calciteOptimizedPlan), calciteOptimizedPlan.toString());
+
+
       // 9. Apply Druid transformation rules
       perfLogger.PerfLogBegin(this.getClass().getName(), PerfLogger.OPTIMIZER);
       calciteOptimizedPlan = hepPlan(calciteOptimizedPlan, false, mdProvider.getMetadataProvider(), null,
@@ -1678,6 +1693,10 @@ public class CalcitePlanner extends SemanticAnalyzer {
               DruidRules.PROJECT, DruidRules.AGGREGATE, DruidRules.PROJECT_SORT,
               DruidRules.SORT, DruidRules.SORT_PROJECT);
       perfLogger.PerfLogEnd(this.getClass().getName(), PerfLogger.OPTIMIZER, "Calcite: Druid transformation rules");
+
+      System.out.printf("Plan after other Druid calcitePreCboPlan:\n %s \n " +
+              "only tostring: \n %s \n",RelOptUtil.toString(calciteOptimizedPlan), calciteOptimizedPlan.toString());
+
 
       // 10. Run rules to aid in translation from Calcite tree to Hive tree
       if (HiveConf.getBoolVar(conf, ConfVars.HIVE_CBO_RETPATH_HIVEOP)) {
