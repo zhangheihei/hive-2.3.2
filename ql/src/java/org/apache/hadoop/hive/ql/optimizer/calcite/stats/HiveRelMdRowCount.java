@@ -188,7 +188,7 @@ public class HiveRelMdRowCount extends RelMdRowCount {
     /*
      * No joining condition.
      */
-    System.out.printf("edwin hive getRowCount initJoinFilters is empty");
+    System.out.printf("edwin hive getRowCount initJoinFilters is empty \n");
     if (initJoinFilters.isEmpty()) {
       return null;
     }

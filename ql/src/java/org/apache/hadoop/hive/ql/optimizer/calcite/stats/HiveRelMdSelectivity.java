@@ -55,7 +55,9 @@ public class HiveRelMdSelectivity extends RelMdSelectivity {
   //~ Methods ----------------------------------------------------------------
 
   public Double getSelectivity(HiveTableScan t, RelMetadataQuery mq, RexNode predicate) {
+    System.out.printf("edwin hive HiveTableScan getSelectivity \n");
     if (predicate != null) {
+      System.out.printf("edwin hive HiveTableScan getSelectivity:%s\n", predicate);
       FilterSelectivityEstimator filterSelEstmator = new FilterSelectivityEstimator(t);
       return filterSelEstmator.estimateSelectivity(predicate);
     }
