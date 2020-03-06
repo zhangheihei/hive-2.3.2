@@ -63,7 +63,7 @@ public class HiveRelMdRowCount extends RelMdRowCount {
   }
 
   public Double getRowCount(Join join, RelMetadataQuery mq) {
-    System.out.printf("edwin hive getRowCount join:%s", join.toString());
+    System.out.printf("edwin hive getRowCount join:%s \n", join.toString());
     PKFKRelationInfo pkfk = analyzeJoinForPKFK(join, mq);
     if (pkfk != null) {
       double selectivity = (pkfk.pkInfo.selectivity * pkfk.ndvScalingFactor);
@@ -203,6 +203,8 @@ public class HiveRelMdRowCount extends RelMdRowCount {
       return null;
     }
 
+    System.out.printf("edwin hive getRowCount initJoinFilters:%s\n", initJoinFilters.toString());
+
     RelOptUtil.classifyFilters(joinRel, joinFilters, joinRel.getJoinType(),
         false, !joinRel.getJoinType().generatesNullsOnRight(), !joinRel
             .getJoinType().generatesNullsOnLeft(), joinFilters, leftFilters,
@@ -223,6 +225,8 @@ public class HiveRelMdRowCount extends RelMdRowCount {
         true);
     ImmutableBitSet lBitSet = ImmutableBitSet.of(leftColIdx);
     ImmutableBitSet rBitSet = ImmutableBitSet.of(rightColIdx);
+
+    System.out.printf("edwin hive getRowCount If the form is Dim loj \n");
 
     /*
      * If the form is Dim loj F or Fact roj Dim or Dim semij Fact then return
