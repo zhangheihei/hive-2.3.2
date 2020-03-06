@@ -64,9 +64,12 @@ public class FilterSelectivityEstimator extends RexVisitorImpl<Double> {
      * Ignore any predicates on partition columns because we have already
      * accounted for these in the Table row count.
      */
+    //只包含分区列，就不需要预测列
     if (isPartitionPredicate(call, this.childRel)) {
       return 1.0;
     }
+
+    System.out.printf("edwin hive getSelectivity after isPartitionPredicate:%s \n", call.toString());
 
     Double selectivity = null;
     SqlKind op = getOp(call);
