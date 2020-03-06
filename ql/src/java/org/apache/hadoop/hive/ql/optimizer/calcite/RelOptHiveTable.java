@@ -436,6 +436,7 @@ public class RelOptHiveTable extends RelOptAbstractTable {
           projIndxSet.remove(i);
         }
       }
+      System.out.printf("edwin getColStat projIndxSet:%s, colStatsBldr:%s", projIndxSet, colStatsBldr);
       if (!projIndxSet.isEmpty()) {
         updateColStats(projIndxSet, allowNullColumnForMissingStats);
         for (Integer i : projIndxSet) {
