@@ -298,6 +298,10 @@ public class RelOptHiveTable extends RelOptAbstractTable {
       }
     }
 
+    System.out.printf("edwin updateColStats partitionList:%s \n", partitionList);
+    System.out.printf("edwin updateColStats nonPartColNamesThatRqrStats:%s, nonPartColIndxsThatRqrStats:%s, hiveTblMetadata.isPartitioned:%b" +
+            "partColNamesThatRqrStats:%s, partColIndxsThatRqrStats:%s", nonPartColNamesThatRqrStats, nonPartColIndxsThatRqrStats,
+            partColNamesThatRqrStats, partColIndxsThatRqrStats, hiveTblMetadata.isPartitioned());
     if (null == partitionList) {
       // We could be here either because its an unpartitioned table or because
       // there are no pruning predicates on a partitioned table.
@@ -436,7 +440,7 @@ public class RelOptHiveTable extends RelOptAbstractTable {
           projIndxSet.remove(i);
         }
       }
-      System.out.printf("edwin getColStat projIndxSet:%s, colStatsBldr:%s", projIndxSet, colStatsBldr);
+      System.out.printf("edwin getColStat projIndxSet:%s, colStatsBldr:%s \n", projIndxSet, colStatsBldr);
       if (!projIndxSet.isEmpty()) {
         updateColStats(projIndxSet, allowNullColumnForMissingStats);
         for (Integer i : projIndxSet) {
