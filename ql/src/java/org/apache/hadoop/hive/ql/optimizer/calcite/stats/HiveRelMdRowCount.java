@@ -63,6 +63,7 @@ public class HiveRelMdRowCount extends RelMdRowCount {
   }
 
   public Double getRowCount(Join join, RelMetadataQuery mq) {
+    System.out.printf("edwin hive getRowCount join:%s", join.toString());
     PKFKRelationInfo pkfk = analyzeJoinForPKFK(join, mq);
     if (pkfk != null) {
       double selectivity = (pkfk.pkInfo.selectivity * pkfk.ndvScalingFactor);
