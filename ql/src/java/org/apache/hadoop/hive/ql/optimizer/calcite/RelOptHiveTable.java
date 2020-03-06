@@ -299,8 +299,8 @@ public class RelOptHiveTable extends RelOptAbstractTable {
     }
 
     System.out.printf("edwin updateColStats partitionList:%s \n", partitionList);
-    System.out.printf("edwin updateColStats nonPartColNamesThatRqrStats:%s, nonPartColIndxsThatRqrStats:%s, hiveTblMetadata.isPartitioned:%b" +
-            "partColNamesThatRqrStats:%s, partColIndxsThatRqrStats:%s", nonPartColNamesThatRqrStats, nonPartColIndxsThatRqrStats,
+    System.out.printf("edwin updateColStats nonPartColNamesThatRqrStats:%s, nonPartColIndxsThatRqrStats:%s," +
+            "partColNamesThatRqrStats:%s, partColIndxsThatRqrStats:%s,hiveTblMetadata.isPartitioned:%b \n", nonPartColNamesThatRqrStats, nonPartColIndxsThatRqrStats,
             partColNamesThatRqrStats, partColIndxsThatRqrStats, hiveTblMetadata.isPartitioned());
     if (null == partitionList) {
       // We could be here either because its an unpartitioned table or because
