@@ -298,7 +298,8 @@ public class RelOptHiveTable extends RelOptAbstractTable {
       }
     }
 
-    System.out.printf("edwin updateColStats partitionList:%s \n", partitionList);
+    System.out.printf("edwin updateColStats partitionList:%s, partitionList.getNotDeniedPartns:%s \n",
+            partitionList, partitionList.getNotDeniedPartns());
     System.out.printf("edwin updateColStats nonPartColNamesThatRqrStats:%s, nonPartColIndxsThatRqrStats:%s," +
             "partColNamesThatRqrStats:%s, partColIndxsThatRqrStats:%s,hiveTblMetadata.isPartitioned:%b \n", nonPartColNamesThatRqrStats, nonPartColIndxsThatRqrStats,
             partColNamesThatRqrStats, partColIndxsThatRqrStats, hiveTblMetadata.isPartitioned());
