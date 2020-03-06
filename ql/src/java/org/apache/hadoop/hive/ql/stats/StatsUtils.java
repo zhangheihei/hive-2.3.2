@@ -545,6 +545,7 @@ public class StatsUtils {
     int avgRowSize = 0;
     for (String neededCol : neededColumns) {
       ColumnInfo ci = getColumnInfoForColumn(neededCol, schema);
+      System.out.printf("edwin estimateRowSizeFromSchema ColumnInfo:%s, needCol:%s \n", ci, neededCol);
       if (ci == null) {
         // No need to collect statistics of index columns
         continue;
@@ -564,6 +565,7 @@ public class StatsUtils {
         avgRowSize += getAvgColLenOfFixedLengthTypes(colTypeLowerCase);
       }
     }
+    System.out.printf("edwin estimateRowSizeFromSchema avgRowSize:%d \n", avgRowSize);
     return avgRowSize;
   }
 
