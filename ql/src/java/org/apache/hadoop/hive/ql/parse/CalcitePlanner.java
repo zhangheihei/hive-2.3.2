@@ -1735,11 +1735,15 @@ public class CalcitePlanner extends SemanticAnalyzer {
       if (LOG.isDebugEnabled() && !conf.getBoolVar(ConfVars.HIVE_IN_TEST)) {
         LOG.debug("CBO Planning details:\n");
         LOG.debug("Original Plan:\n" + RelOptUtil.toString(calciteGenPlan));
+        System.out.printf("edwin after Original Plan \n");
         LOG.debug("Plan After PPD, PartPruning, ColumnPruning:\n"
             + RelOptUtil.toString(calcitePreCboPlan));
+        System.out.printf("edwin after PPD, PartPruning, ColumnPruning \n");
         LOG.debug("edwin!!################");
         LOG.debug("Plan After Join Reordering:\n"
             + RelOptUtil.toString(calciteOptimizedPlan, SqlExplainLevel.ALL_ATTRIBUTES));
+        System.out.printf("Plan After Join Reordering \n");
+
 //        LOG.debug("Plan After Join Reordering:\n"
 //                + RelOptUtil.toString(calciteOptimizedPlan));
       }
