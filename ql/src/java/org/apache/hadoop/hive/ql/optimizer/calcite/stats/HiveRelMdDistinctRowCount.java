@@ -87,6 +87,8 @@ public class HiveRelMdDistinctRowCount extends RelMdDistinctRowCount {
   //该函数不会被反射，要被反射的函数必须是public非static权限
   public static Double getDistinctRowCount(RelNode r, RelMetadataQuery mq, int indx) {
     ImmutableBitSet bitSetOfRqdProj = ImmutableBitSet.of(indx);
+    System.out.printf("edwin hive getDistinctRowCount relNode:%s, literat:%s \n", r.toString(), r
+            .getCluster().getRexBuilder().makeLiteral(true).toString());
     return mq.getDistinctRowCount(r, bitSetOfRqdProj, r
         .getCluster().getRexBuilder().makeLiteral(true));
   }
