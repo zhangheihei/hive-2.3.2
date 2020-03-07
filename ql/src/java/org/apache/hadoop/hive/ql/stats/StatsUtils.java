@@ -286,6 +286,7 @@ public class StatsUtils {
         // We check the sizes of neededColumns and partNames here. If either
         // size is 0, aggrStats is null after several retries. Thus, we can
         // skip the step to connect to the metastore.
+        System.out.printf("edwin collectStatistics neededColumns:%s, partNames:%s\n ", neededColumns, partNames);
         if (neededColumns.size() > 0 && partNames.size() > 0) {
           aggrStats = Hive.get().getAggrColStatsFor(table.getDbName(), table.getTableName(),
               neededColumns, partNames);
