@@ -349,7 +349,7 @@ public class CalcitePlanner extends SemanticAnalyzer {
           } else {
             // 1. Gen Optimized AST
             ASTNode newAST = getOptimizedAST();
-
+            System.out.printf("edwin after OptimizedAST, ast:%s \n newAst:%s \n", ast.toString(), newAST.toString());
             // 1.1. Fix up the query for insert/ctas/materialized views
             newAST = fixUpAfterCbo(ast, newAST, cboCtx);
 
@@ -1077,6 +1077,7 @@ public class CalcitePlanner extends SemanticAnalyzer {
    */
   ASTNode getOptimizedAST() throws SemanticException {
     RelNode optimizedOptiqPlan = logicalPlan();
+    System.out.printf("edwin AST TREE after calcite RBO:%s \n", RelOptUtil.toString(optimizedOptiqPlan));
     System.out.printf("edwin resultSchema is %d%n", resultSchema.size());
     for (FieldSchema fs: resultSchema) {
       System.out.printf("edwin resultSchema fs is %s%n", fs.toString());
