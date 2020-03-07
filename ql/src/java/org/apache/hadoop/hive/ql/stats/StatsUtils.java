@@ -291,6 +291,8 @@ public class StatsUtils {
           aggrStats = Hive.get().getAggrColStatsFor(table.getDbName(), table.getTableName(),
               neededColumns, partNames);
         }
+
+        System.out.printf("edwin collectStatistics aggrStats:%s \n", ((null == aggrStats) ? "null" : aggrStats.toString()));
         if (null == aggrStats || null == aggrStats.getColStats()
             || aggrStats.getColStatsSize() == 0) {
           // There are some partitions with no state (or we didn't fetch any state).
