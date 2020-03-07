@@ -228,8 +228,10 @@ public class StatsUtils {
       List<Long> dataSizes = Lists.newArrayList();
 
       if (fetchPartStats) {
+        //把分区中所有的行数统计起来，所有分区
         rowCounts = getBasicStatForPartitions(
             table, partList.getNotDeniedPartns(), StatsSetupConst.ROW_COUNT);
+        //所有分区的数据大小统计起来
         dataSizes =  getBasicStatForPartitions(
             table, partList.getNotDeniedPartns(), StatsSetupConst.RAW_DATA_SIZE);
 
@@ -250,6 +252,7 @@ public class StatsUtils {
       ds = getSumIgnoreNegatives(dataSizes);
       ds = (long) (ds * deserFactor);
 
+      //估算指定列字段的的大小，这些列组成一行，每列根据数据类型估算
       int avgRowSize = estimateRowSizeFromSchema(conf, schema, neededColumns);
       if (avgRowSize > 0) {
         setUnknownRcDsToAverage(rowCounts, dataSizes, avgRowSize);
@@ -266,6 +269,7 @@ public class StatsUtils {
       }
       stats.addToNumRows(nr);
       stats.addToDataSize(ds);
+      System.out.printf("edwin Statistics before(f at least a partition),stats:%s\n ", stats.toString());
 
       // if at least a partition does not contain row count then mark basic stats state as PARTIAL
       if (containsNonPositives(rowCounts) &&
@@ -526,13 +530,17 @@ public class StatsUtils {
       LOG.debug("Estimated average row size: " + avgRowSize);
     }
     for (int i = 0; i < rowCounts.size(); i++) {
+      //每个分区的行数
       long rc = rowCounts.get(i);
+      //每个分区的总数据量
       long s = dataSizes.get(i);
+
+      //如果统计中rowcount(rc)小于0，那么根据总数据（s）除以每行的估算量，计算出行数
       if (rc <= 0 && s > 0) {
         rc = s / avgRowSize;
         rowCounts.set(i, rc);
       }
-
+      //如果s(总数据量)小于0，那么根据每行的估算量*行数，得出总数据
       if (s <= 0 && rc > 0) {
         s = safeMult(rc, avgRowSize);
         dataSizes.set(i, s);
