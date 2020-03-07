@@ -845,6 +845,9 @@ public class StatsUtils {
       neededColsInTable.remove(i--);
       --limit;
     }
+
+    System.out.printf("edwin stats processNeededColumns, neededColumns:%s, neededColsInTable:%s, flase",
+            neededColumns, ((neededColsInTable == null) ? "null" : neededColsInTable.toString()), (neededColsInTable == null || neededColsInTable.size() == 0));
     return (neededColsInTable == null || neededColsInTable.size() == 0) ? neededColumns
         : neededColsInTable;
   }
