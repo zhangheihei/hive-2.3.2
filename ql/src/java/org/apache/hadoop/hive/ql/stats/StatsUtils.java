@@ -847,7 +847,7 @@ public class StatsUtils {
       --limit;
     }
 
-    System.out.printf("edwin stats processNeededColumns, neededColumns:%s, neededColsInTable:%s, flase",
+    System.out.printf("edwin stats processNeededColumns, neededColumns:%s, neededColsInTable:%s, flag:%b \n",
             neededColumns, ((neededColsInTable == null) ? "null" : neededColsInTable.toString()), (neededColsInTable == null || neededColsInTable.size() == 0));
     return (neededColsInTable == null || neededColsInTable.size() == 0) ? neededColumns
         : neededColsInTable;
