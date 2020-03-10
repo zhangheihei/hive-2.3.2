@@ -394,6 +394,7 @@ public class CalcitePlanner extends SemanticAnalyzer {
 
             disableJoinMerge = defaultJoinMerge;
             sinkOp = genPlan(getQB());
+            System.out.printf("edwin CBO Succeeded; optimized logical plan, sinkOp:%s", sinkOp.dump(0));
             LOG.info("CBO Succeeded; optimized logical plan.");
             this.ctx.setCboInfo("Plan optimized by CBO.");
             this.ctx.setCboSucceeded(true);

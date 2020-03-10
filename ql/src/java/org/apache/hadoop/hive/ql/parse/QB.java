@@ -46,6 +46,7 @@ public class QB {
   private final int numJoins = 0;
   private final int numGbys = 0;
   private int numSels = 0;
+  //记录sql中distinck出现的次数
   private int numSelDi = 0;
   //别名和表名的映射
   private HashMap<String, String> aliasToTabs;

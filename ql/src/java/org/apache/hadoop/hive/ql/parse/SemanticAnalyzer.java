@@ -1484,7 +1484,7 @@ public class SemanticAnalyzer extends BaseSemanticAnalyzer {
       skipRecursion = true;
       switch (ast.getToken().getType()) {
       case HiveParser.TOK_SELECTDI:
-          //不明白为啥不保存信息
+          //不明白为啥不保存信息,(二次读：信息补充在TOK_SELECT，此处没有break)
         qb.countSelDi();
         // fall through
       case HiveParser.TOK_SELECT:
