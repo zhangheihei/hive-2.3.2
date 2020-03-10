@@ -350,6 +350,7 @@ public class CalcitePlanner extends SemanticAnalyzer {
             // 1. Gen Optimized AST
             ASTNode newAST = getOptimizedAST();
             System.out.printf("edwin after OptimizedAST, ast:%s \n newAst:%s \n", ast.toStringTree(), newAST.toStringTree());
+            System.out.printf("edwin cbo type is %s \n ", cboCtx.type);
             // 1.1. Fix up the query for insert/ctas/materialized views
             newAST = fixUpAfterCbo(ast, newAST, cboCtx);
 
