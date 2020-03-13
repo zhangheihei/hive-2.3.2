@@ -53,6 +53,7 @@ public class QB {
   //别名到子查询的映射
   private HashMap<String, QBExpr> aliasToSubq;
   private HashMap<String, Table> viewAliasToViewSchema;
+  //表属性,元数据库中
   private HashMap<String, Map<String, String>> aliasToProps;
   //保存语句中的所有别名
   private List<String> aliases;

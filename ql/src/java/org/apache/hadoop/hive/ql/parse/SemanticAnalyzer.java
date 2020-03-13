@@ -10209,7 +10209,8 @@ public class SemanticAnalyzer extends BaseSemanticAnalyzer {
 
     // Obtain table props in query
     Map<String, String> properties = qb.getTabPropsForAlias(alias);
-
+    System.out.printf("edwin genTablePlan TableScanOperator:%s, properties:%s \n",
+            ((top == null)?"null":top.toString()), properties);
     if (top == null) {
       // Determine row schema for TSOP.
       // Include column names from SerDe, the partition and virtual columns.
