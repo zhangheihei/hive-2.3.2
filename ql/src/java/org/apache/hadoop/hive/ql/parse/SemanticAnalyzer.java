@@ -10199,8 +10199,9 @@ public class SemanticAnalyzer extends BaseSemanticAnalyzer {
 
   @SuppressWarnings("nls")
   private Operator genTablePlan(String alias, QB qb) throws SemanticException {
-
+    System.out.printf("edwin genTablePlan alias:%s \n", alias);
     String alias_id = getAliasId(alias, qb);
+    System.out.printf("edwin genTablePlan alias:%s, aliad_id \n", alias, alias_id);
     Table tab = qb.getMetaData().getSrcForAlias(alias);
     RowResolver rwsch;
 
@@ -10580,6 +10581,7 @@ public class SemanticAnalyzer extends BaseSemanticAnalyzer {
 
     //当没有子查询后，开始递归表
     // Recurse over all the source tables
+    System.out.printf("edwin genplan table alist:%s \n", qb.getAliases());
     for (String alias : qb.getTabAliases()) {
       Operator op = genTablePlan(alias, qb);
       aliasToOpInfo.put(alias, op);
