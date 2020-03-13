@@ -10200,7 +10200,7 @@ public class SemanticAnalyzer extends BaseSemanticAnalyzer {
   @SuppressWarnings("nls")
   private Operator genTablePlan(String alias, QB qb) throws SemanticException {
     String alias_id = getAliasId(alias, qb);
-    System.out.printf("edwin genTablePlan alias:%s, aliad_id:%s \n", alias, alias_id);
+    System.out.printf("edwin genTablePlan alias:%s, aliad_id:%s, tabProps:%s \n", alias, alias_id);
     Table tab = qb.getMetaData().getSrcForAlias(alias);
     RowResolver rwsch;
 
@@ -10218,6 +10218,7 @@ public class SemanticAnalyzer extends BaseSemanticAnalyzer {
       try {
         // Including parameters passed in the query
         if (properties != null) {
+          System.out.printf("edwin genTablePlan properties != null \n");
           for (Entry<String, String> prop : properties.entrySet()) {
             if (tab.getSerdeParam(prop.getKey()) != null) {
               LOG.warn("SerDe property in input query overrides stored SerDe property");
@@ -10225,6 +10226,9 @@ public class SemanticAnalyzer extends BaseSemanticAnalyzer {
             tab.setSerdeParam(prop.getKey(), prop.getValue());
           }
         }
+
+        System.out.printf("edwin genTablePlan Deserializer:%s, class:%s \n", tab
+                .getDeserializer().toString(), tab.getDeserializer().getClass());
         // Obtain inspector for schema
         StructObjectInspector rowObjectInspector = (StructObjectInspector) tab
             .getDeserializer().getObjectInspector();
