@@ -266,6 +266,7 @@ public class SemanticAnalyzer extends BaseSemanticAnalyzer {
   private HashMap<TableScanOperator, ExprNodeDesc> opToPartPruner;
   private HashMap<TableScanOperator, PrunedPartitionList> opToPartList;
   protected HashMap<String, TableScanOperator> topOps;
+  //存储每个operator和对应的环境
   protected LinkedHashMap<Operator<? extends OperatorDesc>, OpParseContext> opParseCtx;
   private List<LoadTableDesc> loadTableWork;
   private List<LoadFileDesc> loadFileWork;
@@ -10251,6 +10252,7 @@ public class SemanticAnalyzer extends BaseSemanticAnalyzer {
       }
       // Hack!! - refactor once the metadata APIs with types are ready
       // Finally add the partitioning columns
+        //分区列
       for (FieldSchema part_col : tab.getPartCols()) {
         LOG.trace("Adding partition col: " + part_col);
         rwsch.put(alias, part_col.getName(), new ColumnInfo(part_col.getName(),
@@ -10258,6 +10260,7 @@ public class SemanticAnalyzer extends BaseSemanticAnalyzer {
       }
 
       // put all virtual columns in RowResolver.
+        //虚拟列
       Iterator<VirtualColumn> vcs = VirtualColumn.getRegistry(conf).iterator();
       // use a list for easy cumtomize
       List<VirtualColumn> vcList = new ArrayList<VirtualColumn>();
@@ -10274,13 +10277,14 @@ public class SemanticAnalyzer extends BaseSemanticAnalyzer {
 
       SplitSample sample = nameToSplitSample.get(alias_id);
       if (sample != null && sample.getRowCount() != null) {
+          System.out.printf("edwin genTablePlan have sample \n");
         tsDesc.setRowLimit(sample.getRowCount());
         nameToSplitSample.remove(alias_id);
       }
 
       top = (TableScanOperator) putOpInsertMap(OperatorFactory.get(getOpContext(), tsDesc,
           new RowSchema(rwsch.getColumnInfos())), rwsch);
-
+      System.out.printf("edwin genTablePlan tableoperaotr:%s, dump:%s \n", top.toString(), top.dump(0));
       // Set insiderView so that we can skip the column authorization for this.
       top.setInsideView(qb.isInsideView() || qb.getAliasInsideView().contains(alias.toLowerCase()));
 
@@ -10464,6 +10468,7 @@ public class SemanticAnalyzer extends BaseSemanticAnalyzer {
     if ((!qbp.isAnalyzeCommand() && qbp.getAnalyzeRewrite() == null)
         || (qbp.getAnalyzeRewrite() != null && !HiveConf.getVar(conf,
             HiveConf.ConfVars.HIVE_EXECUTION_ENGINE).equals("tez"))) {
+        System.out.printf("edwin table operator setGatherStats(false)\n");
       tsDesc.setGatherStats(false);
     } else {
       if (HiveConf.getVar(conf, HIVESTATSDBCLASS).equalsIgnoreCase(StatDB.fs.name())) {

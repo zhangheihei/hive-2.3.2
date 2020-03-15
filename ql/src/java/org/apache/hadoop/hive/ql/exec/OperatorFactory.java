@@ -238,6 +238,7 @@ public final class OperatorFactory {
   /**
    * Returns an operator given the conf and a list of children operators.
    */
+  //conf是 operatordesc
   public static <T extends OperatorDesc> Operator<T> get(
       CompilationOpContext cContext, T conf, RowSchema rwsch) {
     Operator<T> ret = get(cContext, conf);
