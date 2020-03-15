@@ -10218,7 +10218,7 @@ public class SemanticAnalyzer extends BaseSemanticAnalyzer {
       try {
         // Including parameters passed in the query
         if (properties != null) {
-          System.out.printf("edwin genTablePlan properties != null \n");
+          System.out.printf("edwin genTablePlan properties != null, len:%s \n", properties.size());
           for (Entry<String, String> prop : properties.entrySet()) {
             if (tab.getSerdeParam(prop.getKey()) != null) {
               LOG.warn("SerDe property in input query overrides stored SerDe property");
@@ -10243,6 +10243,7 @@ public class SemanticAnalyzer extends BaseSemanticAnalyzer {
                   .getFieldObjectInspector()), alias, false);
           colInfo.setSkewedCol((isSkewedCol(alias, qb, fields.get(i)
               .getFieldName())) ? true : false);
+          //列信息
           rwsch.put(alias, fields.get(i).getFieldName(), colInfo);
         }
       } catch (SerDeException e) {
