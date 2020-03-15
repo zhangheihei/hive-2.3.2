@@ -10643,7 +10643,7 @@ public class SemanticAnalyzer extends BaseSemanticAnalyzer {
     // appropriate operators to the TS
     genLateralViewPlans(aliasToOpInfo, qb);
 
-    System.out.printf("edwin genplan hasPTF:%b, hasJoinExpr:%b \n", queryProperties.hasPTF(), qb.getParseInfo().getJoinExpr());
+    System.out.printf("edwin genplan hasPTF:%b, hasJoinExpr:%b \n", queryProperties.hasPTF(), qb.getParseInfo().getJoinExpr() != null);
     // process join
     if (qb.getParseInfo().getJoinExpr() != null) {
       ASTNode joinExpr = qb.getParseInfo().getJoinExpr();
