@@ -265,6 +265,7 @@ public class SemanticAnalyzer extends BaseSemanticAnalyzer {
 
   private HashMap<TableScanOperator, ExprNodeDesc> opToPartPruner;
   private HashMap<TableScanOperator, PrunedPartitionList> opToPartList;
+  //存放所有tablescan
   protected HashMap<String, TableScanOperator> topOps;
   //存储每个operator和对应的环境
   protected LinkedHashMap<Operator<? extends OperatorDesc>, OpParseContext> opParseCtx;
@@ -273,9 +274,11 @@ public class SemanticAnalyzer extends BaseSemanticAnalyzer {
   private List<ColumnStatsAutoGatherContext> columnStatsAutoGatherContexts;
   private final Map<JoinOperator, QBJoinTree> joinContext;
   private final Map<SMBMapJoinOperator, QBJoinTree> smbMapJoinContext;
+  //tablescan对应的table
   private final HashMap<TableScanOperator, Table> topToTable;
   private final Map<FileSinkOperator, Table> fsopToTable;
   private final List<ReduceSinkOperator> reduceSinkOperatorsAddedByEnforceBucketingSorting;
+
   private final HashMap<TableScanOperator, Map<String, String>> topToTableProps;
   private QB qb;
   private ASTNode ast;
@@ -10211,7 +10214,7 @@ public class SemanticAnalyzer extends BaseSemanticAnalyzer {
     // Obtain table props in query
     Map<String, String> properties = qb.getTabPropsForAlias(alias);
     System.out.printf("edwin genTablePlan TableScanOperator:%s, properties:%s \n",
-            ((top == null)?"null":top.toString()), properties);
+            ((top == null)?"null":top.toString()), properties.toString());
     if (top == null) {
       // Determine row schema for TSOP.
       // Include column names from SerDe, the partition and virtual columns.
@@ -10284,7 +10287,8 @@ public class SemanticAnalyzer extends BaseSemanticAnalyzer {
 
       top = (TableScanOperator) putOpInsertMap(OperatorFactory.get(getOpContext(), tsDesc,
           new RowSchema(rwsch.getColumnInfos())), rwsch);
-      System.out.printf("edwin genTablePlan tableoperaotr:%s, dump:%s \n", top.toString(), top.dump(0));
+      System.out.printf("edwin genTablePlan tableoperaotr:%s, dump:%s \n, opParseCtx is:%s, size:%d \n",
+              top.toString(), top.dump(0), opParseCtx.toString(), opParseCtx.size());
       // Set insiderView so that we can skip the column authorization for this.
       top.setInsideView(qb.isInsideView() || qb.getAliasInsideView().contains(alias.toLowerCase()));
 
@@ -10440,7 +10444,8 @@ public class SemanticAnalyzer extends BaseSemanticAnalyzer {
     }
 
     Operator output = putOpInsertMap(op, rwsch);
-
+      System.out.printf("edwin final genTablePlan tableoperaotr:%s, dump:%s \n, opParseCtx is:%s, size:%d \n",
+              output.toString(), output.dump(0), opParseCtx.toString(), opParseCtx.size());
     if (LOG.isDebugEnabled()) {
       LOG.debug("Created Table Plan for " + alias + " " + op.toString());
     }
