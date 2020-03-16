@@ -9655,11 +9655,16 @@ public class SemanticAnalyzer extends BaseSemanticAnalyzer {
   @SuppressWarnings("nls")
   private Operator genBodyPlan(QB qb, Operator input, Map<String, Operator> aliasToOpInfo)
       throws SemanticException {
+      System.out.printf("edwin genBodyPlan input is:%s, aliasToOpInfo is:%s\n", input.toString(), aliasToOpInfo.toString());
     QBParseInfo qbp = qb.getParseInfo();
+
+    for (String clause : qbp.getClauseNames()) {
+        System.out.printf("edwin genBodyPlan clause:%s, selNode:%s \n", clause, qbp.getSelForClause(clause));
+    }
 
     TreeSet<String> ks = new TreeSet<String>(qbp.getClauseNames());
     Map<String, Operator<? extends OperatorDesc>> inputs = createInputForDests(qb, input, ks);
-
+    System.out.printf("after lateral view ,edwin genBodyPlan inputs:%s \n", inputs);
     Operator curr = input;
 
     List<List<String>> commonGroupByDestGroups = null;
@@ -9776,6 +9781,7 @@ public class SemanticAnalyzer extends BaseSemanticAnalyzer {
     return curr;
   }
 
+  //搜集表之上的lateral view
   private Map<String, Operator<? extends OperatorDesc>> createInputForDests(QB qb,
       Operator<? extends OperatorDesc> input, Set<String> dests) throws SemanticException {
     Map<String, Operator<? extends OperatorDesc>> inputs =

@@ -111,6 +111,8 @@ public class QBParseInfo {
    */
   private final HashMap<String, ArrayList<ASTNode>> aliasToLateralViews;
 
+  //存放lateral view节点
+  //https://blog.csdn.net/bitcarmanlee/article/details/51926530
   private final HashMap<String, ASTNode> destToLateralView;
 
   /* Order by clause */
