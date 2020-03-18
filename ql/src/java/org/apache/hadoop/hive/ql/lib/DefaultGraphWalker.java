@@ -59,7 +59,7 @@ public class DefaultGraphWalker implements GraphWalker {
    * traversed
    */
   protected final List<Node> toWalk = new ArrayList<Node>();
-  //walk graph:每个节点NODE 丰富为ExprDesc
+  //walk graph:每个节点NODE 丰富为ExprDesc;dispatch过的节点
   protected final IdentityHashMap<Node, Object> retMap = new  IdentityHashMap<Node, Object>();
   protected final Dispatcher dispatcher;
 

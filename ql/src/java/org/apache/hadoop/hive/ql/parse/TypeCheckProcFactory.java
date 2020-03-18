@@ -1009,7 +1009,7 @@ public class TypeCheckProcFactory {
 
         //=号, and这些都是有默认UDF函数的。。。
         if (fi != null) {
-          System.out.printf("edwin  getXpathOrFuncExprNodeDesc FunctionInfo is:%s%n", fi.toString());
+          System.out.printf("edwin  getXpathOrFuncExprNodeDesc FunctionInfo is:%s, class:%s%n", fi.toString(), fi.getClassName());
         }
 
         if (fi == null) {

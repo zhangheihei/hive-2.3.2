@@ -1495,6 +1495,7 @@ public class SemanticAnalyzer extends BaseSemanticAnalyzer {
 
         qb.countSel();
         //接着填充QB，ctx_1.dest="reduce"
+          //遇见TOK_DESTINATION 会生产新的 比如insclause-0
         qbp.setSelExprForClause(ctx_1.dest, ast);
         int posn = 0;
         if (((ASTNode) ast.getChild(0)).getToken().getType() == HiveParser.QUERY_HINT) {
@@ -3222,11 +3223,13 @@ public class SemanticAnalyzer extends BaseSemanticAnalyzer {
   }
 
   @SuppressWarnings("nls")
+  //filter肯定在tablescan之上
   private Operator genFilterPlan(ASTNode searchCond, QB qb, Operator input,
       Map<String, Operator> aliasToOpInfo,
       boolean forHavingClause, boolean forGroupByClause)
       throws SemanticException {
-
+      System.out.printf("edwin genFilterPlan whereAst:%s, cur:%s, aliasToOpInfo:%s \n",
+              searchCond.toString(), input.toString(), aliasToOpInfo.toString());
     OpParseContext inputCtx = opParseCtx.get(input);
     RowResolver inputRR = inputCtx.getRowResolver();
 
@@ -3262,7 +3265,7 @@ public class SemanticAnalyzer extends BaseSemanticAnalyzer {
      *     method method for detailed comments.
      */
     List<ASTNode> subQueriesInOriginalTree = SubQueryUtils.findSubQueries(searchCond);
-
+    System.out.printf("edwin genFilterPlan subQueriesInOriginalTree:%d \n", subQueriesInOriginalTree.size());
     if ( subQueriesInOriginalTree.size() > 0 ) {
 
       /*
@@ -3382,11 +3385,13 @@ public class SemanticAnalyzer extends BaseSemanticAnalyzer {
   @SuppressWarnings("nls")
   private Operator genFilterPlan(QB qb, ASTNode condn, Operator input, boolean useCaching)
       throws SemanticException {
-
+    System.out.printf("after subquer check: edwin genFilterPlan input:%s, ast:%s, useCache:%b \n",
+            input.toString(), condn.toString(), useCaching);
     OpParseContext inputCtx = opParseCtx.get(input);
     RowResolver inputRR = inputCtx.getRowResolver();
 
     ExprNodeDesc filterCond = genExprNodeDesc(condn, inputRR, useCaching, isCBOExecuted());
+    System.out.printf("edwin genFilterPlan after genExprNodeDesc filterCond is %s \n", filterCond.toString());
     if (filterCond instanceof ExprNodeConstantDesc) {
       ExprNodeConstantDesc c = (ExprNodeConstantDesc) filterCond;
       if (Boolean.TRUE.equals(c.getValue())) {
@@ -3403,6 +3408,7 @@ public class SemanticAnalyzer extends BaseSemanticAnalyzer {
         new FilterDesc(filterCond, false), new RowSchema(
             inputRR.getColumnInfos()), input), inputRR);
 
+    System.out.printf("edwin genFilterPlan operation:%s \n", output.dump(0));
     if (LOG.isDebugEnabled()) {
       LOG.debug("Created Filter Plan for " + qb.getId() + " row schema: "
           + inputRR.toString());
@@ -9691,7 +9697,7 @@ public class SemanticAnalyzer extends BaseSemanticAnalyzer {
         if (commonGroupByDestGroup.isEmpty()) {
           continue;
         }
-
+        System.out.printf("edwin genBodyPlan commonGroupByDestGroup:%s \n", commonGroupByDestGroup.toString());
         String firstDest = commonGroupByDestGroup.get(0);
         input = inputs.get(firstDest);
 
@@ -9712,6 +9718,7 @@ public class SemanticAnalyzer extends BaseSemanticAnalyzer {
             curr = inputs.get(dest);
 
             if (qbp.getWhrForClause(dest) != null) {
+                System.out.printf("edwin genBodyPlan whereForClause:%s \n", qb.getParseInfo().getWhrForClause(dest));
               ASTNode whereExpr = qb.getParseInfo().getWhrForClause(dest);
               curr = genFilterPlan((ASTNode) whereExpr.getChild(0), qb, curr, aliasToOpInfo, false, false);
             }
@@ -11825,6 +11832,7 @@ public class SemanticAnalyzer extends BaseSemanticAnalyzer {
     Map<ASTNode, ExprNodeDesc> nodeOutputs =
         TypeCheckProcFactory.genExprNode(expr, tcCtx);
     ExprNodeDesc desc = nodeOutputs.get(expr);
+    System.out.printf("edwin genAllExprNodeDesc after genExprNode desc is %s \n", desc.toString());
     if (desc == null) {
       String errMsg = tcCtx.getError();
       if (errMsg == null) {

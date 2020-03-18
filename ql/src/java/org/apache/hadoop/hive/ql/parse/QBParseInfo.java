@@ -60,7 +60,7 @@ public class QBParseInfo {
   //抽样功能
   private final HashMap<String, TableSample> nameToSample;
   private final Map<ASTNode, String> exprToColumnAlias;
-  //存放select表达式
+  //存放select表达式 select必和dest联系在一起， nametoDest
   private final Map<String, ASTNode> destToSelExpr;
   //存放where节点
   private final HashMap<String, ASTNode> destToWhereExpr;

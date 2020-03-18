@@ -83,6 +83,7 @@ WHERE EXISTS (SELECT B FROM T2 WHERE T1.X = T2.Y)
       Node node = opStack.peek();
 
       //IdentityHashMap<Node, Object>
+      //没有子节点，或者改节点的子节点已经全部处理过
       if (node.getChildren() == null ||
               getDispatchedList().containsAll(node.getChildren())) {
         // Dispatch current ndispatchode
