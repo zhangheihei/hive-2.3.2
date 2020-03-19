@@ -3408,7 +3408,7 @@ public class SemanticAnalyzer extends BaseSemanticAnalyzer {
         new FilterDesc(filterCond, false), new RowSchema(
             inputRR.getColumnInfos()), input), inputRR);
 
-    System.out.printf("edwin genFilterPlan operation:%s \n", output.dump(0));
+    System.out.printf("edwin genFilterPlan operation:%s \n, opParseCtx:%s\n", output.dump(0), opParseCtx.toString());
     if (LOG.isDebugEnabled()) {
       LOG.debug("Created Filter Plan for " + qb.getId() + " row schema: "
           + inputRR.toString());
