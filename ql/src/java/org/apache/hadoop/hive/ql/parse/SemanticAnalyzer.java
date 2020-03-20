@@ -11782,7 +11782,6 @@ public class SemanticAnalyzer extends BaseSemanticAnalyzer {
 
     // If the current subExpression is pre-calculated, as in Group-By etc.
     ExprNodeDesc cached = null;
-    //没有使用Cache,熊猫
     if (tcCtx.isUseCaching()) {
       cached = getExprNodeDescCached(expr, input);
     }
@@ -11801,6 +11800,8 @@ public class SemanticAnalyzer extends BaseSemanticAnalyzer {
   private ExprNodeDesc getExprNodeDescCached(ASTNode expr, RowResolver input)
       throws SemanticException {
     ColumnInfo colInfo = input.getExpression(expr);
+    System.out.printf("edwin getExprNodeDescCached expr:%s, colInfo:%s \n", expr.toString(),
+            (colInfo != null)?colInfo.toString():"null");
     if (colInfo != null) {
       ASTNode source = input.getExpressionSource(expr);
       if (source != null) {
