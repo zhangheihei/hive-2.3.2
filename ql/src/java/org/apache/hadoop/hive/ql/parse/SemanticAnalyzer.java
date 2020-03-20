@@ -4474,7 +4474,8 @@ public class SemanticAnalyzer extends BaseSemanticAnalyzer {
       aliases[i] = new String[] {tabAlias, colAlias};
       hasAsClauses[i] = hasAsClause;
       colAliases.add(colAlias);
-      System.out.printf("edwin genSelectPlan expr:%s, tabAlias:%s, colAlias:%s \n", expr.toString(), tabAlias, colAlias);
+      System.out.printf("edwin genSelectPlan expr:%s, tabAlias:%s, colAlias:%s, hasAsClause:%b \n",
+              expr.toString(), tabAlias, colAlias, hasAsClause);
 
       // The real expression
       if (expr.getType() == HiveParser.TOK_ALLCOLREF) {
