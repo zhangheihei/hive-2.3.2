@@ -4532,7 +4532,7 @@ public class SemanticAnalyzer extends BaseSemanticAnalyzer {
         colInfo.setSkewedCol((exp instanceof ExprNodeColumnDesc) ? ((ExprNodeColumnDesc) exp)
             .isSkewedCol() : false);
         out_rwsch.put(tabAlias, colAlias, colInfo);
-        System.out.printf("edwin genSelectPlan tabAlias:%s, colAilas:%d, colInfo:%s, out_rwsch:%s \n",
+        System.out.printf("edwin genSelectPlan tabAlias:%s, colAilas:%s, colInfo:%s, out_rwsch:%s \n",
                 tabAlias, colAlias, colInfo, out_rwsch.toString());
 
         if ( exp instanceof ExprNodeColumnDesc ) {
