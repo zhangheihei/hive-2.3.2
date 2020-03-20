@@ -9729,6 +9729,7 @@ public class SemanticAnalyzer extends BaseSemanticAnalyzer {
                 || getGroupByForClause(qbp, dest).size() > 0)
                     && (qbp.getSelForClause(dest).getToken().getType() != HiveParser.TOK_SELECTDI
                       || qbp.getWindowingExprsForClause(dest) == null)) {
+              System.out.printf("edwin genBodyPlan process group by \n");
               // multiple distincts is not supported with skew in data
               if (conf.getBoolVar(HiveConf.ConfVars.HIVEGROUPBYSKEW) &&
                   qbp.getDistinctFuncExprsForClause(dest).size() > 1) {
