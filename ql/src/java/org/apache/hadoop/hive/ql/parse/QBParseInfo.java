@@ -70,7 +70,7 @@ public class QBParseInfo {
   private final Set<String> destRollups;
   //不清楚 和GB相关
   private final Set<String> destCubes;
-  //不清楚 和GB相关
+  //不清楚 和GB相关 OK_ROLLUP_GROUPBY TOK_CUBE_GROUPBY TOK_GROUPING_SETS
   private final Set<String> destGroupingSets;
   private final Map<String, ASTNode> destToHaving;
   // insertIntoTables/insertOverwriteTables map a table's fullName to its ast;

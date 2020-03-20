@@ -1707,6 +1707,7 @@ public class SemanticAnalyzer extends BaseSemanticAnalyzer {
         qbp.setGroupByExprForClause(ctx_1.dest, ast);
         skipRecursion = true;
 
+        //TOK_ROLLUP_GROUPBY TOK_CUBE_GROUPBY TOK_GROUPING_SETS
         // Rollup and Cubes are syntactic sugar on top of grouping sets
         if (ast.getToken().getType() == HiveParser.TOK_ROLLUP_GROUPBY) {
           qbp.getDestRollups().add(ctx_1.dest);
@@ -4303,7 +4304,6 @@ public class SemanticAnalyzer extends BaseSemanticAnalyzer {
     if (LOG.isDebugEnabled()) {
       LOG.debug("tree: " + selExprList.toStringTree());
     }
-
     ArrayList<ExprNodeDesc> col_list = new ArrayList<ExprNodeDesc>();
     RowResolver out_rwsch = new RowResolver();
     ASTNode trfm = null;
@@ -4313,6 +4313,9 @@ public class SemanticAnalyzer extends BaseSemanticAnalyzer {
     if (inputForSelectStar != null && inputForSelectStar != input) {
       starRR = opParseCtx.get(inputForSelectStar).getRowResolver();
     }
+
+    System.out.printf("edwin genSelectPlan input:%s, inputForSelectStar:%s \n", input.toString(),
+            (inputForSelectStar != null)?inputForSelectStar.toString():"NULL");
     // SELECT * or SELECT TRANSFORM(*)
     boolean selectStar = false;
     int posn = 0;
@@ -4471,6 +4474,7 @@ public class SemanticAnalyzer extends BaseSemanticAnalyzer {
       aliases[i] = new String[] {tabAlias, colAlias};
       hasAsClauses[i] = hasAsClause;
       colAliases.add(colAlias);
+      System.out.printf("edwin genSelectPlan expr:%s, tabAlias:%s, colAlias:%s \n", expr.toString(), tabAlias, colAlias);
 
       // The real expression
       if (expr.getType() == HiveParser.TOK_ALLCOLREF) {
@@ -9804,6 +9808,8 @@ public class SemanticAnalyzer extends BaseSemanticAnalyzer {
   private Operator genPostGroupByBodyPlan(Operator curr, String dest, QB qb,
       Map<String, Operator> aliasToOpInfo, Operator gbySource)
       throws SemanticException {
+    System.out.printf("edwin genPostGroupByBodyPlan curr is:%s, aliasToOpInfo is:%s, gbySource:%s\n",
+            curr.toString(), aliasToOpInfo.toString(), gbySource.toString());
 
     QBParseInfo qbp = qb.getParseInfo();
 
