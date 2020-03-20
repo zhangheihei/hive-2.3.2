@@ -4532,11 +4532,14 @@ public class SemanticAnalyzer extends BaseSemanticAnalyzer {
         colInfo.setSkewedCol((exp instanceof ExprNodeColumnDesc) ? ((ExprNodeColumnDesc) exp)
             .isSkewedCol() : false);
         out_rwsch.put(tabAlias, colAlias, colInfo);
+        System.out.printf("edwin genSelectPlan tabAlias:%s, colAilas:%d, colInfo:%s, out_rwsch:%s \n",
+                tabAlias, colAlias, colInfo, out_rwsch.toString());
 
         if ( exp instanceof ExprNodeColumnDesc ) {
           ExprNodeColumnDesc colExp = (ExprNodeColumnDesc) exp;
           String[] altMapping = inputRR.getAlternateMappings(colExp.getColumn());
           if ( altMapping != null ) {
+              System.out.printf("edwin genSelectPlan altMapping is:%s \n", altMapping);
             out_rwsch.put(altMapping[0], altMapping[1], colInfo);
           }
         }
