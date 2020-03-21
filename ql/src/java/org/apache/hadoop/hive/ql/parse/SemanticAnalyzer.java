@@ -9883,6 +9883,10 @@ public class SemanticAnalyzer extends BaseSemanticAnalyzer {
     }
 
     System.out.printf("edwin genPostGroupByBodyPlan genReduceSink:%b, hasOrderBy:%b \n", genReduceSink, hasOrderBy);
+    if (limit != null) {
+      System.out.printf("edwin genPostGroupByBodyPlan limit:%d \n", limit.intValue());
+
+    }
     if (genReduceSink) {
       int numReducers = -1;
 
