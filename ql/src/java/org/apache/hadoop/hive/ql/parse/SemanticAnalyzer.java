@@ -4598,6 +4598,9 @@ public class SemanticAnalyzer extends BaseSemanticAnalyzer {
   public RowResolver handleInsertStatementSpec(List<ExprNodeDesc> col_list, String dest,
                                          RowResolver outputRR, RowResolver inputRR, QB qb,
                                          ASTNode selExprList) throws SemanticException {
+
+    System.out.printf("edwin handleInsertStatementSpec col_list:%s, dest:%s, output:%s, inputRR:%s, selExprList:%s \n",
+            col_list, dest, outputRR, inputRR, selExprList.toString());
     //(z,x)
     List<String> targetTableSchema = qb.getParseInfo().getDestSchemaForClause(dest);//specified in the query
     if(targetTableSchema == null) {
