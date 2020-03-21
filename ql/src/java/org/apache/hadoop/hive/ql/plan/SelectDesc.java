@@ -33,7 +33,9 @@ import org.apache.hadoop.hive.ql.plan.Explain.Vectorization;
 @Explain(displayName = "Select Operator", explainLevels = { Level.USER, Level.DEFAULT, Level.EXTENDED })
 public class SelectDesc extends AbstractOperatorDesc {
   private static final long serialVersionUID = 1L;
+  //记录Desc的列名[Column[category], Column[populary_num]]
   private List<org.apache.hadoop.hive.ql.plan.ExprNodeDesc> colList;
+  //记录operator的输出列名
   private List<java.lang.String> outputColumnNames;
   private boolean selectStar;
   private boolean selStarNoCompute;

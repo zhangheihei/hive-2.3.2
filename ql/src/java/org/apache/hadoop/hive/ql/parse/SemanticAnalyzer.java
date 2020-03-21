@@ -4552,6 +4552,7 @@ public class SemanticAnalyzer extends BaseSemanticAnalyzer {
     out_rwsch = handleInsertStatementSpec(col_list, dest, out_rwsch, inputRR, qb, selExprList);
 
     ArrayList<String> columnNames = new ArrayList<String>();
+    //输出列和原始列明的对应关系
     Map<String, ExprNodeDesc> colExprMap = new HashMap<String, ExprNodeDesc>();
     for (int i = 0; i < col_list.size(); i++) {
       String outputCol = getColumnInternalName(i);
@@ -6891,7 +6892,7 @@ public class SemanticAnalyzer extends BaseSemanticAnalyzer {
     RowResolver inputRR = opParseCtx.get(input).getRowResolver();
     QBMetaData qbm = qb.getMetaData();
     Integer dest_type = qbm.getDestTypeForAlias(dest);
-
+    System.out.printf("edwin genFileSinkPlan dest:%s, input:%s, inputRR:%s \n", dest, input.toString(), inputRR.toString());
     Table dest_tab = null; // destination table if any
     boolean destTableIsAcid = false; // should the destination table be written to using ACID
     boolean destTableIsTemporary = false;
@@ -9850,7 +9851,7 @@ public class SemanticAnalyzer extends BaseSemanticAnalyzer {
     }
 
     curr = genSelectPlan(dest, qb, curr, gbySource);
-
+    System.out.printf("edwin genPostGroupByBodyPlan operator:%s, ctx:%s \n", curr.dump(0), opParseCtx.toString());
     Integer limit = qbp.getDestLimit(dest);
     Integer offset = (qbp.getDestLimitOffset(dest) == null) ? 0 : qbp.getDestLimitOffset(dest);
 
@@ -9881,6 +9882,7 @@ public class SemanticAnalyzer extends BaseSemanticAnalyzer {
       genReduceSink = true;
     }
 
+    System.out.printf("edwin genPostGroupByBodyPlan genReduceSink:%b, hasOrderBy:%b \n", genReduceSink, hasOrderBy);
     if (genReduceSink) {
       int numReducers = -1;
 
