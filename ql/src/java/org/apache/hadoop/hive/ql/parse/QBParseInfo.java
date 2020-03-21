@@ -276,6 +276,7 @@ public class QBParseInfo {
     return nameToDestSchema.put(clause, columnList);
   }
   List<String> getDestSchemaForClause(String clause) {
+    System.out.printf("edwin QBParseInfo getDestSchemaForClause:%s \n", nameToDestSchema.toString());
     return nameToDestSchema.get(clause);
   }
 
