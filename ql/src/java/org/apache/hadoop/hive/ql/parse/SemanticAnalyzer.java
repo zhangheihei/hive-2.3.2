@@ -6892,7 +6892,7 @@ public class SemanticAnalyzer extends BaseSemanticAnalyzer {
     RowResolver inputRR = opParseCtx.get(input).getRowResolver();
     QBMetaData qbm = qb.getMetaData();
     Integer dest_type = qbm.getDestTypeForAlias(dest);
-    System.out.printf("edwin genFileSinkPlan dest:%s, input:%s, inputRR:%s \n", dest, input.toString(), inputRR.toString());
+    System.out.printf("edwin genFileSinkPlan dest:%s, input:%s, inputRR:%s, destType:%d \n", dest, input.toString(), inputRR.toString(), dest_type);
     Table dest_tab = null; // destination table if any
     boolean destTableIsAcid = false; // should the destination table be written to using ACID
     boolean destTableIsTemporary = false;
