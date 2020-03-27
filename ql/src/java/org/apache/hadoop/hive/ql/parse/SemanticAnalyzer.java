@@ -6409,7 +6409,7 @@ public class SemanticAnalyzer extends BaseSemanticAnalyzer {
   @SuppressWarnings("nls")
   private Operator genGroupByPlanMapAggrNoSkew(String dest, QB qb,
       Operator inputOperatorInfo) throws SemanticException {
-
+    System.out.printf("edwin genGroupByPlanMapAggrNoSkew inputOperatorInfo:%s \n", inputOperatorInfo.toString());
     QBParseInfo parseInfo = qb.getParseInfo();
     ObjectPair<List<ASTNode>, List<Integer>> grpByExprsGroupingSets =
         getGroupByGroupingSetsForClause(parseInfo, dest);
