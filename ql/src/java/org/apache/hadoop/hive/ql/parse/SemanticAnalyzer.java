@@ -9742,7 +9742,7 @@ public class SemanticAnalyzer extends BaseSemanticAnalyzer {
                     && (qbp.getSelForClause(dest).getToken().getType() != HiveParser.TOK_SELECTDI
                       || qbp.getWindowingExprsForClause(dest) == null)) {
               System.out.printf("edwin genBodyPlan process group by:destToAggregationExprs%s," +
-                      "destToGroupby:%s  \n", qbp.getDestToAggregationExprs(), qbp.getDestToGroupBy());
+                      "destToGroupby:%s, DestToDistinctFuncExprs:%s  \n", qbp.getDestToAggregationExprs(), qbp.getDestToGroupBy(), qbp.getDestToDistinctFuncExprs());
               // multiple distincts is not supported with skew in data
               if (conf.getBoolVar(HiveConf.ConfVars.HIVEGROUPBYSKEW) &&
                   qbp.getDistinctFuncExprsForClause(dest).size() > 1) {
@@ -10626,6 +10626,8 @@ public class SemanticAnalyzer extends BaseSemanticAnalyzer {
               + operator.getType().name() + ", rather than a SelectOperator.");
         }
       }
+      System.out.printf("edwin genPlan aliasToOpInfo:%s, hasViewToTabSchema:%b \n", aliasToOpInfo,
+              qb.getViewToTabSchema().containsKey(alias));
     }
 
     //当没有子查询后，开始递归表
@@ -10730,7 +10732,7 @@ public class SemanticAnalyzer extends BaseSemanticAnalyzer {
     if (qb.getAlias() != null) {
       rewriteRRForSubQ(qb.getAlias(), bodyOpInfo, skipAmbiguityCheck);
     }
-
+    System.out.printf("edwin after genBodyPlan:%s \n", bodyOpInfo.toString());
     setQB(qb);
     return bodyOpInfo;
   }
