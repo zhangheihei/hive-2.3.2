@@ -4166,9 +4166,10 @@ public class SemanticAnalyzer extends BaseSemanticAnalyzer {
       return result;
     } else {
       ASTNode grpByExprs = parseInfo.getGroupByForClause(dest);
-      System.out.printf("edwin getGroupByForClause grpByExprs:%s \n", grpByExprs.toString());
       List<ASTNode> result = new ArrayList<ASTNode>(grpByExprs == null ? 0
           : grpByExprs.getChildCount());
+      System.out.printf("edwin getGroupByForClause grpByExprs:%s \n", (grpByExprs == null ? "null"
+              : grpByExprs.toString()));
       if (grpByExprs != null) {
         for (int i = 0; i < grpByExprs.getChildCount(); ++i) {
           ASTNode grpbyExpr = (ASTNode) grpByExprs.getChild(i);
