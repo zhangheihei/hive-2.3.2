@@ -409,12 +409,14 @@ public class RelOptHiveTable extends RelOptAbstractTable {
       noColsMissingStats.getAndAdd(colNamesFailedStats.size());
       if (allowNullColumnForMissingStats) {
         LOG.warn(logMsg);
+        LOG.info("edwin colNamesFailedStats is true");
         HiveConf conf = SessionState.getSessionConf();
         if (HiveConf.getBoolVar(conf, HiveConf.ConfVars.HIVE_CBO_SHOW_WARNINGS)) {
           LogHelper console = SessionState.getConsole();
           console.printInfoNoLog(logMsg);
         }
       } else {
+        LOG.info("edwin colNamesFailedStats is false");
         LOG.error(logMsg);
         throw new RuntimeException(logMsg);
       }
