@@ -430,7 +430,7 @@ public class RelOptHiveTable extends RelOptAbstractTable {
   }
 
   public List<ColStatistics> getColStat(List<Integer> projIndxLst) {
-    return getColStat(projIndxLst, false);
+    return getColStat(projIndxLst, true);
   }
 
   public List<ColStatistics> getColStat(List<Integer> projIndxLst, boolean allowNullColumnForMissingStats) {
