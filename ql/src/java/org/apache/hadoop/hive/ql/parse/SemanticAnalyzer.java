@@ -11856,7 +11856,10 @@ public class SemanticAnalyzer extends BaseSemanticAnalyzer {
     Map<ASTNode, ExprNodeDesc> nodeOutputs =
         TypeCheckProcFactory.genExprNode(expr, tcCtx);
     ExprNodeDesc desc = nodeOutputs.get(expr);
-    System.out.printf("edwin genAllExprNodeDesc after genExprNode desc is %s \n", desc.toString());
+    if (desc != null) {
+      System.out.printf("edwin genAllExprNodeDesc after genExprNode desc is %s \n", desc.toString());
+
+    }
     if (desc == null) {
       String errMsg = tcCtx.getError();
       if (errMsg == null) {
