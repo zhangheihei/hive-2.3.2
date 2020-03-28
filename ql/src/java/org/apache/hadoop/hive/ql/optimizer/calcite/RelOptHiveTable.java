@@ -324,6 +324,7 @@ public class RelOptHiveTable extends RelOptAbstractTable {
         if (hiveColStats == null) {
           colNamesFailedStats.addAll(nonPartColNamesThatRqrStats);
         } else if (hiveColStats.size() != nonPartColNamesThatRqrStats.size()) {
+          System.out.printf("edwin stats hiveColStats:%s \n", hiveColStats.toString());
           Set<String> setOfFiledCols = new HashSet<String>(nonPartColNamesThatRqrStats);
 
           Set<String> setOfObtainedColStats = new HashSet<String>();

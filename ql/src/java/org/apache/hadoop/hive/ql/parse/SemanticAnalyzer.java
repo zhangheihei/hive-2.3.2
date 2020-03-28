@@ -4166,6 +4166,7 @@ public class SemanticAnalyzer extends BaseSemanticAnalyzer {
       return result;
     } else {
       ASTNode grpByExprs = parseInfo.getGroupByForClause(dest);
+      System.out.printf("edwin getGroupByForClause grpByExprs:%s \n", grpByExprs.toString());
       List<ASTNode> result = new ArrayList<ASTNode>(grpByExprs == null ? 0
           : grpByExprs.getChildCount());
       if (grpByExprs != null) {
@@ -4176,6 +4177,8 @@ public class SemanticAnalyzer extends BaseSemanticAnalyzer {
           }
         }
       }
+      System.out.printf("edwin getGroupByForClause result:%s \n", result.toString());
+
       return result;
     }
   }
@@ -9765,10 +9768,12 @@ public class SemanticAnalyzer extends BaseSemanticAnalyzer {
                 ASTNode node = (ASTNode) selExprList.getChild(0).getChild(0);
                 if (node.getToken().getType() == HiveParser.TOK_ALLCOLREF) {
                   curr = genSelectPlan(dest, qb, curr, curr);
+                  System.out.printf("edwin gen select plan:%s \n", curr.dump(0));
                   RowResolver rr = opParseCtx.get(curr).getRowResolver();
                   qbp.setSelExprForClause(dest, SemanticAnalyzer.genSelectDIAST(rr));
                 }
               }
+
               if (conf.getBoolVar(HiveConf.ConfVars.HIVEMAPSIDEAGGREGATE)) {
                 if (!conf.getBoolVar(HiveConf.ConfVars.HIVEGROUPBYSKEW)) {
                   curr = genGroupByPlanMapAggrNoSkew(dest, qb, curr);
