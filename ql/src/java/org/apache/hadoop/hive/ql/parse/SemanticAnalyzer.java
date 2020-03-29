@@ -6421,6 +6421,8 @@ public class SemanticAnalyzer extends BaseSemanticAnalyzer {
 
     List<ASTNode> grpByExprs = grpByExprsGroupingSets.getFirst();
     List<Integer> groupingSets = grpByExprsGroupingSets.getSecond();
+    System.out.printf("edwin genGroupByPlanMapAggrNoSkew grpByExprs:%s\n", grpByExprs);
+    System.out.printf("edwin genGroupByPlanMapAggrNoSkew groupingSets:%s\n", groupingSets);
     boolean groupingSetsPresent = !groupingSets.isEmpty();
 
     int newMRJobGroupingSetsThreshold =
