@@ -5493,6 +5493,8 @@ public class SemanticAnalyzer extends BaseSemanticAnalyzer {
 
     RowResolver reduceSinkInputRowResolver = opParseCtx.get(inputOperatorInfo)
         .getRowResolver();
+    System.out.printf("edwin genGroupByPlanReduceSinkOperator reduceSinkInputRowResolver:%s \n", reduceSinkInputRowResolver);
+
     QBParseInfo parseInfo = qb.getParseInfo();
     RowResolver reduceSinkOutputRowResolver = new RowResolver();
     reduceSinkOutputRowResolver.setIsExprResolver(true);
@@ -5505,6 +5507,9 @@ public class SemanticAnalyzer extends BaseSemanticAnalyzer {
     ArrayList<ExprNodeDesc> reduceKeys = getReduceKeysForReduceSink(grpByExprs, dest,
         reduceSinkInputRowResolver, reduceSinkOutputRowResolver, outputKeyColumnNames,
         colExprMap);
+    System.out.printf("edwin genGroupByPlanReduceSinkOperator reduceKeys:%s, " +
+            "reduceSinkOutputRowResolver:%s, outputKeyColumnNames:%s, colExprMap:%s \n",
+            reduceKeys, reduceSinkOutputRowResolver, outputKeyColumnNames, colExprMap);
 
     int keyLength = reduceKeys.size();
     int numOfColsRmedFromkey = grpByExprs.size() - keyLength;
@@ -6470,6 +6475,8 @@ public class SemanticAnalyzer extends BaseSemanticAnalyzer {
 
     groupOpToInputTables.put(groupByOperatorInfo, opParseCtx.get(
         inputOperatorInfo).getRowResolver().getTableNames());
+    System.out.printf("edwin genGroupByPlanMapAggrNoSkew tableName:%s \n", opParseCtx.get(
+            inputOperatorInfo).getRowResolver().getTableNames());
     int numReducers = -1;
 
     // Optimize the scenario when there are no grouping keys - only 1 reducer is
