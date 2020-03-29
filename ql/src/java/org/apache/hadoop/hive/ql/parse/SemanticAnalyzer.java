@@ -5328,7 +5328,7 @@ public class SemanticAnalyzer extends BaseSemanticAnalyzer {
       List<Integer> groupingSetKeys,
       boolean groupingSetsPresent) throws SemanticException {
     System.out.printf("edwin genGroupByPlanMapGroupByOperator genericUDAFEvaluators:%s, mode:%s, operator:%s \n",
-            genericUDAFEvaluators.toString(), mode.toString(), inputOperatorInfo.toString());
+            genericUDAFEvaluators.toString(), mode.toString(), inputOperatorInfo.dump(0));
 
     RowResolver groupByInputRowResolver = opParseCtx.get(inputOperatorInfo)
         .getRowResolver();
@@ -5379,6 +5379,8 @@ public class SemanticAnalyzer extends BaseSemanticAnalyzer {
     }
 
     // If there is a distinctFuncExp, add all parameters to the reduceKeys.
+    System.out.printf("edwin genGroupByPlanMapGroupByOperator distinctFuncExp:%b \n",
+            parseInfo.getDistinctFuncExprsForClause(dest).isEmpty());
     if (!parseInfo.getDistinctFuncExprsForClause(dest).isEmpty()) {
       List<ASTNode> list = parseInfo.getDistinctFuncExprsForClause(dest);
       for (ASTNode value : list) {
