@@ -5327,9 +5327,12 @@ public class SemanticAnalyzer extends BaseSemanticAnalyzer {
       Map<String, GenericUDAFEvaluator> genericUDAFEvaluators,
       List<Integer> groupingSetKeys,
       boolean groupingSetsPresent) throws SemanticException {
+    System.out.printf("edwin genGroupByPlanMapGroupByOperator genericUDAFEvaluators:%s, mode:%s \n",
+            genericUDAFEvaluators.toString(), mode.toString());
 
     RowResolver groupByInputRowResolver = opParseCtx.get(inputOperatorInfo)
         .getRowResolver();
+    System.out.printf("edwin genGroupByPlanMapGroupByOperator groupByInputRowResolver:%s \n", groupByInputRowResolver);
     QBParseInfo parseInfo = qb.getParseInfo();
     RowResolver groupByOutputRowResolver = new RowResolver();
     groupByOutputRowResolver.setIsExprResolver(true);
