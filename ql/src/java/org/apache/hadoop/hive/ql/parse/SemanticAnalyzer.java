@@ -5406,6 +5406,7 @@ public class SemanticAnalyzer extends BaseSemanticAnalyzer {
         .getAggregationExprsForClause(dest);
     assert (aggregationTrees != null);
 
+    System.out.printf("edwin genGroupByPlanMapGroupByOperator aggregationTrees :%s \n", aggregationTrees);
     boolean containsDistinctAggr = false;
     for (Map.Entry<String, ASTNode> entry : aggregationTrees.entrySet()) {
       ASTNode value = entry.getValue();
@@ -5449,6 +5450,11 @@ public class SemanticAnalyzer extends BaseSemanticAnalyzer {
     float groupByMemoryUsage = HiveConf.getFloatVar(conf, HiveConf.ConfVars.HIVEMAPAGGRHASHMEMORY);
     float memoryThreshold = HiveConf
         .getFloatVar(conf, HiveConf.ConfVars.HIVEMAPAGGRMEMORYTHRESHOLD);
+    System.out.printf("edwin genGroupByPlanMapGroupByOperator outputColumnNames:%s, " +
+            "groupByKeys:%s, aggregations:%s,  groupingSetKeys:%s, groupingSetsPresent:%b, " +
+            "groupingSetsPosition:%d, containsDistinctAggr:%b \n", outputColumnNames, groupByKeys,
+            aggregations, groupingSetKeys, groupingSetsPresent, groupingSetsPosition, containsDistinctAggr);
+    System.out.printf("edwin genGroupByPlanMapGroupByOperator outputRow:%s \n", groupByOutputRowResolver);
     Operator op = putOpInsertMap(OperatorFactory.getAndMakeChild(
         new GroupByDesc(mode, outputColumnNames, groupByKeys, aggregations,
             false, groupByMemoryUsage, memoryThreshold,
