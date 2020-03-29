@@ -5569,13 +5569,14 @@ public class SemanticAnalyzer extends BaseSemanticAnalyzer {
             "outputValueColumnNames:%s, numPartitionFields:%d, numReducers:%d \n",
             reduceKeys, reduceValues, distinctColIndices, outputKeyColumnNames, outputValueColumnNames, numPartitionFields, numReducers);
 
+    ReduceSinkDesc tmp = PlanUtils.getReduceSinkDesc(reduceKeys,
+            groupingSetsPresent ? keyLength + 1 : keyLength,
+            reduceValues, distinctColIndices,
+            outputKeyColumnNames, outputValueColumnNames, true, -1, numPartitionFields,
+            numReducers, AcidUtils.Operation.NOT_ACID);
+    System.out.printf("edwin genGroupByPlanReduceSinkOperator sink desc:%s \n", tmp.toString());
     ReduceSinkOperator rsOp = (ReduceSinkOperator) putOpInsertMap(
-        OperatorFactory.getAndMakeChild(
-            PlanUtils.getReduceSinkDesc(reduceKeys,
-                groupingSetsPresent ? keyLength + 1 : keyLength,
-                reduceValues, distinctColIndices,
-                outputKeyColumnNames, outputValueColumnNames, true, -1, numPartitionFields,
-                numReducers, AcidUtils.Operation.NOT_ACID),
+        OperatorFactory.getAndMakeChild(tmp,
             new RowSchema(reduceSinkOutputRowResolver.getColumnInfos()), inputOperatorInfo),
         reduceSinkOutputRowResolver);
     rsOp.setColumnExprMap(colExprMap);

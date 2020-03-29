@@ -744,12 +744,14 @@ public final class PlanUtils {
     if (includeKeyCols) {
       List<FieldSchema> keySchema = getFieldSchemasFromColumnListWithLength(
           keyCols, distinctColIndices, outputKeyColumnNames, numKeys, "");
+      System.out.printf("edwin getReduceSinkDesc keySchema:%s \n", keySchema);
       if (order.length() < outputKeyColumnNames.size()) {
         order = order + "+";
       }
       if (nullOrder.length() < outputKeyColumnNames.size()) {
         nullOrder = nullOrder + "a";
       }
+      System.out.printf("edwin getReduceSinkDesc order:%s, nullOrder:%s \n", order, nullOrder);
       keyTable = getReduceKeyTableDesc(keySchema, order, nullOrder);
       outputKeyCols.addAll(outputKeyColumnNames);
     } else {
@@ -759,9 +761,11 @@ public final class PlanUtils {
         outputKeyCols.add("reducesinkkey" + i);
       }
     }
+    System.out.printf("edwin getReduceSinkDesc keyTable:%s, outputKeyCols:%s \n", keyTable.toString(), outputKeyCols.toString());
     valueTable = getReduceValueTableDesc(getFieldSchemasFromColumnList(
         valueCols, outputValueColumnNames, 0, ""));
     outputValCols.addAll(outputValueColumnNames);
+    System.out.printf("edwin getReduceSinkDesc valueTable:%s \n", valueTable.toString());
     return new ReduceSinkDesc(keyCols, numKeys, valueCols, outputKeyCols,
         distinctColIndices, outputValCols,
         tag, partitionCols, numReducers, keyTable,
