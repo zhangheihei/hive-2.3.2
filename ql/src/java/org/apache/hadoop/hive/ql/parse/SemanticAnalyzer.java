@@ -4081,6 +4081,7 @@ public class SemanticAnalyzer extends BaseSemanticAnalyzer {
     } else if (parseInfo.getDestCubes().contains(dest)) {
       groupingSets = getGroupingSetsForCube(groupByExprs.size());
     } else if (parseInfo.getDestGroupingSets().contains(dest)) {
+      System.out.printf("edwin parseInfo.getDestGroupingSets().contains(dest) \n");
       groupingSets = getGroupingSets(groupByExprs, parseInfo, dest);
     }
 
