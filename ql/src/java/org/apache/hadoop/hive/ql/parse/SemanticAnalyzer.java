@@ -5533,6 +5533,8 @@ public class SemanticAnalyzer extends BaseSemanticAnalyzer {
         reduceKeys, reduceSinkInputRowResolver, reduceSinkOutputRowResolver, outputKeyColumnNames,
         colExprMap);
 
+    System.out.printf("edwin genGroupByPlanReduceSinkOperator distinctColIndices:%s\n ", distinctColIndices);
+
     ArrayList<ExprNodeDesc> reduceValues = new ArrayList<ExprNodeDesc>();
     HashMap<String, ASTNode> aggregationTrees = parseInfo
         .getAggregationExprsForClause(dest);
@@ -5561,6 +5563,11 @@ public class SemanticAnalyzer extends BaseSemanticAnalyzer {
         colExprMap.put(internalName, exprDesc);
       }
     }
+
+    System.out.printf("edwin genGroupByPlanReduceSinkOperator reduceKeys:%s, reduceValues:%s, " +
+            "distinctColIndices:%s, outputKeyColumnNames:%s, " +
+            "outputValueColumnNames:%s, numPartitionFields:%d, numReducers:%d \n",
+            reduceKeys, reduceValues, distinctColIndices, outputKeyColumnNames, outputValueColumnNames, numPartitionFields, numReducers);
 
     ReduceSinkOperator rsOp = (ReduceSinkOperator) putOpInsertMap(
         OperatorFactory.getAndMakeChild(
