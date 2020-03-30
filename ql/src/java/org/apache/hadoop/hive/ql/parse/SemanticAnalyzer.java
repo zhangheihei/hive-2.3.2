@@ -5566,8 +5566,9 @@ public class SemanticAnalyzer extends BaseSemanticAnalyzer {
 
     System.out.printf("edwin genGroupByPlanReduceSinkOperator reduceKeys:%s, reduceValues:%s, " +
             "distinctColIndices:%s, outputKeyColumnNames:%s, " +
-            "outputValueColumnNames:%s, numPartitionFields:%d, numReducers:%d \n",
-            reduceKeys, reduceValues, distinctColIndices, outputKeyColumnNames, outputValueColumnNames, numPartitionFields, numReducers);
+            "outputValueColumnNames:%s, numPartitionFields:%d, numReducers:%d, reduceSinkOutputRowResolver:%s \n",
+            reduceKeys, reduceValues, distinctColIndices, outputKeyColumnNames, outputValueColumnNames, numPartitionFields,
+            numReducers, reduceSinkOutputRowResolver.toString());
 
     ReduceSinkDesc tmp = PlanUtils.getReduceSinkDesc(reduceKeys,
             groupingSetsPresent ? keyLength + 1 : keyLength,
@@ -6514,6 +6515,7 @@ public class SemanticAnalyzer extends BaseSemanticAnalyzer {
             numReducers,
             true,
             groupingSetsPresent && !groupingSetsNeedAdditionalMRJob);
+    System.out.printf("edwin genGroupByPlanMapAggrNoSkew reduceSinkOperatorInfo:%s \n", reduceSinkOperatorInfo.dump(0));
 
     // Does it require a new MR job for grouping sets
     if (!groupingSetsPresent || !groupingSetsNeedAdditionalMRJob) {
