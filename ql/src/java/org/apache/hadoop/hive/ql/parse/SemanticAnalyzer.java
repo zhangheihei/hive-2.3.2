@@ -6484,8 +6484,8 @@ public class SemanticAnalyzer extends BaseSemanticAnalyzer {
 
     groupOpToInputTables.put(groupByOperatorInfo, opParseCtx.get(
         inputOperatorInfo).getRowResolver().getTableNames());
-    System.out.printf("edwin genGroupByPlanMapAggrNoSkew tableName:%s \n", opParseCtx.get(
-            inputOperatorInfo).getRowResolver().getTableNames());
+    System.out.printf("edwin genGroupByPlanMapAggrNoSkew tableName:%s, genericUDAFEvaluators:%s \n", opParseCtx.get(
+            inputOperatorInfo).getRowResolver().getTableNames(), genericUDAFEvaluators);
     int numReducers = -1;
 
     // Optimize the scenario when there are no grouping keys - only 1 reducer is
