@@ -5281,6 +5281,7 @@ public class SemanticAnalyzer extends BaseSemanticAnalyzer {
         new RowSchema(groupByOutputRowResolver.getColumnInfos()), reduceSinkOperatorInfo),
         groupByOutputRowResolver);
     op.setColumnExprMap(colExprMap);
+    System.out.printf("edwin genGroupByPlanGroupByOperator1 operator:%s \n", op.dump(0));
     return op;
   }
 
