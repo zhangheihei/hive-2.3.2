@@ -13677,6 +13677,7 @@ public class SemanticAnalyzer extends BaseSemanticAnalyzer {
       String col_alias = BaseSemanticAnalyzer.unescapeIdentifier(
           gByExpr.getChild(1).getText().toLowerCase());
       gByRR.put(tab_alias, col_alias, colInfo);
+      System.out.printf("edwin addAlternateGByKeyMappings gByRR :%s \n", gByRR.toString());
     } else if ( gByExpr.getType() == HiveParser.TOK_TABLE_OR_COL ) {
       String col_alias = BaseSemanticAnalyzer.unescapeIdentifier(gByExpr
               .getChild(0).getText().toLowerCase());
