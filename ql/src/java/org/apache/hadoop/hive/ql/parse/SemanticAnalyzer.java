@@ -5101,6 +5101,9 @@ public class SemanticAnalyzer extends BaseSemanticAnalyzer {
       List<Integer> groupingSets,
       boolean groupingSetsPresent,
       boolean groupingSetsNeedAdditionalMRJob) throws SemanticException {
+    System.out.printf("edwin genGroupByPlanGroupByOperator1 " +
+                    "reduceSinkOperatorInfo:%s, mode:%s, genericUDAFEvaluators:%s, groupingSets:%s \n",
+            reduceSinkOperatorInfo.toString(), mode, genericUDAFEvaluators, groupingSets);
     ArrayList<String> outputColumnNames = new ArrayList<String>();
     RowResolver groupByInputRowResolver = opParseCtx
         .get(reduceSinkOperatorInfo).getRowResolver();
