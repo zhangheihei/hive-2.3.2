@@ -6618,7 +6618,7 @@ public class SemanticAnalyzer extends BaseSemanticAnalyzer {
   @SuppressWarnings("nls")
   private Operator genGroupByPlanMapAggr2MR(String dest, QB qb,
       Operator inputOperatorInfo) throws SemanticException {
-
+    System.out.printf("edwin genGroupByPlanMapAggr2MR inputOperator:%s \n", inputOperatorInfo.toString());
     QBParseInfo parseInfo = qb.getParseInfo();
 
     ObjectPair<List<ASTNode>, List<Integer>> grpByExprsGroupingSets =
@@ -6626,6 +6626,8 @@ public class SemanticAnalyzer extends BaseSemanticAnalyzer {
 
     List<ASTNode> grpByExprs = grpByExprsGroupingSets.getFirst();
     List<Integer> groupingSets = grpByExprsGroupingSets.getSecond();
+      System.out.printf("edwin genGroupByPlanMapAggr2MR grpByExprs:%s\n", grpByExprs);
+      System.out.printf("edwin genGroupByPlanMapAggr2MR groupingSets:%s\n", groupingSets);
     boolean groupingSetsPresent = !groupingSets.isEmpty();
 
     if (groupingSetsPresent) {
