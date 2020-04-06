@@ -8380,7 +8380,7 @@ public class SemanticAnalyzer extends BaseSemanticAnalyzer {
       String[] nm = inputRR.reverseLookup(colInfo.getInternalName());
       String[] nm2 = inputRR.getAlternateMappings(colInfo.getInternalName());
       ExprNodeDesc expr = new ExprNodeColumnDesc(colInfo);
-      System.out.printf("edwin genJoinReduceSinkChild nm:%s, nm2:%s, expr:%s \n", nm, nm2, expr);
+      System.out.printf("edwin genJoinReduceSinkChild nm:%s, nm2:%s, expr:%s \n", nm.toString(), nm2.toString(), expr);
 
       // backtrack can be null when input is script operator
       ExprNodeDesc exprBack = ExprNodeDescUtils.backtrack(expr, dummy, child);
