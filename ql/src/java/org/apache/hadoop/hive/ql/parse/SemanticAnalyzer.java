@@ -2925,6 +2925,7 @@ public class SemanticAnalyzer extends BaseSemanticAnalyzer {
    * condition involves both subtrees and is not a equality. Also, we only
    * support AND i.e ORs are not supported currently as their semantics are not
    * very clear, may lead to data explosion and there is no usecase.
+   * 相当于谓词下推，把谓词推到各个字句
    *
    * @param joinTree
    *          jointree to be populated
@@ -10773,11 +10774,15 @@ public class SemanticAnalyzer extends BaseSemanticAnalyzer {
         if (!disableJoinMerge) {
           mergeJoinTree(qb);
         }
+
+        System.out.printf("edwin genplan joinExpr dests:%s, disableJoinMerge %b \n", dests, disableJoinMerge);
+
       }
 
       // if any filters are present in the join tree, push them on top of the
       // table
       pushJoinFilters(qb, qb.getQbJoinTree(), aliasToOpInfo);
+      System.out.printf("edwin genplan joinExpr after pushJoinFilters aliasToOpInfo:%s \n", aliasToOpInfo);
       srcOpInfo = genJoinPlan(qb, aliasToOpInfo);
     } else {
       // Now if there are more than 1 sources then we have a join case
