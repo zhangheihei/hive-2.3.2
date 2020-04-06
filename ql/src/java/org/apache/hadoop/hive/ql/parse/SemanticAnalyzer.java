@@ -2895,7 +2895,7 @@ public class SemanticAnalyzer extends BaseSemanticAnalyzer {
   private void parseJoinCondition(QBJoinTree joinTree, ASTNode joinCond, List<String> leftSrc,
       Map<String, Operator> aliasToOpInfo)
       throws SemanticException {
-    System.out.printf("edwin parseJoinCondition joinCond:%s, type:%d \n", joinCond.toString(), joinCond.getText());
+    System.out.printf("edwin parseJoinCondition joinCond:%s, type:%s \n", joinCond.toString(), joinCond.getText());
     if (joinCond == null) {
       System.out.printf("edwin parseJoinCondition joinCond == null \n");
       return;
