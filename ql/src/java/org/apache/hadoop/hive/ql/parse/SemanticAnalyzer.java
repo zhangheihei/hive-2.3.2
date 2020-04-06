@@ -8457,6 +8457,9 @@ public class SemanticAnalyzer extends BaseSemanticAnalyzer {
     QBJoinTree leftChild = joinTree.getJoinSrc();
     Operator joinSrcOp = joiningOp instanceof JoinOperator ? joiningOp : null;
 
+    System.out.printf("edwin genJoinOperator leftChild:%s, joinSrcOp:%s \n", leftChild != null ? leftChild.toString() : "null",
+            joinSrcOp != null ? joinSrcOp.toString() : "null");
+
     if (joinSrcOp == null && leftChild != null) {
       joinSrcOp = genJoinOperator(qb, leftChild, map, null);
     }
