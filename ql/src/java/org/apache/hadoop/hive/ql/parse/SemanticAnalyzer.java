@@ -3435,7 +3435,6 @@ public class SemanticAnalyzer extends BaseSemanticAnalyzer {
     if (!joinTree.getNoOuterJoin()) {
       return input;
     }
-
     if (joinKeys == null || joinKeys.length == 0) {
       return input;
     }
@@ -8518,6 +8517,12 @@ public class SemanticAnalyzer extends BaseSemanticAnalyzer {
     for (int i = 0; i < srcOps.length; i++) {
       // generate a ReduceSink operator for the join
       String[] srcs = baseSrc[i] != null ? new String[] {baseSrc[i]} : joinTree.getLeftAliases();
+      if (joinKeys[i] != null) {
+        System.out.printf("edwin genJoinOperator joinKeys[i]:%s, len:%d \n", joinKeys[i], joinKeys[i].length);
+        for (int ti = 0; ti < joinKeys[i].length; ti++) {
+          System.out.printf("edwin genJoinOperator test joinkey:%s \n", joinKeys[i][ti].toString());
+        }
+      }
       if (!isCBOExecuted()) {
         srcOps[i] = genNotNullFilterForJoinSourcePlan(qb, srcOps[i], joinTree, joinKeys[i]);
       }
