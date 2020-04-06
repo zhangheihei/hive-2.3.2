@@ -8366,6 +8366,8 @@ public class SemanticAnalyzer extends BaseSemanticAnalyzer {
       reduceKeysBack.add(ExprNodeDescUtils.backtrack(joinKey, dummy, child));
     }
 
+    System.out.printf("edwin genJoinReduceSinkChild inputRR:%s, reduceKeys:%s, reduceKeysBack:%s \n ",
+            inputRR, reduceKeys, reduceKeysBack);
     // Walk over the input row resolver and copy in the output
     ArrayList<ExprNodeDesc> reduceValues = new ArrayList<ExprNodeDesc>();
     ArrayList<ExprNodeDesc> reduceValuesBack = new ArrayList<ExprNodeDesc>();
@@ -8378,6 +8380,7 @@ public class SemanticAnalyzer extends BaseSemanticAnalyzer {
       String[] nm = inputRR.reverseLookup(colInfo.getInternalName());
       String[] nm2 = inputRR.getAlternateMappings(colInfo.getInternalName());
       ExprNodeDesc expr = new ExprNodeColumnDesc(colInfo);
+      System.out.printf("edwin genJoinReduceSinkChild nm:%s, nm2:%s, expr:%s \n", nm, nm2, expr);
 
       // backtrack can be null when input is script operator
       ExprNodeDesc exprBack = ExprNodeDescUtils.backtrack(expr, dummy, child);

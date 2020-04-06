@@ -235,6 +235,10 @@ public class ExprNodeDescUtils {
     if (parent == null) {
       return source;
     }
+
+    System.out.printf("edwin backtrack source:%s, current:%s, parent:%s, terminate:%s \n",
+            source, current, parent, terminal);
+
     if (!foldExpr && isConstant(source)) {
       //constant, just return
       return source;
