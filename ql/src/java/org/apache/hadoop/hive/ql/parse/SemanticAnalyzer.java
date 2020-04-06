@@ -8338,6 +8338,7 @@ public class SemanticAnalyzer extends BaseSemanticAnalyzer {
     for (int i = 0; i < inputs.length; i++) {
       RowResolver inputRR = opParseCtx.get(inputs[i]).getRowResolver();
       List<ASTNode> expressions = joinTree.getExpressions().get(i);
+      System.out.printf("edwin genJoinKeys expressions:%s \n", expressions.toString());
       joinKeys[i] = new ExprNodeDesc[expressions.size()];
       for (int j = 0; j < joinKeys[i].length; j++) {
         joinKeys[i][j] = genExprNodeDesc(expressions.get(j), inputRR, true, isCBOExecuted());
