@@ -8484,6 +8484,7 @@ public class SemanticAnalyzer extends BaseSemanticAnalyzer {
         // for left-semi join, generate an additional selection & group-by
         // operator before ReduceSink
         ArrayList<ASTNode> fields = joinTree.getRHSSemijoinColumns(src);
+        System.out.printf("edwin genJoinOperator src:%s, fields:%s \n", src, fields != null ? fields.toString():"null");
         if (fields != null) {
           // the RHS table columns should be not be output from the join
           if (omitOpts == null) {
@@ -8506,6 +8507,7 @@ public class SemanticAnalyzer extends BaseSemanticAnalyzer {
         srcOps[pos++] = joinSrcOp;
       }
     }
+    System.out.printf("edwin genJoinOperator srcOps:%s \n", srcOps);
 
     ExprNodeDesc[][] joinKeys = genJoinKeys(joinTree, srcOps);
 
