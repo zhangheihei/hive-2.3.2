@@ -2895,9 +2895,12 @@ public class SemanticAnalyzer extends BaseSemanticAnalyzer {
   private void parseJoinCondition(QBJoinTree joinTree, ASTNode joinCond, List<String> leftSrc,
       Map<String, Operator> aliasToOpInfo)
       throws SemanticException {
+    System.out.printf("edwin parseJoinCondition joinCond:%s, type:%d \n", joinCond.toString(), joinCond.getType());
     if (joinCond == null) {
+      System.out.printf("edwin parseJoinCondition joinCond == null \n");
       return;
     }
+
     JoinCond cond = joinTree.getJoinCond()[0];
 
     JoinType type = cond.getJoinType();
@@ -9039,7 +9042,8 @@ public class SemanticAnalyzer extends BaseSemanticAnalyzer {
     if (isValidLeftToken) {
       String tableName = getUnescapedUnqualifiedTableName((ASTNode) left.getChild(0))
           .toLowerCase();
-      System.out.printf("edwin genJoinTree is %s \n", tableName);
+      System.out.printf("edwin genJoinTree tableName is %s \n", tableName);
+      //extractJoinAlias 获取真正的table name
       String alias = extractJoinAlias(left, tableName);
       joinTree.setLeftAlias(alias);
       String[] leftAliases = new String[1];
@@ -9051,6 +9055,7 @@ public class SemanticAnalyzer extends BaseSemanticAnalyzer {
       joinTree.setId(qb.getId());
       joinTree.getAliasToOpInfo().put(
           getModifiedAlias(qb, alias), aliasToOpInfo.get(alias));
+      System.out.printf("edwin  genJoinTree left AliasToOpInfo:%s \n", joinTree.getAliasToOpInfo());
     } else if (isJoinLeftToken) {
       QBJoinTree leftTree = genJoinTree(qb, left, aliasToOpInfo);
       joinTree.setJoinSrc(leftTree);
@@ -9081,6 +9086,8 @@ public class SemanticAnalyzer extends BaseSemanticAnalyzer {
       joinTree.setId(qb.getId());
       joinTree.getAliasToOpInfo().put(
           getModifiedAlias(qb, alias), aliasToOpInfo.get(alias));
+      System.out.printf("edwin  genJoinTree right AliasToOpInfo:%s \n", joinTree.getAliasToOpInfo());
+
       // remember rhs table for semijoin
       if (joinTree.getNoSemiJoin() == false) {
         joinTree.addRHSSemijoin(alias);
