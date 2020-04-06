@@ -8500,6 +8500,7 @@ public class SemanticAnalyzer extends BaseSemanticAnalyzer {
           srcOps[pos++] = genMapGroupByForSemijoin(qb, fields, srcOp,
               GroupByDesc.Mode.HASH);
         } else {
+          System.out.printf("edwin genJoinOperator srcOp:%s \n ", srcOp);
           srcOps[pos++] = srcOp;
         }
       } else {
@@ -8507,7 +8508,7 @@ public class SemanticAnalyzer extends BaseSemanticAnalyzer {
         srcOps[pos++] = joinSrcOp;
       }
     }
-    System.out.printf("edwin genJoinOperator srcOps:%s \n", srcOps);
+    System.out.printf("edwin genJoinOperator srcOps:%s, len:%d \n", srcOps.toString(), srcOps.length);
 
     ExprNodeDesc[][] joinKeys = genJoinKeys(joinTree, srcOps);
 
