@@ -9039,6 +9039,7 @@ public class SemanticAnalyzer extends BaseSemanticAnalyzer {
     if (isValidLeftToken) {
       String tableName = getUnescapedUnqualifiedTableName((ASTNode) left.getChild(0))
           .toLowerCase();
+      System.out.printf("edwin genJoinTree is %s \n", tableName);
       String alias = extractJoinAlias(left, tableName);
       joinTree.setLeftAlias(alias);
       String[] leftAliases = new String[1];
