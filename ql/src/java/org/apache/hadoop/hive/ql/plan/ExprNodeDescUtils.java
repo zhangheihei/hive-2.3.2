@@ -288,6 +288,7 @@ public class ExprNodeDescUtils {
     if (mapping == null) {
       return backtrack((ExprNodeDesc)column, current, terminal);
     }
+    System.out.printf("edwin backtrack mapping:%s \n", mapping.toString());
     ExprNodeDesc mapped = mapping.get(column.getColumn());
     return mapped == null ? null : backtrack(mapped, current, terminal);
   }
