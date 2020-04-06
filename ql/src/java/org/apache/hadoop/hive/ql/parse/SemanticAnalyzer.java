@@ -8530,6 +8530,7 @@ public class SemanticAnalyzer extends BaseSemanticAnalyzer {
         srcOps[i] = genNotNullFilterForJoinSourcePlan(qb, srcOps[i], joinTree, joinKeys[i]);
       }
       srcOps[i] = genJoinReduceSinkChild(qb, joinKeys[i], srcOps[i], srcs, joinTree.getNextTag());
+      System.out.printf("edwin genJoinOperator test srcOps[i]:%s \n", srcOps[i].dump(0));
     }
 
     JoinOperator joinOp = (JoinOperator) genJoinOperatorChildren(joinTree,
@@ -8549,6 +8550,8 @@ public class SemanticAnalyzer extends BaseSemanticAnalyzer {
       }
       return op;
     }
+
+    System.out.printf("edwin genJoinOperator joinOp:%s \n", joinOp.dump(0));
 
     return joinOp;
   }
