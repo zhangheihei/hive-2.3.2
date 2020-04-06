@@ -8512,6 +8512,8 @@ public class SemanticAnalyzer extends BaseSemanticAnalyzer {
     System.out.printf("edwin genJoinOperator srcOps:%s, len:%d \n", srcOps.toString(), srcOps.length);
 
     ExprNodeDesc[][] joinKeys = genJoinKeys(joinTree, srcOps);
+    System.out.printf("edwin genJoinOperator joinKeys:%s \n", joinKeys.toString());
+
 
     for (int i = 0; i < srcOps.length; i++) {
       // generate a ReduceSink operator for the join
