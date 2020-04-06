@@ -5180,6 +5180,7 @@ public class SemanticAnalyzer extends BaseSemanticAnalyzer {
       }
       reduceValues = ((ReduceSinkDesc) reduceSinkOperatorInfo.getConf()).getValueCols();
     }
+    System.out.printf("edwin genGroupByPlanGroupByOperator1 reduceValues:%s \n", reduceValues);
     int numDistinctUDFs = 0;
     boolean containsDistinctAggr = false;
     for (Map.Entry<String, ASTNode> entry : aggregationTrees.entrySet()) {
@@ -6664,8 +6665,9 @@ public class SemanticAnalyzer extends BaseSemanticAnalyzer {
     // For eg: select count(1) from T where t.ds = ....
     if (!optimizeMapAggrGroupBy(dest, qb)) {
       List<ASTNode> distinctFuncExprs = parseInfo.getDistinctFuncExprsForClause(dest);
+      System.out.printf("edwin genGroupByPlanMapAggr2MR distinctFuncExprs:%s\n", distinctFuncExprs);
 
-      // ////// Generate ReduceSink Operator
+        // ////// Generate ReduceSink Operator
       Operator reduceSinkOperatorInfo =
           genGroupByPlanReduceSinkOperator(qb,
               dest,
@@ -6677,6 +6679,7 @@ public class SemanticAnalyzer extends BaseSemanticAnalyzer {
               true,
               groupingSetsPresent);
 
+      System.out.printf("edwin genGroupByPlanMapAggr2MR reduceSinkOperatorInfo:%s", reduceSinkOperatorInfo.dump(0));
       // ////// Generate GroupbyOperator for a partial aggregation
       Operator groupByOperatorInfo2 = genGroupByPlanGroupByOperator1(parseInfo,
           dest, reduceSinkOperatorInfo, GroupByDesc.Mode.PARTIALS,
@@ -6693,7 +6696,10 @@ public class SemanticAnalyzer extends BaseSemanticAnalyzer {
           parseInfo, dest, groupByOperatorInfo2, grpByExprs.size(), numReducers,
           groupingSetsPresent);
 
-      // ////// Generate GroupbyOperator3
+        System.out.printf("edwin genGroupByPlanMapAggr2MR reduceSinkOperatorInfo2:%s", reduceSinkOperatorInfo2.dump(0));
+
+
+        // ////// Generate GroupbyOperator3
       return genGroupByPlanGroupByOperator2MR(parseInfo, dest,
           reduceSinkOperatorInfo2, GroupByDesc.Mode.FINAL,
           genericUDAFEvaluators, groupingSetsPresent);
@@ -9820,6 +9826,8 @@ public class SemanticAnalyzer extends BaseSemanticAnalyzer {
                   curr = genGroupByPlanMapAggrNoSkew(dest, qb, curr);
                 } else {
                   curr = genGroupByPlanMapAggr2MR(dest, qb, curr);
+
+
                 }
               } else if (conf.getBoolVar(HiveConf.ConfVars.HIVEGROUPBYSKEW)) {
                 curr = genGroupByPlan2MR(dest, qb, curr);
@@ -10678,7 +10686,7 @@ public class SemanticAnalyzer extends BaseSemanticAnalyzer {
 
     //当没有子查询后，开始递归表
     // Recurse over all the source tables
-    System.out.printf("edwin genplan table alist:%s \n", qb.getAliases());
+    System.out.printf("edwin genplan table alist:%s, tabAlias:%s \n", qb.getAliases(), qb.getTabAliases());
     for (String alias : qb.getTabAliases()) {
       Operator op = genTablePlan(alias, qb);
       aliasToOpInfo.put(alias, op);
