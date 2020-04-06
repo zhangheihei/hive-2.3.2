@@ -9018,6 +9018,8 @@ public class SemanticAnalyzer extends BaseSemanticAnalyzer {
     boolean isJoinLeftToken = !isValidLeftToken && isJoinToken(left);
     boolean isValidRightToken = isValidJoinSide(right);
     boolean isJoinRightToken = !isValidRightToken && isJoinToken(right);
+    System.out.printf("edwin genJoinTree isValidLeftToken:%b, isJoinLeftToken:%b, isValidRightToken:%b, isJoinRightToken:%b \n",
+            isValidLeftToken, isJoinLeftToken, isValidRightToken, isJoinRightToken);
     // TODO: if we didn't care about the column order, we could switch join sides here
     //       for TOK_JOIN and TOK_FULLOUTERJOIN.
     if (!isValidLeftToken && !isJoinLeftToken) {
@@ -10738,6 +10740,7 @@ public class SemanticAnalyzer extends BaseSemanticAnalyzer {
     if (qb.getParseInfo().getJoinExpr() != null) {
       ASTNode joinExpr = qb.getParseInfo().getJoinExpr();
 
+      System.out.printf("edwin genplan joinExpr:%s \n", joinExpr.toString());
       if (joinExpr.getToken().getType() == HiveParser.TOK_UNIQUEJOIN) {
         QBJoinTree joinTree = genUniqueJoinTree(qb, joinExpr, aliasToOpInfo);
         qb.setQbJoinTree(joinTree);
