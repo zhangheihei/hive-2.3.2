@@ -11463,10 +11463,13 @@ public class SemanticAnalyzer extends BaseSemanticAnalyzer {
       // resultSchema will be re-initialized)
       // It will only be not null if cbo is enabled with new return path and it
       // succeeds.
+        System.out.printf("edwin resultSchema resultScheme is null:%b \n ", resultSchema == null);
       if (resultSchema == null) {
         resultSchema = convertRowSchemaToResultSetSchema(opParseCtx.get(sinkOp).getRowResolver(),
             HiveConf.getBoolVar(conf, HiveConf.ConfVars.HIVE_RESULTSET_USE_UNIQUE_COLUMN_NAMES));
       }
+        System.out.printf("edwin resultSchema resultScheme is:%s \n ", resultSchema);
+
     }
 
     // 4. Generate Parse Context for Optimizer & Physical compiler
