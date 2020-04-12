@@ -11435,7 +11435,7 @@ public class SemanticAnalyzer extends BaseSemanticAnalyzer {
     System.out.println("####################### before genOPTree");
     // 2. Gen OP Tree from resolved Parse Tree
     Operator sinkOp = genOPTree(ast, plannerCtx);
-    System.out.println("####################### after genOPTree");
+    System.out.printf("####################### after genOPTree \n, opParseCtx:%s \n", opParseCtx.toString());
     if (!unparseTranslator.isEnabled() && tableMask.isEnabled()) {
       // Here we rewrite the * and also the masking table
       ASTNode tree = rewriteASTWithMaskAndFilter(tableMask, ast, ctx.getTokenRewriteStream(),
@@ -11543,6 +11543,7 @@ public class SemanticAnalyzer extends BaseSemanticAnalyzer {
     if (LOG.isDebugEnabled()) {
       LOG.debug("Before logical optimization\n" + Operator.toString(pCtx.getTopOps().values()));
     }
+    System.out.printf("Before logical optimization:%s \n" ,Operator.toString(pCtx.getTopOps().values()));
     Optimizer optm = new Optimizer();
     optm.setPctx(pCtx);
     optm.initialize(conf);
