@@ -11473,6 +11473,11 @@ public class SemanticAnalyzer extends BaseSemanticAnalyzer {
     }
 
     // 4. Generate Parse Context for Optimizer & Physical compiler
+
+    /*
+    * Add this to the list of top operators - we always start from a table scan
+    * 执行计划肯定是从tablescan开始的,topOps记录这些
+    * */
     copyInfoToQueryProperties(queryProperties);
     ParseContext pCtx = new ParseContext(queryState, opToPartPruner, opToPartList, topOps,
         new HashSet<JoinOperator>(joinContext.keySet()),
@@ -11539,6 +11544,8 @@ public class SemanticAnalyzer extends BaseSemanticAnalyzer {
       setTableAccessInfo(tableAccessAnalyzer.analyzeTableAccess());
     }
 
+    System.out.printf("edwin Generate table access stats:%b \n",
+            HiveConf.getBoolVar(this.conf, HiveConf.ConfVars.HIVE_STATS_COLLECT_TABLEKEYS));
     // 7. Perform Logical optimization
     if (LOG.isDebugEnabled()) {
       LOG.debug("Before logical optimization\n" + Operator.toString(pCtx.getTopOps().values()));

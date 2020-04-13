@@ -83,6 +83,7 @@ public class Optimizer {
     }
 
     // Try to transform OR predicates in Filter into simpler IN clauses first
+      //CBO成功，就不需要这个
     if (HiveConf.getBoolVar(hiveConf, HiveConf.ConfVars.HIVEPOINTLOOKUPOPTIMIZER) &&
             !pctx.getContext().isCboSucceeded()) {
       final int min = HiveConf.getIntVar(hiveConf,
@@ -90,10 +91,13 @@ public class Optimizer {
       transformations.add(new PointLookupOptimizer(min));
     }
 
+    //看起来是 剪枝优化
     if (HiveConf.getBoolVar(hiveConf, HiveConf.ConfVars.HIVEPARTITIONCOLUMNSEPARATOR)) {
         transformations.add(new PartitionColumnsSeparator());
     }
 
+    //谓词下推优化，如果CBO成功，不需要谓词下推优化了PredicatePushDown
+      //SimplePredicatePushDown不清楚什么意思
     if (HiveConf.getBoolVar(hiveConf, HiveConf.ConfVars.HIVEOPTPPD) &&
             !pctx.getContext().isCboSucceeded()) {
       transformations.add(new PredicateTransitivePropagate());
@@ -109,6 +113,7 @@ public class Optimizer {
       transformations.add(new RedundantDynamicPruningConditionsRemoval());
     }
 
+    //CBO通过的话 不需要在常量替换
     if (HiveConf.getBoolVar(hiveConf, HiveConf.ConfVars.HIVEOPTCONSTANTPROPAGATION) &&
             !pctx.getContext().isCboSucceeded()) {    
       // We run constant propagation twice because after predicate pushdown, filter expressions   
@@ -125,6 +130,7 @@ public class Optimizer {
 
     transformations.add(new SortedDynPartitionTimeGranularityOptimizer());
 
+    //谓词下推:这里主要是为了剪枝
     if (HiveConf.getBoolVar(hiveConf, HiveConf.ConfVars.HIVEOPTPPD)) {
       transformations.add(new PartitionPruner());
       transformations.add(new PartitionConditionRemover());
@@ -144,6 +150,7 @@ public class Optimizer {
       transformations.add(new GroupByOptimizer());
     }
     transformations.add(new ColumnPruner());
+    //数据倾斜标志
     if (HiveConf.getBoolVar(hiveConf, HiveConf.ConfVars.HIVE_OPTIMIZE_SKEWJOIN_COMPILETIME)) {
       if (!isTezExecEngine) {
         transformations.add(new SkewJoinOptimizer());
@@ -245,7 +252,9 @@ public class Optimizer {
    * @throws SemanticException
    */
   public ParseContext optimize() throws SemanticException {
+    System.out.printf("edwin operator optimize len:%s\n", transformations.size());
     for (Transform t : transformations) {
+      System.out.printf("edwin operator optimize class:%s", t.getClass().getName());
       t.beginPerfLogging();
       pctx = t.transform(pctx);
       t.endPerfLogging(t.toString());
