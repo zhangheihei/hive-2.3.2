@@ -254,7 +254,7 @@ public class Optimizer {
   public ParseContext optimize() throws SemanticException {
     System.out.printf("edwin operator optimize len:%s\n", transformations.size());
     for (Transform t : transformations) {
-      System.out.printf("edwin operator optimize class:%s", t.getClass().getName());
+      System.out.printf("edwin operator optimize class:%s \n", t.getClass().getName());
       t.beginPerfLogging();
       pctx = t.transform(pctx);
       t.endPerfLogging(t.toString());
