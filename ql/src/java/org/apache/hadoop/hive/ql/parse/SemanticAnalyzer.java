@@ -11555,6 +11555,8 @@ public class SemanticAnalyzer extends BaseSemanticAnalyzer {
     optm.setPctx(pCtx);
     optm.initialize(conf);
     pCtx = optm.optimize();
+    System.out.printf("Middle logical optimization:%s \n" ,Operator.toString(pCtx.getTopOps().values()));
+
     if (pCtx.getColumnAccessInfo() != null) {
       // set ColumnAccessInfo for view column authorization
       setColumnAccessInfo(pCtx.getColumnAccessInfo());
@@ -11563,6 +11565,9 @@ public class SemanticAnalyzer extends BaseSemanticAnalyzer {
     if (LOG.isDebugEnabled()) {
       LOG.debug("After logical optimization\n" + Operator.toString(pCtx.getTopOps().values()));
     }
+
+    System.out.printf("After logical optimization:%s \n" ,Operator.toString(pCtx.getTopOps().values()));
+
 
     // 8. Generate column access stats if required - wait until column pruning
     // takes place during optimization
