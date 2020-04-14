@@ -38,6 +38,7 @@ public class ForwardWalker extends DefaultGraphWalker {
   protected boolean allParentsDispatched(Node nd) {
     Operator<? extends OperatorDesc> op = (Operator<? extends OperatorDesc>) nd;
     if (op.getParentOperators() == null) {
+      System.out.printf("edwin ForwardWalker allParentsDispatched op.getParentOperators() == null,:%s \n", op.toString());
       return true;
     }
     for (Node pNode : op.getParentOperators()) {
@@ -67,6 +68,8 @@ public class ForwardWalker extends DefaultGraphWalker {
     if (opStack.empty() || nd != opStack.peek()) {
       opStack.push(nd);
     }
+
+    System.out.printf("edwin ForwardWalker walk node:%s \n", nd.toString());
     if (allParentsDispatched(nd)) {
       // all children are done or no need to walk the children
       if (!getDispatchedList().contains(nd)) {
