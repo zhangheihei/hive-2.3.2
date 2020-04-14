@@ -41,6 +41,9 @@ public class ForwardWalker extends DefaultGraphWalker {
       System.out.printf("edwin ForwardWalker allParentsDispatched op.getParentOperators() == null,:%s \n", op.toString());
       return true;
     }
+
+    System.out.printf("edwin ForwardWalker allParentsDispatched op.getParentOperators(): %s \n", op.getParentOperators().toString());
+
     for (Node pNode : op.getParentOperators()) {
       if (!getDispatchedList().contains(pNode)) {
         return false;
@@ -80,6 +83,7 @@ public class ForwardWalker extends DefaultGraphWalker {
       return;
     }
     // add children, self to the front of the queue in that order
+    //把自己加到children前面
     toWalk.add(0, nd);
     addAllParents(nd);
   }
